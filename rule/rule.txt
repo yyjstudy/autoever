@@ -1,0 +1,68 @@
+Spring Boot 개발 표준 컨텍스트 (Java 기반, CLI 개발용)
+
+1. 프로젝트 기본
+Java 21, Spring Boot 3.3.x, Gradle Kotlin DSL
+모듈 구조: api, core, domain, infra
+패키지 구조: com.yourorg.도메인명 기준
+
+2. 코드 스타일
+클래스/인터페이스: PascalCase
+변수/메서드: camelCase
+상수: UPPER_SNAKE_CASE
+코드 포맷: Spotless + Google Java Style
+
+3. 아키텍처 레이어
+controller → service → domain(model/logic) → repository
+                         ↘ infra(external API, messaging)
+DTO ↔ Entity 분리, MapStruct 사용
+
+4. REST API
+URL: /v1/resources (복수형)
+메서드: GET, POST, PUT, PATCH, DELETE
+에러: RFC 7807 (Problem+JSON)
+페이징: ?page=0&size=20
+
+5. 예외 & 검증
+@Validated, @ControllerAdvice 공통 에러 응답
+ErrorResponse 통일
+
+6. 데이터 & 트랜잭션
+JPA + snake_case, Flyway 적용 (Vyyyymmdd__desc.sql)
+@Transactional은 Service 계층만
+낙관적 락 기본, 필요시 비관적 락
+
+7. 테스트
+Unit: JUnit 5 + Mockito
+통합: @SpringBootTest + Testcontainers
+커버리지: JaCoCo, SonarQube 품질 기준 80%
+
+8. CI/CD & Git
+Git Flow: feature, release, hotfix, main, develop
+커밋 메시지: Conventional Commits
+GitHub Actions → Build/Test/Docker/Deploy
+Docker: Multi-stage + G1GC 옵션
+
+9. 보안
+Spring Security + JWT (HS256), OAuth2 지원
+비밀번호: BCrypt(12회 반복)
+HTTPS + HSTS + CSP 설정
+
+10. 설정 & 환경
+Profile: local, dev, stage, prod
+설정 관리: Spring Cloud Config, Secrets Manager
+
+11. 성능 & 캐싱
+캐시: Caffeine(local) + Redis(distributed)
+커넥션 풀: HikariCP (min: 5, max: 40)
+모니터링: /actuator/*, Prometheus, Grafana
+
+12. 문서화
+SpringDoc OpenAPI → Swagger UI
+API 문서 버전 관리: AsciiDoc
+ADR 문서: docs/adr/NNN-title.md
+
+활용 가이드:
+기능 개발 전: ADR 작성 → PR
+구현 시: 레이어/명명/표준 구조 준수
+커밋 전: 테스트 + 린트 자동 실행
+배포: GitHub Actions → Docker Registry → K8s

@@ -1,0 +1,43 @@
+spring:
+  # H2 in-memory database configuration
+  datasource:
+    url: jdbc:h2:mem:memberdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  # H2 Console (for development)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  
+  # Server Configuration
+  application:
+    name: autoever-member-system
+
+server:
+  port: 8080
+  
+# JWT Configuration
+jwt:
+  secret-key: autoeverSecretKeyForJWTTokenGenerationAndValidation2024!
+  expiration-time: 3600000  # 1 hour in milliseconds
+  token-prefix: Bearer
+
+# Logging Configuration
+logging:
+  level:
+    com.autoever.member: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

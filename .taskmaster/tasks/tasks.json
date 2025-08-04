@@ -9,7 +9,7 @@
         "testStrategy": "프로젝트가 정상적으로 빌드되고 Spring Boot 애플리케이션이 성공적으로 시작되는지 확인. 기본 헬스체크 엔드포인트 테스트.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -17,7 +17,7 @@
             "description": "Spring Boot 2.7+ 프로젝트를 생성하고 web, JPA, security, validation 등 기본 의존성을 build.gradle 또는 pom.xml에 추가합니다.",
             "dependencies": [],
             "details": "Maven 또는 Gradle 기반 Spring Boot 프로젝트 생성. Java 11+ 환경 설정. 기본 의존성 추가: spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-security, spring-boot-starter-validation, spring-boot-starter-test. 프로젝트 메타데이터 설정 (groupId, artifactId, version).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -26,7 +26,7 @@
             "description": "표준 Spring Boot 패키지 구조를 생성하고 각 레이어별 기본 클래스들을 생성합니다.",
             "dependencies": [],
             "details": "패키지 구조 생성: controller, service, repository, entity, config, dto, exception 패키지. 메인 Application 클래스 생성 (@SpringBootApplication). 각 패키지별 마커 인터페이스 또는 기본 클래스 생성. .gitignore 파일 생성 (IDE, 빌드 파일 제외).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -35,7 +35,7 @@
             "description": "데이터베이스 연결을 위한 드라이버를 추가하고 JPA/Hibernate 기본 설정을 구성합니다.",
             "dependencies": [],
             "details": "H2 인메모리 데이터베이스 의존성 추가 (개발용). MySQL 또는 PostgreSQL 드라이버 의존성 추가 (선택적). JPA 관련 기본 설정 준비: Entity 스캔 패키지, Repository 스캔 패키지 설정. Hibernate 기본 설정 준비 (ddl-auto, show-sql 등).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -44,7 +44,7 @@
             "description": "Spring Security와 JWT 토큰 처리를 위한 라이브러리들을 프로젝트에 추가합니다.",
             "dependencies": [],
             "details": "JWT 라이브러리 의존성 추가: jjwt-api, jjwt-impl, jjwt-jackson. 암호화 관련 의존성 확인 (BCrypt는 Spring Security에 포함). Spring Security 추가 설정 의존성 검토. 버전 호환성 확인 및 의존성 충돌 해결.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -53,7 +53,7 @@
             "description": "애플리케이션 설정 파일을 작성하고 Git 저장소를 초기화하여 버전 관리를 시작합니다.",
             "dependencies": [],
             "details": "application.yml 파일 생성 및 기본 설정: server.port, spring.datasource (H2 설정), spring.jpa (hibernate 설정), spring.security 기본 설정. 프로필별 설정 준비 (dev, prod). Git 저장소 초기화: git init, 초기 커밋. GitHub 저장소 생성 및 원격 저장소 연결. README.md 기본 내용 작성.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-04T12:43:28.666Z",
+      "updated": "2025-08-04T13:32:29.981Z",
       "description": "Tasks for master context"
     }
   }
