@@ -1,0 +1,175 @@
+<context>
+# Overview  
+회원관리 시스템은 Spring Boot 기반의 웹 서버로, Java 언어와 JWT 인증을 사용하여 개발됩니다. 본 시스템은 사용자 회원가입, 관리자 기능, 로그인/정보 조회, 그리고 대용량 메시징 시스템을 제공하여 3천만 사용자 규모까지 확장 가능한 플랫폼을 구축합니다.
+
+시스템의 핵심 가치는 단계별 개발을 통해 기본적인 회원관리 기능부터 시작하여 점진적으로 고도화된 메시징 시스템까지 구현하는 것입니다. 각 단계는 완전히 구현 완료 후 다음 단계로 진행하는 방식으로 안정적인 개발을 보장합니다.
+
+# Core Features  
+**1단계: 회원가입 시스템**
+- 사용자 회원가입 API 제공
+- 계정, 암호, 성명, 주민등록번호, 핸드폰번호, 주소 정보 수집
+- 계정값과 주민등록번호 유일성 보장
+- 본인인증 없이 서버가 요청을 신뢰하는 간단한 구조
+
+**2단계: 시스템 관리자 기능**
+- Basic Auth 인증 (admin/1212) 기반 관리자 API
+- 페이지네이션 기반 회원 조회 기능
+- 암호 및 주소 수정 기능 (개별 또는 동시 수정)
+- 회원 삭제 기능
+
+**3단계: 사용자 인증 및 정보 조회**
+- JWT 토큰 기반 로그인 시스템
+- 로그인한 사용자의 본인 정보 조회
+- 주소 정보는 최상위 행정구역만 제공 (보안 고려)
+
+**4단계: 대용량 메시징 시스템**
+- 연령대별 전체 회원 대상 메시지 발송
+- 카카오톡 우선 발송, 실패 시 SMS 대체 발송
+- 외부 API 연동 및 속도 제한 관리 (카카오톡 100회/분, SMS 500회/분)
+
+# User Experience  
+**사용자 페르소나**
+- 일반 사용자: 회원가입 후 로그인하여 본인 정보를 조회하는 서비스 이용자
+- 시스템 관리자: 회원 데이터를 관리하고 대량 메시지를 발송하는 운영자
+
+**주요 사용자 플로우**
+1. 일반 사용자: 회원가입 → 로그인 → 본인 정보 조회
+2. 관리자: Basic Auth 인증 → 회원 관리 (조회/수정/삭제) → 메시지 발송
+
+**UI/UX 고려사항**
+- REST API 기반으로 명확한 엔드포인트 설계
+- 적절한 HTTP 상태 코드 사용
+- JSON 형태의 일관된 응답 구조
+- 페이지네이션을 통한 대용량 데이터 처리
+</context>
+<PRD>
+# Technical Architecture  
+**시스템 구성요소**
+- Spring Boot 2.x 이상 기반 REST API 서버
+- Java 11 이상 사용
+- JWT 토큰 처리를 위한 Spring Security 설정
+- JPA/Hibernate 기반 데이터 액세스 레이어
+- 외부 API 호출을 위한 RestTemplate 또는 WebClient
+
+**데이터 모델**
+- User 엔티티: 회원 정보 (계정, 암호, 성명, 주민등록번호, 핸드폰번호, 주소)
+- 계정과 주민등록번호에 대한 UNIQUE 제약조건
+- 암호는 BCrypt 등을 사용한 해시 처리
+
+**API 설계**
+- 사용자 API: /api/users/* (회원가입, 로그인, 정보조회)
+- 관리자 API: /api/admin/* (회원관리, 메시지발송)
+- JWT 토큰 기반 인증 필터
+- Basic Auth 기반 관리자 인증
+
+**외부 시스템 연동**
+- 카카오톡 메시지 API: localhost:8081 (Basic Auth: autoever/1234)
+- SMS 메시지 API: localhost:8082 (Basic Auth: autoever/5678)
+- 속도 제한 관리를 위한 Rate Limiting 구현
+
+**인프라 요구사항**
+- 로컬 환경에서 실행 가능한 구성
+- 데이터베이스 (H2/MySQL/PostgreSQL 선택 가능)
+- 외부 저장소 사용 시 Docker 등을 통한 로컬 실행 가이드
+
+# Development Roadmap  
+**MVP 1단계: 기본 회원가입 시스템**
+- Spring Boot 프로젝트 초기 설정
+- 데이터베이스 설정 및 User 엔티티 생성
+- 회원가입 API 구현 (/api/users/register)
+- 유효성 검증 로직 (계정, 주민등록번호 중복 체크)
+- 기본 예외 처리 및 응답 구조 설계
+
+**MVP 2단계: 관리자 기능**
+- Spring Security 설정 및 Basic Auth 구현
+- 관리자 인증 필터 구현
+- 페이지네이션 기반 회원 조회 API (/api/admin/users)
+- 회원 정보 수정 API (/api/admin/users/{id})
+- 회원 삭제 API (/api/admin/users/{id})
+
+**MVP 3단계: JWT 인증 시스템**
+- JWT 토큰 생성 및 검증 로직 구현
+- 로그인 API (/api/users/login) - JWT 토큰 반환
+- JWT 인증 필터 구현
+- 본인 정보 조회 API (/api/users/me) - 주소 필터링 포함
+
+**확장 4단계: 대용량 메시징 시스템**
+- 외부 API 클라이언트 구현 (카카오톡, SMS)
+- 메시지 발송 서비스 로직 구현
+- 속도 제한 관리 (Rate Limiting) 구현
+- 연령대별 메시지 발송 API (/api/admin/messages/send)
+- 비동기 처리 및 큐 시스템 구현
+- 재시도 로직 및 실패 처리
+
+# Logical Dependency Chain
+**기반 구조 우선 구축**
+1. Spring Boot 프로젝트 설정 → 데이터베이스 설정 → User 엔티티 정의
+2. 기본 Controller-Service-Repository 레이어 구조 설정
+3. 공통 예외 처리 및 응답 구조 정의
+
+**단계별 기능 구현**
+1. 회원가입 API → 유효성 검증 → 데이터 저장
+2. Basic Auth 설정 → 관리자 API 구현 → 페이지네이션 조회
+3. JWT 구현 → 로그인 API → 인증 필터 → 본인 정보 조회
+4. 외부 API 클라이언트 → 메시지 서비스 → Rate Limiting → 대량 발송
+
+**가시적 결과물 우선순위**
+- 1단계 완료 시: 회원가입 가능한 기본 시스템
+- 2단계 완료 시: 관리자가 회원을 관리할 수 있는 시스템
+- 3단계 완료 시: 사용자가 로그인하여 정보를 확인할 수 있는 완전한 시스템
+- 4단계 완료 시: 대용량 메시지 발송이 가능한 엔터프라이즈급 시스템
+
+**원자적 단위 개발**
+- 각 API 엔드포인트를 독립적으로 구현 및 테스트
+- 인증 시스템을 단계별로 분리 (Basic Auth → JWT)
+- 외부 시스템 연동은 Mock 객체부터 시작하여 실제 연동으로 발전
+
+# Risks and Mitigations  
+**기술적 도전과제**
+- JWT 토큰 보안 및 만료 처리: Spring Security JWT 라이브러리 활용, 적절한 만료 시간 설정
+- 대용량 데이터 처리: 페이지네이션, 인덱싱, Connection Pool 최적화
+- 외부 API 속도 제한: Rate Limiting, 큐 시스템, 비동기 처리 구현
+
+**MVP 범위 설정**
+- 1-3단계는 반드시 구현해야 하는 핵심 기능
+- 4단계는 확장 기능으로 시간에 따라 조정 가능
+- 각 단계별 완전한 테스트 및 검증 후 다음 단계 진행
+
+**리소스 제약사항**
+- 로컬 환경 실행 제약: Docker를 활용한 외부 의존성 최소화
+- 개발 시간 제약: 단계별 우선순위 설정, 핵심 기능 먼저 구현
+- 테스트 환경: 단위 테스트, 통합 테스트 자동화 구축
+
+**위험 완화 전략**
+- 각 단계별 완전한 구현 및 테스트 완료 후 다음 단계 진행
+- 외부 API 연동 실패 대비 Mock 서버 준비
+- 성능 이슈 대비 모니터링 및 로깅 시스템 구축
+
+# Appendix  
+**기술 스펙**
+- Java 11+ 사용
+- Spring Boot 2.7+ 권장
+- Spring Security 5.7+ 사용
+- JPA/Hibernate 데이터 액세스
+- BCrypt 패스워드 해싱
+- JWT 토큰 (JJWT 라이브러리 권장)
+
+**외부 API 명세**
+- 카카오톡 메시지 API: POST localhost:8081/kakaotalk-messages
+  - Headers: Authorization (Basic autoever:1234), Content-Type: application/json  
+  - Body: {"phone": "xxx-xxxx-xxxx", "message": "content"}
+  - 제한: 1분당 100회
+
+- SMS 메시지 API: POST localhost:8082/sms?phone={phone}
+  - Headers: Authorization (Basic autoever:5678), Content-Type: application/x-www-form-urlencoded
+  - Body: {"message": "content"}  
+  - Response: {"result": "OK"}
+  - 제한: 1분당 500회
+
+**개발 요구사항**
+- GitHub public 저장소 사용
+- README.md에 로컬 실행 가이드 작성
+- PROMPT.md에 AI 프롬프트 기록
+- 각 단계별 완전한 구현 후 다음 단계 진행
+- 코드 리뷰 가능한 구조로 개발
+</PRD>

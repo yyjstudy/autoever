@@ -29,3 +29,31 @@
 - Claude Code 구성 파일 및 MCP 서버 설정 추가
 - 환경 변수 예제 파일 생성
 - Node.js 및 개발 도구용 gitignore 업데이트
+
+### 5. PRD 분석 및 카테고리화
+**프롬프트:** "prd/prd_raw.md 파일을 열고 제품 요구사항을 분석해서 카테고리화해서 정리해줘. 파일명은 prd_calude.md로 저장하고."
+
+**추가 지시사항:**
+- "언어는 자바를 사용한다."
+- "인증은 JWT로 한다."
+
+**수행 작업:**
+- prd/prd_raw.md 파일 분석
+- 요구사항을 카테고리별로 정리
+- Java와 JWT 인증 기반으로 기술 스펙 명시
+- prd/prd_claude.md 파일 생성
+
+### 6. PRD TaskMaster 템플릿 변환
+**프롬프트:** "prd/prd_claude.md 파일을 .taskmaster/templates/example_prd.txt 파일을 참조하여, 템플릿의 규격을 맞춘후 prd/prd_task_master.txt로 저장해"
+
+**수행 작업:**
+- TaskMaster PRD 템플릿 형식 분석
+- prd_claude.md 내용을 <context>와 <PRD> 구조로 재구성
+- prd/prd_task_master.txt 파일 생성
+
+### 7. PROMPT.md 갱신 및 커밋 규칙 설정
+**프롬프트:** "prompt.md파일을 최신화해. 그리고 커밋해. 그리고 앞으로는 내가 커밋요청을 하면 커밋전 무조건 prompt.md파일을 갱신하도록해."
+
+**수행 작업:**
+- PROMPT.md 파일을 최신 상태로 업데이트
+- 향후 커밋 시 PROMPT.md 자동 갱신 규칙 설정
