@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-08-04T12:56:37.492Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Spring Boot 프로젝트 초기 설정 및 기본 구조 구축",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Spring Boot 프로젝트 초기 설정을 다음과 같이 세분화하여 구현하세요: 1) 프로젝트 생성 및 기본 의존성 설정, 2) 패키지 구조 생성 및 기본 클래스들 생성, 3) 데이터베이스 드라이버 및 JPA 설정, 4) Security 및 JWT 관련 의존성 추가, 5) application.yml 설정 및 GitHub 저장소 초기화",
+			"reasoning": "Spring Boot 프로젝트 초기 설정은 여러 의존성과 설정 파일을 다뤄야 하며, 패키지 구조 설계가 전체 프로젝트 아키텍처에 영향을 미치므로 중간 복잡도를 가집니다. 각 의존성별로 설정이 필요하므로 5개 정도의 서브태스크가 적절합니다."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "데이터베이스 설정 및 User 엔티티 정의",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "데이터베이스 설정과 User 엔티티를 다음과 같이 구현하세요: 1) 데이터베이스 연결 설정 (H2/MySQL/PostgreSQL), 2) User 엔티티 클래스 생성 및 JPA 어노테이션 설정, 3) UNIQUE 제약조건 및 데이터 검증 설정, 4) UserRepository 인터페이스 생성 및 기본 쿼리 메서드 정의",
+			"reasoning": "JPA 엔티티 설계는 데이터 모델링과 어노테이션 이해가 필요하지만, 표준적인 패턴을 따르므로 중간 정도의 복잡도입니다. 데이터베이스 설정, 엔티티 정의, 제약조건, 레포지토리로 나누어 4개 서브태스크가 적절합니다."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "공통 예외 처리 및 응답 구조 설계",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "공통 예외 처리 시스템을 다음과 같이 구현하세요: 1) 공통 응답 DTO 클래스 (ApiResponse) 설계, 2) 커스텀 예외 클래스들 정의, 3) @RestControllerAdvice를 사용한 전역 예외 처리기 구현, 4) HTTP 상태 코드 매핑 및 Validation 예외 처리 추가",
+			"reasoning": "예외 처리 아키텍처는 전체 애플리케이션의 일관성에 중요한 영향을 미치며, 다양한 예외 상황을 고려해야 합니다. Spring의 예외 처리 메커니즘에 대한 깊은 이해가 필요하므로 중간-높은 복잡도를 가집니다."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "회원가입 API 구현 (1단계)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "회원가입 API를 다음과 같이 구현하세요: 1) UserRegistrationDto 생성 및 validation 어노테이션 설정, 2) UserController 생성 및 POST /api/users/register 엔드포인트 구현, 3) UserService 비즈니스 로직 구현 (중복 체크, 비밀번호 해싱), 4) UserRepository 쿼리 메서드 구현, 5) 회원가입 성공/실패 응답 처리 및 테스트 케이스 작성",
+			"reasoning": "회원가입 API는 전체 3-layer 아키텍처를 구현하고, 데이터 검증, 비즈니스 로직, 보안(BCrypt), 예외 처리 등 여러 측면을 다뤄야 하므로 높은 복잡도를 가집니다. 각 레이어별로 구현이 필요하므로 5개 서브태스크가 적절합니다."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Spring Security 설정 및 Basic Auth 구현",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Spring Security 설정을 다음과 같이 구현하세요: 1) SecurityConfig 클래스 생성 및 기본 Security 설정, 2) Basic Authentication 설정 및 인메모리 관리자 계정 구성, 3) 경로별 권한 설정 (/api/admin/**, /api/users/register 등), 4) CSRF 비활성화 및 STATELESS 세션 관리, PasswordEncoder Bean 등록",
+			"reasoning": "Spring Security 설정은 보안 아키텍처의 핵심이며, 인증/인가 메커니즘에 대한 깊은 이해가 필요합니다. 잘못 설정하면 보안 취약점이 발생할 수 있어 높은 복잡도를 가집니다. 설정 영역별로 4개 서브태스크로 나누는 것이 적절합니다."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "관리자 회원 관리 API 구현 (2단계)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "관리자 회원 관리 API를 다음과 같이 구현하세요: 1) AdminController 생성 및 기본 구조 설정, 2) 페이지네이션 기반 회원 조회 API (GET /api/admin/users) 구현, 3) UserUpdateDto 생성 및 회원 정보 수정 API (PUT /api/admin/users/{id}) 구현, 4) 회원 삭제 API (DELETE /api/admin/users/{id}) 구현, 5) AdminService 레이어 비즈니스 로직 구현, 6) 페이지네이션 응답 구조 및 에러 처리 완성",
+			"reasoning": "관리자 API는 CRUD 전체 기능과 페이지네이션, 부분 업데이트 등 고급 기능을 포함하며, 보안이 중요한 관리자 권한 처리까지 필요합니다. 다양한 API 엔드포인트와 복잡한 비즈니스 로직으로 인해 높은 복잡도를 가집니다."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "JWT 토큰 생성 및 검증 시스템 구현",
+			"complexityScore": 9,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "JWT 토큰 시스템을 다음과 같이 구현하세요: 1) JwtUtil 클래스 생성 및 토큰 생성/검증/파싱 메서드 구현, 2) JWT 설정 (Secret Key, 만료시간, Claims) 및 application.yml 구성, 3) JwtAuthenticationFilter 구현 (토큰 추출 및 검증), 4) SecurityContext 설정 및 사용자 인증 정보 주입, 5) SecurityConfig에 JWT 필터 추가 및 필터 체인 구성, 6) 토큰 블랙리스트 처리 및 예외 상황 핸들링",
+			"reasoning": "JWT 구현은 암호화, 보안, Spring Security 필터 체인에 대한 깊은 이해가 필요한 고급 기능입니다. 토큰 생성부터 검증, 필터 체인 통합까지 복잡한 과정을 거치며, 보안상 매우 중요하므로 높은 복잡도를 가집니다."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "사용자 로그인 및 본인 정보 조회 API 구현 (3단계)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "사용자 로그인 및 정보 조회 API를 다음과 같이 구현하세요: 1) LoginDto 생성 및 로그인 엔드포인트 (POST /api/users/login) 기본 구조 구현, 2) AuthenticationManager를 사용한 사용자 인증 로직 구현, 3) 인증 성공 시 JWT 토큰 생성 및 응답 처리, 4) 본인 정보 조회 API (GET /api/users/me) 구현, 5) UserInfoDto 생성 및 주소 필터링, 민감정보 마스킹 처리",
+			"reasoning": "로그인 API는 JWT 토큰 시스템과 Spring Security 인증 매니저를 통합해야 하며, 보안을 고려한 정보 필터링까지 포함합니다. 인증 플로우의 핵심 부분이므로 높은 복잡도를 가지며, 기능별로 5개 서브태스크가 적절합니다."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "외부 메시지 API 클라이언트 및 Rate Limiting 구현",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "외부 메시지 API 시스템을 다음과 같이 구현하세요: 1) MessageApiClient 인터페이스 설계 및 기본 구조 생성, 2) KakaoTalkApiClient 구현 (RestTemplate/WebClient 사용), 3) SmsApiClient 구현 및 Basic Auth 설정, 4) Rate Limiting 시스템 구현 (Bucket4j 또는 커스텀), 5) 재시도 메커니즘 및 대체 발송 로직 구현, 6) 외부 API 호출 로깅, 모니터링 및 예외 처리",
+			"reasoning": "외부 API 연동은 네트워크 통신, 에러 처리, 속도 제한, 재시도 로직 등 복잡한 요소들을 다뤄야 합니다. 특히 Rate Limiting과 Fallback 메커니즘은 고급 기능이므로 높은 복잡도를 가집니다."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "대용량 메시지 발송 시스템 구현 (4단계)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "대용량 메시지 발송 시스템을 다음과 같이 구현하세요: 1) MessageSendDto 생성 및 연령대별 메시지 발송 API 기본 구조, 2) 주민등록번호 기반 연령 계산 로직 구현, 3) 페이지네이션 기반 대량 데이터 처리 로직 구현, 4) @Async 및 ThreadPoolTaskExecutor 설정, 5) CompletableFuture를 사용한 비동기 메시지 발송 구현, 6) 메시지 발송 상태 추적 및 통계 시스템 구현, 7) 성능 최적화 및 에러 처리, 로깅 시스템 완성",
+			"reasoning": "대용량 처리 시스템은 비동기 프로그래밍, 성능 최적화, 메모리 관리, 동시성 제어 등 고급 기술들이 복합적으로 필요합니다. 대량 데이터 처리와 비동기 시스템의 복잡성으로 인해 최고 수준의 복잡도를 가지며, 세밀한 단계별 구현이 필요합니다."
+		}
+	]
+}

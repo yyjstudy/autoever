@@ -1,0 +1,691 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Spring Boot 프로젝트 초기 설정 및 기본 구조 구축",
+        "description": "Spring Boot 2.7+ 기반 프로젝트를 생성하고 필요한 의존성을 설정하여 개발 환경을 구축합니다.",
+        "details": "Java 11+ 환경에서 Spring Boot 2.7+ 프로젝트 생성. 필요한 의존성: spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-security, spring-boot-starter-validation, jjwt 라이브러리, BCrypt, H2/MySQL/PostgreSQL 드라이버. 기본 패키지 구조 생성: controller, service, repository, entity, config, dto 패키지. application.yml 또는 application.properties 기본 설정. GitHub public 저장소 생성 및 초기 커밋.",
+        "testStrategy": "프로젝트가 정상적으로 빌드되고 Spring Boot 애플리케이션이 성공적으로 시작되는지 확인. 기본 헬스체크 엔드포인트 테스트.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Spring Boot 프로젝트 생성 및 기본 의존성 설정",
+            "description": "Spring Boot 2.7+ 프로젝트를 생성하고 web, JPA, security, validation 등 기본 의존성을 build.gradle 또는 pom.xml에 추가합니다.",
+            "dependencies": [],
+            "details": "Maven 또는 Gradle 기반 Spring Boot 프로젝트 생성. Java 11+ 환경 설정. 기본 의존성 추가: spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-security, spring-boot-starter-validation, spring-boot-starter-test. 프로젝트 메타데이터 설정 (groupId, artifactId, version).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "패키지 구조 생성 및 기본 클래스들 생성",
+            "description": "표준 Spring Boot 패키지 구조를 생성하고 각 레이어별 기본 클래스들을 생성합니다.",
+            "dependencies": [],
+            "details": "패키지 구조 생성: controller, service, repository, entity, config, dto, exception 패키지. 메인 Application 클래스 생성 (@SpringBootApplication). 각 패키지별 마커 인터페이스 또는 기본 클래스 생성. .gitignore 파일 생성 (IDE, 빌드 파일 제외).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "데이터베이스 드라이버 및 JPA 설정",
+            "description": "데이터베이스 연결을 위한 드라이버를 추가하고 JPA/Hibernate 기본 설정을 구성합니다.",
+            "dependencies": [],
+            "details": "H2 인메모리 데이터베이스 의존성 추가 (개발용). MySQL 또는 PostgreSQL 드라이버 의존성 추가 (선택적). JPA 관련 기본 설정 준비: Entity 스캔 패키지, Repository 스캔 패키지 설정. Hibernate 기본 설정 준비 (ddl-auto, show-sql 등).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Security 및 JWT 관련 의존성 추가",
+            "description": "Spring Security와 JWT 토큰 처리를 위한 라이브러리들을 프로젝트에 추가합니다.",
+            "dependencies": [],
+            "details": "JWT 라이브러리 의존성 추가: jjwt-api, jjwt-impl, jjwt-jackson. 암호화 관련 의존성 확인 (BCrypt는 Spring Security에 포함). Spring Security 추가 설정 의존성 검토. 버전 호환성 확인 및 의존성 충돌 해결.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "application.yml 설정 및 GitHub 저장소 초기화",
+            "description": "애플리케이션 설정 파일을 작성하고 Git 저장소를 초기화하여 버전 관리를 시작합니다.",
+            "dependencies": [],
+            "details": "application.yml 파일 생성 및 기본 설정: server.port, spring.datasource (H2 설정), spring.jpa (hibernate 설정), spring.security 기본 설정. 프로필별 설정 준비 (dev, prod). Git 저장소 초기화: git init, 초기 커밋. GitHub 저장소 생성 및 원격 저장소 연결. README.md 기본 내용 작성.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "데이터베이스 설정 및 User 엔티티 정의",
+        "description": "JPA/Hibernate 기반 데이터베이스 설정을 구성하고 회원 정보를 저장할 User 엔티티를 정의합니다.",
+        "details": "User 엔티티 생성: id(PK), 계정(username, unique), 암호(password, BCrypt 해시), 성명(name), 주민등록번호(socialNumber, unique), 핸드폰번호(phoneNumber), 주소(address) 필드. JPA 어노테이션 설정: @Entity, @Table, @Id, @GeneratedValue, @Column(unique=true). 계정과 주민등록번호에 UNIQUE 제약조건 설정. 데이터베이스 연결 설정 (H2 인메모리 또는 로컬 MySQL/PostgreSQL). JPA 설정: hibernate ddl-auto, show-sql 등.",
+        "testStrategy": "데이터베이스 연결 테스트 및 User 엔티티 테이블 자동 생성 확인. 유니크 제약조건 테스트.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "데이터베이스 연결 설정 구성",
+            "description": "H2 인메모리 데이터베이스 또는 MySQL/PostgreSQL 연결을 위한 데이터베이스 설정을 구성합니다.",
+            "dependencies": [],
+            "details": "application.yml 또는 application.properties에서 데이터베이스 연결 설정 구성. H2 인메모리 데이터베이스를 기본으로 설정하고 MySQL/PostgreSQL 대안 제공. JPA/Hibernate 설정 추가: ddl-auto, show-sql, format-sql 등. 데이터베이스 드라이버 의존성 추가 (H2, MySQL Connector, PostgreSQL). 데이터베이스 연결 풀 설정 (HikariCP).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "User 엔티티 클래스 생성 및 JPA 어노테이션 설정",
+            "description": "회원 정보를 저장할 User 엔티티 클래스를 생성하고 JPA 어노테이션을 설정합니다.",
+            "dependencies": [
+              "2.1"
+            ],
+            "details": "User 엔티티 클래스 생성: id(PK, Long), username(계정명), password(암호), name(성명), socialNumber(주민등록번호), phoneNumber(핸드폰번호), address(주소) 필드 정의. JPA 어노테이션 설정: @Entity, @Table, @Id, @GeneratedValue(strategy = GenerationType.IDENTITY), @Column 설정. 엔티티 필드에 적절한 데이터 타입과 길이 제한 설정.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "UNIQUE 제약조건 및 데이터 검증 설정",
+            "description": "계정명과 주민등록번호에 UNIQUE 제약조건을 설정하고 데이터 검증 로직을 추가합니다.",
+            "dependencies": [
+              "2.2"
+            ],
+            "details": "username과 socialNumber 필드에 @Column(unique = true) 설정. 데이터 검증 어노테이션 추가: @NotBlank, @Size, @Pattern 등을 사용한 입력값 검증. 주민등록번호 형식 검증을 위한 정규식 패턴 적용. 핸드폰번호 형식 검증 추가. 데이터베이스 레벨에서 UNIQUE 인덱스 자동 생성 확인.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "UserRepository 인터페이스 생성 및 기본 쿼리 메서드 정의",
+            "description": "User 엔티티에 대한 데이터 액세스를 위한 Repository 인터페이스를 생성하고 기본 쿼리 메서드를 정의합니다.",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "JpaRepository를 상속하는 UserRepository 인터페이스 생성. 기본 CRUD 메서드 외 추가 쿼리 메서드 정의: existsByUsername(), existsBySocialNumber(), findByUsername(), findBySocialNumber(). Optional을 사용한 안전한 조회 메서드 구현. Repository 패키지 구조 설정 및 @Repository 어노테이션 적용. JPA 쿼리 메서드 네이밍 규칙 준수.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "공통 예외 처리 및 응답 구조 설계",
+        "description": "전역 예외 처리기와 일관된 API 응답 구조를 설계하여 클라이언트와의 통신 표준을 정의합니다.",
+        "details": "@RestControllerAdvice를 사용한 전역 예외 처리기 구현. 공통 응답 DTO 클래스 생성 (ApiResponse<T> with success, message, data 필드). 커스텀 예외 클래스들 정의: DuplicateAccountException, DuplicateSocialNumberException, UserNotFoundException 등. HTTP 상태 코드 매핑: 200(성공), 400(잘못된 요청), 401(인증 실패), 403(권한 없음), 404(리소스 없음), 409(중복), 500(서버 오류). Validation 예외 처리 (@Valid 검증 실패 시).",
+        "testStrategy": "각종 예외 상황에 대한 응답 형식 및 HTTP 상태 코드 정확성 테스트. 공통 응답 구조 일관성 검증.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "공통 응답 DTO 클래스 (ApiResponse) 설계 및 구현",
+            "description": "전체 API에서 사용할 일관된 응답 구조를 위한 제네릭 응답 DTO 클래스를 설계하고 구현합니다.",
+            "dependencies": [],
+            "details": "ApiResponse<T> 클래스 생성. success(Boolean), message(String), data(T) 필드 포함. HTTP 상태 코드와 매핑되는 정적 팩토리 메서드 제공 (success(), error(), created() 등). 제네릭 타입을 활용한 타입 안전성 보장. JSON 직렬화를 위한 적절한 어노테이션 추가.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "커스텀 예외 클래스들 정의",
+            "description": "비즈니스 로직에서 발생하는 다양한 예외 상황을 처리하기 위한 커스텀 예외 클래스들을 정의합니다.",
+            "dependencies": [],
+            "details": "기본 예외 클래스 BaseCustomException 생성. DuplicateAccountException: 계정 중복 예외. DuplicateSocialNumberException: 주민등록번호 중복 예외. UserNotFoundException: 사용자 찾을 수 없음 예외. InvalidCredentialsException: 인증 실패 예외. AccessDeniedException: 권한 없음 예외. 각 예외별 HTTP 상태 코드와 에러 메시지 정의.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "@RestControllerAdvice 전역 예외 처리기 구현",
+            "description": "애플리케이션 전역에서 발생하는 예외를 일관된 방식으로 처리하는 전역 예외 처리기를 구현합니다.",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "GlobalExceptionHandler 클래스 생성. @RestControllerAdvice 어노테이션 적용. 각 커스텀 예외별 @ExceptionHandler 메서드 구현. 일반적인 예외(Exception, RuntimeException) 처리 핸들러. 예외 발생 시 적절한 HTTP 상태 코드와 ApiResponse 형태로 응답 반환. 로깅 처리 추가.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "HTTP 상태 코드 매핑 및 Validation 예외 처리 추가",
+            "description": "Spring Validation 실패와 기타 표준 예외들에 대한 HTTP 상태 코드 매핑과 처리 로직을 구현합니다.",
+            "dependencies": [
+              "3.3"
+            ],
+            "details": "@Valid 검증 실패 시 MethodArgumentNotValidException 처리. BindingResult에서 필드별 에러 메시지 추출하여 상세한 에러 응답 생성. 400(잘못된 요청), 401(인증 실패), 403(권한 없음), 404(리소스 없음), 409(중복), 500(서버 오류) 상태 코드 매핑. 각 HTTP 상태별 표준 에러 메시지 정의. 개발/운영 환경별 에러 메시지 상세도 조정.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "회원가입 API 구현 (1단계)",
+        "description": "사용자 회원가입을 처리하는 REST API를 구현하고 데이터 유효성 검증 로직을 추가합니다.",
+        "details": "POST /api/users/register 엔드포인트 구현. UserRegistrationDto 생성: validation 어노테이션 추가 (@NotBlank, @Pattern 등). UserController, UserService, UserRepository 레이어 구현. 비즈니스 로직: 계정 중복 체크, 주민등록번호 중복 체크, 암호 BCrypt 해싱, User 엔티티 저장. Repository에서 existsByUsername(), existsBySocialNumber() 메서드 구현. 성공 시 201 Created 상태코드와 사용자 정보 반환 (암호 제외).",
+        "testStrategy": "정상 회원가입 테스트, 계정 중복 테스트, 주민등록번호 중복 테스트, 유효성 검증 실패 테스트, 단위 테스트 및 통합 테스트 작성.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "UserRegistrationDto 생성 및 validation 어노테이션 설정",
+            "description": "회원가입 요청 데이터를 받기 위한 DTO 클래스를 생성하고 데이터 유효성 검증 어노테이션을 설정합니다.",
+            "dependencies": [],
+            "details": "UserRegistrationDto 클래스 생성: username, password, confirmPassword, socialNumber, name, email, phoneNumber, address 필드 포함. @NotBlank, @Pattern, @Email, @Size 등 validation 어노테이션 추가. 주민등록번호 형식 검증 패턴 설정. 비밀번호 확인 일치 여부를 위한 커스텀 validation 어노테이션 구현.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "UserController 생성 및 POST /api/users/register 엔드포인트 구현",
+            "description": "회원가입 API 엔드포인트를 제공하는 컨트롤러를 구성하고 요청/응답 처리 로직을 구현합니다.",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "UserController 클래스 생성 및 @RestController, @RequestMapping 어노테이션 설정. POST /api/users/register 엔드포인트 구현. @Valid @RequestBody UserRegistrationDto 매개변수 설정. UserService 의존성 주입. 성공 시 201 Created 상태코드와 생성된 사용자 정보 반환. 비밀번호는 응답에서 제외 처리.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "UserService 비즈니스 로직 구현 (중복 체크, 비밀번호 해싱)",
+            "description": "회원가입 시 필요한 비즈니스 로직을 구현하여 데이터 유효성과 보안을 보장합니다.",
+            "dependencies": [
+              "4.2"
+            ],
+            "details": "UserService 클래스 생성 및 @Service 어노테이션 설정. registerUser() 메서드 구현: 사용자명 중복 체크, 주민등록번호 중복 체크, BCryptPasswordEncoder를 사용한 비밀번호 해싱. 중복 발견 시 DuplicateAccountException, DuplicateSocialNumberException 예외 발생. User 엔티티 생성 및 저장 로직 구현.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "UserRepository 쿼리 메서드 구현",
+            "description": "사용자 데이터 조회를 위한 Repository 인터페이스와 필요한 쿼리 메서드를 구현합니다.",
+            "dependencies": [
+              "4.3"
+            ],
+            "details": "UserRepository 인터페이스 생성 및 JpaRepository<User, Long> 상속. existsByUsername(String username) 메서드 정의: 사용자명 중복 체크용. existsBySocialNumber(String socialNumber) 메서드 정의: 주민등록번호 중복 체크용. findByUsername(String username) 메서드 정의: 로그인 시 사용할 사용자 조회용.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "회원가입 성공/실패 응답 처리 및 테스트 케이스 작성",
+            "description": "회원가입 API의 다양한 시나리오에 대한 응답 처리 로직과 포괄적인 테스트 케이스를 작성합니다.",
+            "dependencies": [
+              "4.4"
+            ],
+            "details": "성공 응답: 201 Created, ApiResponse<UserResponseDto> 형태로 반환. 실패 응답: 400 Bad Request (validation 실패), 409 Conflict (중복 데이터). UserControllerTest 작성: 정상 회원가입, 사용자명 중복, 주민등록번호 중복, validation 실패 테스트. UserServiceTest 작성: 비즈니스 로직 단위 테스트. @WebMvcTest, @MockBean 사용한 통합 테스트.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Spring Security 설정 및 Basic Auth 구현",
+        "description": "관리자 인증을 위한 Spring Security 설정과 Basic Authentication을 구현합니다.",
+        "details": "SecurityConfig 클래스 생성하여 Spring Security 설정. Basic Auth 설정: admin/1212 계정 인메모리 설정. 관리자 권한 ROLE_ADMIN 부여. /api/admin/** 경로에 대해 ROLE_ADMIN 권한 필요하도록 설정. /api/users/register는 permitAll() 설정. CSRF 비활성화 (REST API용). HttpSecurity 설정: authorizeRequests(), httpBasic(), sessionManagement(STATELESS). PasswordEncoder Bean 등록 (BCryptPasswordEncoder).",
+        "testStrategy": "Basic Auth 인증 테스트, 관리자 권한 접근 테스트, 미인증 사용자 접근 거부 테스트, 잘못된 인증 정보 테스트.",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "SecurityConfig 클래스 생성 및 기본 Spring Security 설정",
+            "description": "Spring Security의 핵심 설정을 담당하는 SecurityConfig 클래스를 생성하고 기본적인 보안 설정을 구성합니다.",
+            "dependencies": [],
+            "details": "@Configuration, @EnableWebSecurity 어노테이션을 사용하여 SecurityConfig 클래스 생성. WebSecurityConfigurerAdapter를 상속받아 configure(HttpSecurity http) 메서드 오버라이드. HttpSecurity 기본 설정: 보안 헤더, 프레임 옵션, 컨텐츠 타입 옵션 등 기본 보안 설정 적용. Spring Security 필터체인 구성을 위한 기반 코드 작성.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Basic Authentication 설정 및 인메모리 관리자 계정 구성",
+            "description": "Basic Authentication을 활성화하고 관리자 계정을 인메모리로 설정하여 인증 시스템을 구축합니다.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "httpBasic() 메서드를 사용하여 Basic Authentication 활성화. configure(AuthenticationManagerBuilder auth) 메서드 오버라이드하여 인메모리 사용자 설정. 관리자 계정 생성: username='admin', password='1212', roles='ADMIN'. inMemoryAuthentication() 사용하여 메모리 기반 사용자 저장소 구성. 패스워드 인코딩 적용.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "경로별 권한 설정 및 접근 제어 구성",
+            "description": "URL 패턴에 따른 세분화된 권한 설정을 구성하여 적절한 접근 제어를 구현합니다.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "authorizeRequests() 메서드를 사용하여 경로별 권한 설정. /api/admin/** 경로에 대해 hasRole('ADMIN') 권한 요구. /api/users/register 경로에 대해 permitAll() 설정으로 모든 사용자 접근 허용. 기타 /api/** 경로에 대한 기본 인증 요구 설정. antMatchers() 사용하여 URL 패턴 매칭 및 권한 부여.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "CSRF 비활성화, STATELESS 세션 관리 및 PasswordEncoder Bean 등록",
+            "description": "REST API에 적합한 보안 설정을 완성하고 패스워드 인코딩을 위한 Bean을 등록합니다.",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "csrf().disable() 설정으로 CSRF 보호 비활성화 (REST API용). sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) 설정으로 세션 사용하지 않도록 구성. @Bean 어노테이션을 사용하여 PasswordEncoder 빈 등록 (BCryptPasswordEncoder 사용). 패스워드 인코딩 강도 설정 및 보안 정책 적용.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "관리자 회원 관리 API 구현 (2단계)",
+        "description": "관리자가 회원을 조회, 수정, 삭제할 수 있는 API를 페이지네이션과 함께 구현합니다.",
+        "details": "AdminController 생성. GET /api/admin/users - 페이지네이션 기반 회원 조회 (Pageable 사용, PageDto 응답). PUT /api/admin/users/{id} - 회원 정보 수정 (암호, 주소 개별 또는 동시 수정). DELETE /api/admin/users/{id} - 회원 삭제. AdminService 레이어 구현. UserUpdateDto 생성 (암호, 주소 필드, 선택적 업데이트). 페이지네이션 응답 구조: content, totalElements, totalPages, currentPage. 수정 시 암호는 BCrypt 해싱 처리.",
+        "testStrategy": "페이지네이션 조회 테스트, 회원 정보 수정 테스트 (암호만, 주소만, 둘 다), 회원 삭제 테스트, 존재하지 않는 회원 처리 테스트.",
+        "priority": "high",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "AdminController 생성 및 기본 구조 설정",
+            "description": "관리자 회원 관리를 위한 AdminController 클래스를 생성하고 기본 구조와 보안 설정을 구현합니다.",
+            "dependencies": [],
+            "details": "@RestController, @RequestMapping(\"/api/admin\") 어노테이션 추가. @PreAuthorize(\"hasRole('ADMIN')\") 보안 설정. 기본 생성자 및 AdminService 의존성 주입 설정. 컨트롤러 레벨 예외 처리 준비.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "UserUpdateDto 생성 및 검증 로직 구현",
+            "description": "회원 정보 수정을 위한 DTO 클래스를 생성하고 선택적 업데이트를 위한 검증 로직을 구현합니다.",
+            "dependencies": [],
+            "details": "password, address 필드를 Optional로 설정. @Valid 검증 어노테이션 추가. 암호 패턴 검증 (@Pattern). 주소 길이 제한 검증. null 체크 및 빈 문자열 처리 로직.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "페이지네이션 기반 회원 조회 API 구현",
+            "description": "GET /api/admin/users 엔드포인트를 구현하여 페이지네이션을 지원하는 회원 조회 기능을 제공합니다.",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "Pageable 파라미터 처리. AdminService.getAllUsers() 메서드 호출. Page<User>를 PageDto로 변환. content, totalElements, totalPages, currentPage 포함. 정렬 옵션 지원 (id, username, createdDate).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "회원 정보 수정 API 구현",
+            "description": "PUT /api/admin/users/{id} 엔드포인트를 구현하여 관리자가 회원 정보를 수정할 수 있는 기능을 제공합니다.",
+            "dependencies": [
+              "6.1",
+              "6.2"
+            ],
+            "details": "@PathVariable Long id, @Valid @RequestBody UserUpdateDto 처리. AdminService.updateUser() 메서드 호출. 부분 업데이트 로직 (암호만, 주소만, 둘 다 가능). 수정 성공 시 업데이트된 사용자 정보 반환 (암호 제외).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "회원 삭제 API 구현",
+            "description": "DELETE /api/admin/users/{id} 엔드포인트를 구현하여 관리자가 회원을 삭제할 수 있는 기능을 제공합니다.",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "@PathVariable Long id 처리. AdminService.deleteUser() 메서드 호출. 삭제 전 회원 존재 여부 확인. 성공 시 204 No Content 응답. 삭제된 회원의 관련 데이터 처리 고려.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "AdminService 비즈니스 로직 및 페이지네이션 응답 구조 완성",
+            "description": "AdminService 레이어의 비즈니스 로직을 구현하고 페이지네이션 응답 구조 및 에러 처리를 완성합니다.",
+            "dependencies": [
+              "6.2"
+            ],
+            "details": "getAllUsers(Pageable) 메서드 구현. updateUser(Long, UserUpdateDto) 메서드 - BCrypt 암호 해싱 포함. deleteUser(Long) 메서드 구현. UserNotFoundException 예외 처리. PageDto 클래스 생성 및 Page<T> 변환 로직. 트랜잭션 처리 (@Transactional).",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "JWT 토큰 생성 및 검증 시스템 구현",
+        "description": "JWT 기반 인증 시스템을 구현하여 사용자 로그인 및 토큰 관리 기능을 제공합니다.",
+        "details": "JwtUtil 클래스 생성: JWT 토큰 생성, 검증, 파싱 메서드 구현. JJWT 라이브러리 사용. 토큰 만료 시간 설정 (예: 1시간). Secret Key 설정 (application.yml). Claims 정보: username, authorities, 만료 시간. JwtAuthenticationFilter 구현: JWT 토큰 추출, 검증, SecurityContext 설정. SecurityConfig에 JWT 필터 추가 (UsernamePasswordAuthenticationFilter 전에). 토큰 무효화를 위한 블랙리스트 처리 고려 (선택사항).",
+        "testStrategy": "JWT 토큰 생성 테스트, 토큰 검증 테스트, 만료된 토큰 처리 테스트, 잘못된 토큰 처리 테스트, 필터 체인 동작 테스트.",
+        "priority": "high",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "JwtUtil 클래스 생성 및 핵심 메서드 구현",
+            "description": "JWT 토큰의 생성, 검증, 파싱을 담당하는 JwtUtil 유틸리티 클래스를 구현합니다.",
+            "dependencies": [],
+            "details": "JJWT 라이브러리를 사용하여 JWT 토큰 생성 메서드(generateToken), 토큰 검증 메서드(validateToken), 클레임 파싱 메서드(parseClaimsFromToken) 구현. Secret Key 주입 및 토큰 만료 시간 설정. username, authorities, 발급/만료 시간을 포함한 Claims 생성 로직 구현.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "JWT 설정 및 application.yml 구성",
+            "description": "JWT 토큰 시스템에 필요한 설정값들을 application.yml에 정의하고 구성 클래스를 생성합니다.",
+            "dependencies": [],
+            "details": "application.yml에 jwt.secret-key, jwt.expiration-time, jwt.token-prefix 등의 설정 추가. @ConfigurationProperties를 사용한 JwtProperties 설정 클래스 생성. Secret Key는 최소 256비트 길이로 설정하고 Base64 인코딩 적용. 토큰 만료 시간은 1시간(3600초)으로 설정.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "JwtAuthenticationFilter 구현",
+            "description": "HTTP 요청에서 JWT 토큰을 추출하고 검증하는 인증 필터를 구현합니다.",
+            "dependencies": [
+              "7.1",
+              "7.2"
+            ],
+            "details": "OncePerRequestFilter를 상속받은 JwtAuthenticationFilter 클래스 구현. Authorization 헤더에서 Bearer 토큰 추출 로직 구현. JwtUtil을 사용한 토큰 검증 및 사용자 정보 추출. 유효한 토큰인 경우 Authentication 객체 생성 및 SecurityContext 설정. 토큰이 없거나 유효하지 않은 경우 필터 체인 계속 진행.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "SecurityContext 설정 및 사용자 인증 정보 주입",
+            "description": "JWT 토큰에서 추출한 사용자 정보를 Spring Security Context에 주입하는 로직을 구현합니다.",
+            "dependencies": [
+              "7.3"
+            ],
+            "details": "JWT 토큰에서 추출한 username과 authorities를 사용하여 UsernamePasswordAuthenticationToken 생성. UserDetailsService를 통한 사용자 정보 로드 또는 토큰 클레임 직접 사용. SecurityContextHolder에 Authentication 객체 설정. 인증된 사용자 정보가 컨트롤러에서 @AuthenticationPrincipal로 접근 가능하도록 구성.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "SecurityConfig에 JWT 필터 추가 및 필터 체인 구성",
+            "description": "Spring Security 설정에 JWT 인증 필터를 추가하고 필터 체인을 구성합니다.",
+            "dependencies": [
+              "7.4"
+            ],
+            "details": "SecurityConfig 클래스에서 JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 앞에 추가. /api/users/login 엔드포인트는 permitAll() 설정하여 인증 없이 접근 가능하도록 구성. 나머지 /api/** 경로는 authenticated() 설정. CORS 설정 및 CSRF 비활성화. 세션 관리를 STATELESS로 설정하여 JWT 기반 무상태 인증 구현.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "토큰 블랙리스트 처리 및 예외 상황 핸들링",
+            "description": "JWT 토큰 무효화를 위한 블랙리스트 처리와 토큰 관련 예외 상황을 처리하는 시스템을 구현합니다.",
+            "dependencies": [
+              "7.5"
+            ],
+            "details": "토큰 블랙리스트를 관리하는 TokenBlacklistService 구현 (Redis 또는 In-Memory 캐시 사용). 로그아웃 시 토큰을 블랙리스트에 추가하는 로직 구현. JwtAuthenticationFilter에서 블랙리스트 토큰 체크 로직 추가. JWT 관련 예외 처리: 만료된 토큰, 잘못된 토큰, 파싱 실패 등에 대한 커스텀 예외 및 글로벌 예외 핸들러 구현. 예외 발생 시 적절한 HTTP 상태 코드와 에러 메시지 반환.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "사용자 로그인 및 본인 정보 조회 API 구현 (3단계)",
+        "description": "JWT 토큰 기반 로그인 API와 인증된 사용자의 본인 정보 조회 API를 구현합니다.",
+        "details": "POST /api/users/login 구현: LoginDto (username, password) 받아서 인증 후 JWT 토큰 반환. AuthenticationManager를 사용한 사용자 인증. 인증 성공 시 JWT 토큰 생성하여 응답. GET /api/users/me 구현: JWT 토큰으로 인증된 사용자의 정보 조회. 주소 정보는 최상위 행정구역만 반환 (보안 고려). UserInfoDto 생성: 민감 정보 제외 (암호, 주민등록번호 마스킹). SecurityContext에서 현재 사용자 정보 추출. 주소 필터링 로직 구현.",
+        "testStrategy": "정상 로그인 테스트, 잘못된 계정/암호 테스트, JWT 토큰 응답 확인, 본인 정보 조회 테스트, 주소 필터링 확인, 미인증 사용자 접근 거부 테스트.",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "LoginDto 생성 및 로그인 엔드포인트 기본 구조 구현",
+            "description": "로그인 요청을 처리하기 위한 DTO 클래스와 POST /api/users/login 엔드포인트의 기본 구조를 구현합니다.",
+            "dependencies": [],
+            "details": "LoginDto 클래스 생성 (username, password 필드), UserController에 로그인 엔드포인트 추가, 기본 요청/응답 구조 설정, validation 어노테이션 추가",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "AuthenticationManager를 사용한 사용자 인증 로직 구현",
+            "description": "Spring Security의 AuthenticationManager를 활용하여 사용자 인증을 처리하는 로직을 구현합니다.",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "AuthenticationManager 설정, UsernamePasswordAuthenticationToken 생성, 인증 실패 시 예외 처리, UserDetailsService와 연동",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "JWT 토큰 생성 및 응답 처리 구현",
+            "description": "인증 성공 시 JWT 토큰을 생성하고 클라이언트에게 반환하는 로직을 구현합니다.",
+            "dependencies": [
+              "8.2"
+            ],
+            "details": "JwtTokenProvider 클래스 생성, JWT 토큰 생성 로직, 토큰 응답 DTO 설계, 토큰 만료 시간 설정, 로그인 성공 응답 구조 구현",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "본인 정보 조회 API 구현",
+            "description": "JWT 토큰으로 인증된 사용자의 본인 정보를 조회하는 GET /api/users/me 엔드포인트를 구현합니다.",
+            "dependencies": [
+              "8.3"
+            ],
+            "details": "SecurityContext에서 현재 사용자 정보 추출, 인증된 사용자 정보 조회 로직, 미인증 사용자 접근 거부 처리, JWT 토큰 검증",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "UserInfoDto 생성 및 민감정보 처리",
+            "description": "사용자 정보 응답을 위한 DTO를 생성하고 주소 필터링, 민감정보 마스킹 처리를 구현합니다.",
+            "dependencies": [
+              "8.4"
+            ],
+            "details": "UserInfoDto 클래스 생성, 주민등록번호 마스킹 로직, 주소 정보 최상위 행정구역만 반환 처리, 민감 정보 제외 변환 로직, 응답 데이터 보안 강화",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "외부 메시지 API 클라이언트 및 Rate Limiting 구현",
+        "description": "카카오톡과 SMS 외부 API 연동을 위한 클라이언트와 속도 제한 관리 시스템을 구현합니다.",
+        "details": "MessageApiClient 인터페이스 및 구현체 생성. KakaoTalkApiClient: POST localhost:8081/kakaotalk-messages, Basic Auth (autoever:1234). SmsApiClient: POST localhost:8082/sms, Basic Auth (autoever:5678). RestTemplate 또는 WebClient 사용. Rate Limiting 구현: Bucket4j 라이브러리 사용 또는 커스텀 구현. 카카오톡 100회/분, SMS 500회/분 제한. 메시지 발송 실패 시 대체 발송 로직. 재시도 메커니즘 구현 (@Retryable 사용 고려). 외부 API 호출 로깅 및 모니터링.",
+        "testStrategy": "외부 API 연결 테스트, Rate Limiting 동작 테스트, 재시도 로직 테스트, 카카오톡 실패 시 SMS 대체 발송 테스트, Mock 서버를 사용한 단위 테스트.",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "MessageApiClient 인터페이스 및 기본 구조 설계",
+            "description": "외부 메시지 API 클라이언트의 공통 인터페이스와 기본 구조를 설계하고 구현합니다.",
+            "dependencies": [],
+            "details": "MessageApiClient 인터페이스 정의 (sendMessage, validateConnection 메서드), ApiResponse DTO 클래스 생성, MessageType enum 정의 (KAKAOTALK, SMS), 기본 예외 클래스들 정의 (ApiConnectionException, MessageSendException), 공통 설정 클래스 구조 설계",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "KakaoTalkApiClient 구현체 개발",
+            "description": "카카오톡 API 연동을 위한 클라이언트를 RestTemplate 또는 WebClient로 구현합니다.",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "KakaoTalkApiClient 클래스 구현, POST localhost:8081/kakaotalk-messages 엔드포인트 연동, Basic Auth 인증 구현 (autoever:1234), RestTemplate 또는 WebClient 설정, 요청/응답 DTO 매핑, 연결 테스트 메서드 구현",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "SmsApiClient 구현체 개발",
+            "description": "SMS API 연동을 위한 클라이언트를 구현하고 Basic Auth 인증을 설정합니다.",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "SmsApiClient 클래스 구현, POST localhost:8082/sms 엔드포인트 연동, Basic Auth 인증 구현 (autoever:5678), HTTP 헤더 설정, 요청/응답 처리 로직, 에러 응답 핸들링, 연결 상태 확인 기능",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Rate Limiting 시스템 구현",
+            "description": "Bucket4j 또는 커스텀 구현을 통해 API 호출 속도 제한 시스템을 구축합니다.",
+            "dependencies": [
+              "9.2",
+              "9.3"
+            ],
+            "details": "Bucket4j 라이브러리 의존성 추가, RateLimiter 설정 클래스 구현, 카카오톡 100회/분 제한 설정, SMS 500회/분 제한 설정, Token Bucket 알고리즘 적용, Rate Limit 초과 시 예외 처리, 메트릭 수집 기능 추가",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "재시도 메커니즘 및 대체 발송 로직 구현",
+            "description": "메시지 발송 실패 시 재시도 및 카카오톡 실패 시 SMS 대체 발송 로직을 구현합니다.",
+            "dependencies": [
+              "9.4"
+            ],
+            "details": "@Retryable 어노테이션 설정, 지수 백오프 재시도 전략 구현, 최대 재시도 횟수 설정, 카카오톡 실패 시 SMS 자동 전환 로직, FallbackService 클래스 구현, 재시도 상태 추적, 서킷 브레이커 패턴 적용 고려",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "외부 API 호출 로깅 및 모니터링 시스템 구현",
+            "description": "외부 API 호출에 대한 종합적인 로깅, 모니터링 및 예외 처리 시스템을 구축합니다.",
+            "dependencies": [
+              "9.5"
+            ],
+            "details": "API 호출 로그 포맷 정의, 요청/응답 로깅 AOP 구현, 성능 메트릭 수집 (응답시간, 성공률), 알림 시스템 연동, HealthCheck 엔드포인트 구현, 대시보드용 통계 API 구현, 예외 상황별 알림 설정, 로그 레벨별 정책 수립",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "대용량 메시지 발송 시스템 구현 (4단계)",
+        "description": "연령대별 전체 회원 대상 메시지 발송 기능을 비동기 처리와 함께 구현합니다.",
+        "details": "POST /api/admin/messages/send 구현: 연령대 파라미터와 메시지 내용 받기. MessageSendDto 생성: ageGroup, message 필드. 주민등록번호 기반 연령 계산 로직 구현. 대량 데이터 처리를 위한 페이지네이션 기반 배치 처리. @Async 어노테이션을 사용한 비동기 메시지 발송. CompletableFuture 또는 Spring의 TaskExecutor 활용. 메시지 발송 상태 추적 시스템 구현. 발송 결과 로깅 및 통계 제공. ThreadPoolTaskExecutor 설정으로 동시 처리 제어.",
+        "testStrategy": "연령대별 회원 필터링 테스트, 대량 메시지 발송 성능 테스트, 비동기 처리 동작 확인, 발송 실패 처리 테스트, 통계 및 로깅 확인, 부하 테스트.",
+        "priority": "medium",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "MessageSendDto 생성 및 연령대별 메시지 발송 API 기본 구조 구현",
+            "description": "메시지 발송을 위한 DTO와 REST API 엔드포인트의 기본 구조를 구현합니다.",
+            "dependencies": [],
+            "details": "POST /api/admin/messages/send API 엔드포인트 생성. MessageSendDto 클래스 정의 (ageGroup, message 필드). AdminMessageController 생성 및 기본 요청 처리 로직 구현. 요청 데이터 유효성 검증 (@Valid 어노테이션 활용). Swagger 문서화 어노테이션 추가.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "주민등록번호 기반 연령 계산 로직 구현",
+            "description": "사용자의 주민등록번호를 기반으로 연령을 계산하고 연령대를 판별하는 로직을 구현합니다.",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "AgeCalculatorUtil 클래스 생성. 주민등록번호에서 생년월일 추출 로직 구현. 현재 날짜 기준 만 나이 계산 메서드. 연령대 판별 로직 (예: 10대, 20대, 30대 등). 유효하지 않은 주민등록번호 처리 예외 처리. 단위 테스트 작성.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "페이지네이션 기반 대량 데이터 처리 로직 구현",
+            "description": "대량의 사용자 데이터를 효율적으로 처리하기 위한 페이지네이션 기반 배치 처리 로직을 구현합니다.",
+            "dependencies": [
+              "10.2"
+            ],
+            "details": "UserRepository에 연령대별 사용자 조회 메서드 추가 (Pageable 활용). BatchProcessingService 클래스 생성. 페이지 단위 사용자 데이터 조회 로직. 메모리 효율성을 위한 배치 크기 설정 (기본 1000건). 처리 진행률 추적 기능. 대량 데이터 처리 시 GC 최적화 고려사항 적용.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "@Async 및 ThreadPoolTaskExecutor 설정",
+            "description": "비동기 처리를 위한 Spring의 @Async 설정과 스레드 풀 구성을 구현합니다.",
+            "dependencies": [
+              "10.3"
+            ],
+            "details": "AsyncConfig 클래스 생성 (@EnableAsync 어노테이션). ThreadPoolTaskExecutor 빈 설정 (코어 풀 크기, 최대 풀 크기, 큐 용량). 비동기 처리 예외 핸들러 설정 (AsyncUncaughtExceptionHandler). 스레드 네이밍 규칙 설정. 비동기 메서드 실행 통계 및 모니터링 준비. application.yml에 스레드 풀 관련 설정 추가.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "CompletableFuture를 사용한 비동기 메시지 발송 구현",
+            "description": "CompletableFuture를 활용하여 비동기적으로 메시지를 발송하는 기능을 구현합니다.",
+            "dependencies": [
+              "10.4"
+            ],
+            "details": "AsyncMessageService 클래스 생성. @Async 어노테이션을 사용한 비동기 메시지 발송 메서드. CompletableFuture<MessageSendResult> 반환 타입 설정. 메시지 발송 실패 시 예외 처리 및 재시도 로직. 발송 결과 콜백 처리. 동시 발송 개수 제한 및 백프레셔 처리. 비동기 작업 완료 추적 메커니즘.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "메시지 발송 상태 추적 및 통계 시스템 구현",
+            "description": "메시지 발송 상태를 실시간으로 추적하고 통계 정보를 제공하는 시스템을 구현합니다.",
+            "dependencies": [
+              "10.5"
+            ],
+            "details": "MessageSendStatus 엔티티 생성 (발송 ID, 상태, 성공/실패 건수, 시작/종료 시간). MessageTrackingService 클래스 구현. 발송 진행률 실시간 추적 API (GET /api/admin/messages/status/{sendId}). 발송 통계 조회 API (성공률, 실패율, 소요시간). Redis 또는 인메모리 캐시를 활용한 실시간 상태 관리. 발송 히스토리 저장 및 조회 기능.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "성능 최적화 및 에러 처리, 로깅 시스템 완성",
+            "description": "시스템의 성능을 최적화하고 포괄적인 에러 처리 및 로깅 시스템을 구현합니다.",
+            "dependencies": [
+              "10.6"
+            ],
+            "details": "메시지 발송 성능 최적화 (Connection Pool, HTTP Keep-Alive). 글로벌 예외 처리 핸들러 (@ControllerAdvice). 구조화된 로깅 시스템 (SLF4J + Logback). 발송 실패 시 재시도 정책 및 Circuit Breaker 패턴 적용. 메모리 사용량 모니터링 및 최적화. 대량 발송 시 시스템 부하 제어 메커니즘. 성능 테스트 및 부하 테스트 준비.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-04T12:43:28.666Z",
+      "updated": "2025-08-04T12:43:28.666Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

@@ -57,3 +57,33 @@
 **수행 작업:**
 - PROMPT.md 파일을 최신 상태로 업데이트
 - 향후 커밋 시 PROMPT.md 자동 갱신 규칙 설정
+
+### 8. TaskMaster MCP 설정 및 PRD 파싱
+**프롬프트:** "prd/prd_task_master.txt 파일로 task_master mcp를 사용할수 있도록 해"
+
+**수행 작업:**
+- TaskMaster PRD 파싱으로 10개 태스크 생성
+- 단계별 의존성 관계 설정 (1→2→3→...→10)
+- 각 태스크의 우선순위 및 복잡도 설정
+
+### 9. TaskMaster 복잡도 분석 요청
+**프롬프트:** "태스크마스터의 복잡도를 분석해줘. analyze-complexity명령어로 알고있다."
+
+**수행 작업:**
+- TaskMaster analyze-complexity 명령어 실행
+- 10개 태스크의 복잡도 분석 완료 (높은 복잡도 4개, 중간 복잡도 6개)
+
+### 10. H2 메모리 DB 반영 요청
+**프롬프트:** "내가 이미 tm expand --all로 모든 태스크를 서브태스크로 분해했다. tm list --with-subtasks로 잘 분해된 것을 확인 하였다. DB는 H2 메모리 DB를 사용하도록 반영해라."
+
+**수행 작업:**
+- TaskMaster update 명령으로 모든 태스크에 H2 메모리 DB 설정 반영
+- H2 인메모리 데이터베이스를 기본 설정으로 변경
+- MySQL/PostgreSQL은 선택적 대안으로 유지
+
+### 11. PROMPT.md 갱신 및 커밋 요청
+**프롬프트:** "프롬프트를 갱신하고 커밋하라"
+
+**수행 작업:**
+- PROMPT.md 파일 최신 내용으로 갱신
+- 변경사항 커밋 진행
