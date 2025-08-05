@@ -234,7 +234,10 @@ class AdminControllerIntegrationTest {
      * 테스트용 사용자 생성 헬퍼 메서드 (기본 전화번호)
      */
     private void createTestUser(String username, String name, String socialNumber, String email) throws Exception {
-        createTestUser(username, name, socialNumber, email, "010-1234-5678");
+        // username 기반으로 고유한 전화번호 생성
+        String uniquePhoneNumber = "010-" + String.format("%04d", Math.abs(username.hashCode() % 10000)) + "-" + 
+                                   String.format("%04d", Math.abs((username + email).hashCode() % 10000));
+        createTestUser(username, name, socialNumber, email, uniquePhoneNumber);
     }
 
     /**
