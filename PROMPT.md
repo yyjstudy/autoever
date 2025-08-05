@@ -120,7 +120,17 @@
 **프롬프트:** "여태까지 작업한 태스크2에 대해서, record 클래스를 활용하도록 바꾸어라. 또한, setter를활용하지 않는 코드는 final키워드로 확실히 immutable하게해줘."
 
 **수행 작업:**
-- 모든 DTO를 record 클래스로 변환 (완전한 불변성 제공)
+- 모든 DTO를 record 클래스로 변환 (완전한 불변성 제공)  
 - User 엔티티의 핵심 식별 필드(username, socialNumber) 불변성 보장
 - 테스트 코드를 record 클래스 호환으로 업데이트
 - TaskMaster Task 2 및 모든 서브태스크 완료 상태로 업데이트
+
+### 16. Task 3.1 진행 요청 - 공통 응답 DTO 구현
+**프롬프트:** "다음단계인 태스크 3번을 진행할건데 차례대로 하자. 3-1부터 진행해줘. 다시말하지만 단계별로 설계 개발 테스트 후 커밋이야."
+
+**수행 작업:**
+- Task 3.1 완료: 공통 응답 DTO 클래스 (ApiResponse) 설계 및 구현
+- ApiResponse<T> generic record 클래스 생성 (완전한 불변성과 타입 안전성)
+- HTTP 상태별 static factory 메서드 구현 (success, error, created, notFound 등)
+- JSON 직렬화 지원 및 timestamp 자동 추가
+- 포괄적인 테스트 작성 및 실행 (16개 테스트, 100% 성공률)
