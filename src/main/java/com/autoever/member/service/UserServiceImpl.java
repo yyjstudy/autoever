@@ -99,6 +99,7 @@ public class UserServiceImpl implements UserService {
                 .password(hashedPassword)
                 .name(registrationDto.name())
                 .socialNumber(registrationDto.socialNumber())
+                .email(registrationDto.email())
                 .phoneNumber(registrationDto.phoneNumber())
                 .address(registrationDto.address())
                 .build();

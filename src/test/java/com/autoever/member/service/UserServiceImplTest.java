@@ -60,6 +60,7 @@ class UserServiceImplTest {
             .password("hashedPassword")
             .name("홍길동")
             .socialNumber("901201-1234567")
+            .email("test@example.com")
             .phoneNumber("010-1234-5678")
             .address("서울특별시 강남구 테헤란로 123")
             .build();
@@ -129,6 +130,7 @@ class UserServiceImplTest {
             .password("hashedPassword123")
             .name("홍길동")
             .socialNumber("901201-1234567")
+            .email("test@example.com")
             .phoneNumber("010-1234-5678")
             .address("서울특별시 강남구 테헤란로 123")
             .build();
@@ -159,6 +161,7 @@ class UserServiceImplTest {
             .password("hashedPassword")
             .name("홍길동")
             .socialNumber("901201-1234567")
+            .email("test@example.com")
             .phoneNumber("010-1234-5678")
             .address("서울특별시 강남구 테헤란로 123")
             .build();
@@ -177,6 +180,7 @@ class UserServiceImplTest {
             assertThat(user.getPassword()).isEqualTo("hashedPassword");
             assertThat(user.getName()).isEqualTo("홍길동");
             assertThat(user.getSocialNumber()).isEqualTo("901201-1234567");
+            assertThat(user.getEmail()).isEqualTo("test@example.com");
             assertThat(user.getPhoneNumber()).isEqualTo("010-1234-5678");
             assertThat(user.getAddress()).isEqualTo("서울특별시 강남구 테헤란로 123");
             return true;
@@ -192,6 +196,7 @@ class UserServiceImplTest {
             .password("hashedPassword")
             .name("홍길동")
             .socialNumber("901201-1234567")
+            .email("test@example.com")
             .phoneNumber("010-1234-5678")
             .address("서울특별시 강남구 테헤란로 123")
             .build();

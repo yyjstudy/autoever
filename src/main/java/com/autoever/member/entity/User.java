@@ -37,6 +37,9 @@ public class User {
     @Column(name = "social_number", nullable = false, unique = true, length = 14)
     private String socialNumber;
     
+    @Column(name = "email", nullable = false, unique = true, length = 255)
+    private String email;
+    
     @Column(name = "phone_number", nullable = false, length = 13)
     private String phoneNumber;
     
@@ -53,11 +56,12 @@ public class User {
     
     @Builder
     public User(String username, String password, String name, String socialNumber, 
-                String phoneNumber, String address) {
+                String email, String phoneNumber, String address) {
         this.username = username;
         this.password = password;
         this.name = name;
         this.socialNumber = socialNumber;
+        this.email = email;
         this.phoneNumber = phoneNumber;
         this.address = address;
     }

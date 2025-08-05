@@ -38,6 +38,7 @@ class UserRepositoryTest {
                 .password("password123!")
                 .name("홍길동")
                 .socialNumber("901201-1234567")
+                .email("testuser1@example.com")
                 .phoneNumber("010-1234-5678")
                 .address("서울시 강남구")
                 .build();
@@ -47,6 +48,7 @@ class UserRepositoryTest {
                 .password("password123!")
                 .name("김철수")
                 .socialNumber("890101-1234567")
+                .email("testuser2@example.com")
                 .phoneNumber("010-9876-5432")
                 .address("부산시 해운대구")
                 .build();
@@ -185,6 +187,7 @@ class UserRepositoryTest {
                 .password("password123!")
                 .name("다른사람")
                 .socialNumber("950505-1234567")
+                .email("duplicate@example.com")
                 .phoneNumber("010-5555-5555")
                 .address("대구시")
                 .build();
@@ -209,6 +212,7 @@ class UserRepositoryTest {
                     .password("password123!")
                     .name("사용자" + i)
                     .socialNumber(socialNumberPrefix + "-1234567")
+                    .email("testuser" + i + "@example.com")
                     .phoneNumber("010-1234-" + phoneNumberSuffix)
                     .address("주소" + i)
                     .build();
@@ -240,6 +244,7 @@ class UserRepositoryTest {
             .password("password123!")
             .name("중복테스트")
             .socialNumber("951010-1234567")
+            .email("duplicatetest@example.com")
             .phoneNumber("010-9999-9999")
             .address("중복테스트 주소")
             .build();
@@ -264,6 +269,7 @@ class UserRepositoryTest {
             .password("password123!")
             .name("케이스테스트")
             .socialNumber("941212-1234567")
+            .email("casetest@example.com")
             .phoneNumber("010-8888-8888")
             .address("케이스테스트 주소")
             .build();
@@ -287,6 +293,7 @@ class UserRepositoryTest {
             .password("password123!")
             .name("타임스탬프테스트")
             .socialNumber("931111-1234567")
+            .email("timestamp@example.com")
             .phoneNumber("010-7777-7777")
             .address("타임스탬프 테스트 주소")
             .build();
@@ -312,6 +319,7 @@ class UserRepositoryTest {
             .password("password123!")
             .name("업데이트테스트")
             .socialNumber("921212-1234567")
+            .email("update@example.com")
             .phoneNumber("010-6666-6666")
             .address("업데이트 테스트 주소")
             .build();
@@ -352,6 +360,7 @@ class UserRepositoryTest {
             .password("password123!")
             .name("김민수")
             .socialNumber("900101-1234567")
+            .email("korean1@example.com")
             .phoneNumber("010-1111-1111")
             .address("서울시")
             .build();
@@ -361,6 +370,7 @@ class UserRepositoryTest {
             .password("password123!")
             .name("김민지")
             .socialNumber("900102-1234567")
+            .email("korean2@example.com")
             .phoneNumber("010-2222-2222")
             .address("부산시")
             .build();

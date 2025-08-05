@@ -198,7 +198,7 @@
               "4.1"
             ],
             "details": "UserController 클래스 생성 및 @RestController, @RequestMapping 어노테이션 설정. POST /api/users/register 엔드포인트 구현. @Valid @RequestBody UserRegistrationDto 매개변수 설정. UserService 의존성 주입. 성공 시 201 Created 상태코드와 생성된 사용자 정보 반환. 비밀번호는 응답에서 제외 처리.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -209,7 +209,7 @@
               "4.2"
             ],
             "details": "UserService 클래스 생성 및 @Service 어노테이션 설정. registerUser() 메서드 구현: 사용자명 중복 체크, 주민등록번호 중복 체크, BCryptPasswordEncoder를 사용한 비밀번호 해싱. 중복 발견 시 DuplicateAccountException, DuplicateSocialNumberException 예외 발생. User 엔티티 생성 및 저장 로직 구현.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -219,8 +219,8 @@
             "dependencies": [
               "4.3"
             ],
-            "details": "UserRepository 인터페이스 생성 및 JpaRepository<User, Long> 상속. existsByUsername(String username) 메서드 정의: 사용자명 중복 체크용. existsBySocialNumber(String socialNumber) 메서드 정의: 주민등록번호 중복 체크용. findByUsername(String username) 메서드 정의: 로그인 시 사용할 사용자 조회용.",
-            "status": "pending",
+            "details": "UserRepository 인터페이스 생성 및 JpaRepository<User, Long> 상속. existsByUsername(String username) 메서드 정의: 사용자명 중복 체크용. existsBySocialNumber(String socialNumber) 메서드 정의: 주민등록번호 중복 체크용. findByUsername(String username) 메서드 정의: 로그인 시 사용할 사용자 조회용.\n<info added on 2025-08-05T05:26:35.753Z>\nUserRepositoryTest에서 17개의 포괄적인 테스트 메서드로 모든 레포지토리 기능을 검증 완료. 구현 및 테스트된 기능: 1) UserService 통합을 위한 existsByUsername, existsBySocialNumber 메서드, 2) 대소문자 구분 사용자명 검증 테스트, 3) 자동 생성 타임스탬프 기능 테스트, 4) 한글 이름 검색 정확도 테스트, 5) 적절한 타임스탬프 처리와 함께 엔티티 업데이트 시나리오, 6) 빈 결과 검색 검증, 7) 모든 레포지토리 레이어 기능이 완전히 테스트되고 검증됨. 포괄적인 테스트 커버리지로 레포지토리 레이어가 이제 프로덕션 준비 완료.\n</info added on 2025-08-05T05:26:35.753Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-05T04:28:04.791Z",
+      "updated": "2025-08-05T05:26:07.926Z",
       "description": "Tasks for master context"
     }
   }

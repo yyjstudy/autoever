@@ -66,7 +66,7 @@ class ApiResponseTest {
     void createdResponseTest() {
         // given
         UserResponseDto newUser = new UserResponseDto(1L, "newuser", "신규사용자", 
-                "951010-*******", "010-****-5678", "서울시 강남구", 
+                "951010-*******", "newuser@example.com", "010-****-5678", "서울시 강남구", 
                 LocalDateTime.now(), LocalDateTime.now());
         
         // when
