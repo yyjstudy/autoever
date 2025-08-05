@@ -1,5 +1,7 @@
 package com.autoever.member.config;
 
+import com.autoever.member.jwt.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,15 +14,20 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 /**
  * Spring Security 보안 설정 클래스
  * HTTP 보안, 인증, 권한 부여 및 보안 헤더 관리
+ * JWT와 Basic Authentication을 모두 지원하는 하이브리드 인증 시스템
  */
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+    
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      * BCrypt 패스워드 인코더 Bean 등록
@@ -77,17 +84,17 @@ public class SecurityConfig {
             
             // 경로별 권한 설정 및 접근 제어 구성
             .authorizeHttpRequests(auth -> auth
-                // 회원가입 API는 모든 사용자 접근 허용
-                .requestMatchers("/api/users/register").permitAll()
+                // 공개 접근 허용 경로
+                .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                 
                 // 관리자 전용 API는 ADMIN 권한 필요
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 
-                // Swagger UI 및 API 문서는 ADMIN 권한 필요 (보안 강화)
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").hasRole("ADMIN")
+                // Swagger UI 및 API 문서는 인증 필요
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").authenticated()
                 
-                // H2 콘솔은 ADMIN 권한 필요 (보안 강화)
-                .requestMatchers("/h2-console/**").hasRole("ADMIN")
+                // H2 콘솔은 인증 필요
+                .requestMatchers("/h2-console/**").authenticated()
                 
                 // 기타 모든 API 요청은 인증 필요
                 .requestMatchers("/api/**").authenticated()
@@ -99,21 +106,19 @@ public class SecurityConfig {
             // CSRF 비활성화 (REST API이므로 불필요)
             .csrf(csrf -> csrf.disable())
             
-            // 세션 관리: 브라우저는 세션 기반, API는 Basic Auth 사용
+            // 세션 관리: JWT 기반 무상태 인증을 위해 STATELESS 설정
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)  // 필요시 세션 생성
-                .maximumSessions(1)  // 동시 세션 1개로 제한
-                .maxSessionsPreventsLogin(false)  // 새 로그인 시 기존 세션 만료
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // JWT 기반 무상태 인증
             )
             
-            // Basic Authentication 활성화
+            // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            
+            // Basic Authentication 활성화 (관리자 접근용)
             .httpBasic(httpBasic -> {})  // 기본 HTTP Basic 인증 활성화
             
-            // 폼 로그인 활성화 (브라우저 접근용)
-            .formLogin(formLogin -> formLogin
-                .defaultSuccessUrl("/swagger-ui/index.html", true)  // 로그인 성공 시 Swagger UI로 리다이렉트
-                .permitAll()
-            );
+            // 폼 로그인 비활성화 (JWT 기반 API이므로 불필요)
+            .formLogin(formLogin -> formLogin.disable());
 
         return http.build();
     }
