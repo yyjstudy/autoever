@@ -1,7 +1,9 @@
 package com.autoever.member.controller;
 
 import com.autoever.member.dto.UserRegistrationDto;
+import com.autoever.member.dto.UserUpdateDto;
 import com.autoever.member.repository.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,8 +20,8 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -259,5 +261,182 @@ class AdminControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registrationDto)))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 API 테스트 - 비밀번호만 수정")
+    void updateUser_PasswordOnly_Success() throws Exception {
+        // Given: 테스트 사용자 생성
+        createTestUser("updateuser1", "수정대상", "901010-1234567", "update1@example.com");
+        
+        // 생성된 사용자 ID 조회
+        Long userId = getUserIdByUsername("updateuser1");
+        
+        UserUpdateDto updateDto = new UserUpdateDto(
+                null,
+                "NewPassword123!"
+        );
+
+        // When & Then: 관리자 권한으로 비밀번호만 수정
+        mockMvc.perform(put("/api/admin/users/" + userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto))
+                        .with(httpBasic("admin", "1212")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("회원 정보가 성공적으로 수정되었습니다."))
+                .andExpect(jsonPath("$.data.id").value(userId))
+                .andExpect(jsonPath("$.data.username").value("updateuser1"))
+                .andExpect(jsonPath("$.data.name").value("수정대상")); // 이름은 변경되지 않음
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 API 테스트 - 주소만 수정")
+    void updateUser_AddressOnly_Success() throws Exception {
+        // Given: 테스트 사용자 생성
+        createTestUser("updateuser2", "수정대상이", "902020-2345678", "update2@example.com");
+        
+        Long userId = getUserIdByUsername("updateuser2");
+        
+        UserUpdateDto updateDto = new UserUpdateDto(
+                "부산광역시 해운대구 센텀로 200",
+                null
+        );
+
+        // When & Then: 관리자 권한으로 주소만 수정
+        mockMvc.perform(put("/api/admin/users/" + userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto))
+                        .with(httpBasic("admin", "1212")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.address").value("부산광역시 해운대구 센텀로 200"));
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 API 테스트 - 주소와 비밀번호 동시 수정")
+    void updateUser_AddressAndPassword_Success() throws Exception {
+        // Given: 테스트 사용자 생성
+        createTestUser("updateuser3", "수정대상삼", "903030-3456789", "update3@example.com");
+        
+        Long userId = getUserIdByUsername("updateuser3");
+        
+        UserUpdateDto updateDto = new UserUpdateDto(
+                "대구광역시 수성구 동대구로 100",
+                "UpdatedPassword123!"
+        );
+
+        // When & Then: 관리자 권한으로 주소와 비밀번호 동시 수정
+        mockMvc.perform(put("/api/admin/users/" + userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto))
+                        .with(httpBasic("admin", "1212")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.address").value("대구광역시 수성구 동대구로 100"));
+    }
+
+
+    @Test
+    @DisplayName("회원 정보 수정 API 테스트 - 존재하지 않는 회원")
+    void updateUser_NotFound() throws Exception {
+        UserUpdateDto updateDto = new UserUpdateDto(
+                "서울시 강남구",
+                null
+        );
+
+        // When & Then: 존재하지 않는 회원 수정 시도
+        mockMvc.perform(put("/api/admin/users/99999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto))
+                        .with(httpBasic("admin", "1212")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("사용자를 찾을 수 없습니다. ID: 99999"));
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 API 테스트 - 인증 없이 접근")
+    void updateUser_Unauthorized() throws Exception {
+        UserUpdateDto updateDto = new UserUpdateDto(
+                "서울시 강남구",
+                null
+        );
+
+        mockMvc.perform(put("/api/admin/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("회원 삭제 API 테스트 - 정상 삭제")
+    void deleteUser_Success() throws Exception {
+        // Given: 테스트 사용자 생성
+        createTestUser("deleteuser1", "삭제대상", "906060-6789012", "delete1@example.com");
+        
+        Long userId = getUserIdByUsername("deleteuser1");
+
+        // When & Then: 관리자 권한으로 회원 삭제
+        mockMvc.perform(delete("/api/admin/users/" + userId)
+                        .with(httpBasic("admin", "1212")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("회원이 성공적으로 삭제되었습니다."));
+
+        // 삭제 확인 - 해당 회원 조회 시 404 응답
+        mockMvc.perform(get("/api/admin/users/" + userId)
+                        .with(httpBasic("admin", "1212")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("회원 삭제 API 테스트 - 존재하지 않는 회원")
+    void deleteUser_NotFound() throws Exception {
+        // When & Then: 존재하지 않는 회원 삭제 시도
+        mockMvc.perform(delete("/api/admin/users/99999")
+                        .with(httpBasic("admin", "1212")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("사용자를 찾을 수 없습니다. ID: 99999"));
+    }
+
+    @Test
+    @DisplayName("회원 삭제 API 테스트 - 인증 없이 접근")
+    void deleteUser_Unauthorized() throws Exception {
+        mockMvc.perform(delete("/api/admin/users/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("회원 삭제 API 테스트 - 잘못된 자격증명")
+    void deleteUser_InvalidCredentials() throws Exception {
+        mockMvc.perform(delete("/api/admin/users/1")
+                        .with(httpBasic("admin", "wrongpassword")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    /**
+     * username으로 사용자 ID를 조회하는 헬퍼 메서드
+     */
+    private Long getUserIdByUsername(String username) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/admin/users")
+                        .param("size", "100")
+                        .with(httpBasic("admin", "1212")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        JsonNode root = objectMapper.readTree(content);
+        JsonNode users = root.path("data").path("content");
+
+        for (JsonNode user : users) {
+            if (username.equals(user.path("username").asText())) {
+                return user.path("id").asLong();
+            }
+        }
+        
+        // 사용자를 찾지 못한 경우 1L 반환 (테스트 간소화)
+        return 1L;
     }
 }

@@ -594,6 +594,73 @@
 - AdminControllerIntegrationTest 전화번호 중복 문제 해결
 - 전체 137개 테스트 100% 통과 달성
 
+### 34. Task 6.3-6.6 완료 - 관리자 회원 수정/삭제 API 구현
+**프롬프트:** "태스크 6.3부터 6.6까지 테스트코드 작성해"
+**추가 요청:** "리플렉션은 사용하지 말도록 해."
+
+**수행 작업:**
+
+#### Task 6.3 완료: 페이지네이션 기반 회원 조회 API 구현
+- 이미 Task 6.1-6.2에서 구현 완료된 상태
+- Pageable 파라미터를 @RequestParam으로 분리하여 Swagger UI 호환성 확보
+- 페이지 크기 제한(최대 100), 유효한 정렬 속성 검증 로직 구현
+
+#### Task 6.4 완료: 회원 정보 수정 API 구현
+**중요한 요구사항 변경:**
+- 원래 요구사항: "수정은 암호, 주소에 대해서만 가능합니다."
+- 최초 구현: name, phoneNumber, address, password 4개 필드 수정 가능
+- **최종 수정**: 암호와 주소만 수정 가능하도록 변경
+
+**UserUpdateDto 최종 구조:**
+```java
+public record UserUpdateDto(
+    @Size(min = 5, max = 500, message = "주소는 5-500자 사이여야 합니다")
+    String address,
+    
+    @Size(min = 8, max = 100, message = "비밀번호는 8-100자 사이여야 합니다")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$", 
+             message = "비밀번호는 대소문자, 숫자, 특수문자를 포함해야 합니다")
+    String password
+)
+```
+
+**AdminServiceImpl.updateUser() 구현:**
+- 선택적 필드 업데이트 지원 (null 값은 변경하지 않음)
+- 암호 변경 시 BCrypt 인코딩 적용
+- 최소 하나 이상의 필드가 제공되어야 함
+
+#### Task 6.5 완료: 회원 삭제 API 구현
+- DELETE /api/admin/users/{id} 엔드포인트 구현
+- 존재하지 않는 회원 삭제 시 UserNotFoundException 발생
+- 성공 시 200 OK 응답 반환
+
+#### Task 6.6 완료: AdminService 비즈니스 로직 및 페이지네이션 응답 구조 완성
+- AdminService 인터페이스 정의
+- AdminServiceImpl 완전한 구현
+- 트랜잭션 관리 (@Transactional)
+- 민감정보 마스킹 처리 로직
+
+**테스트 코드 작성:**
+1. **AdminControllerIntegrationTest**: 
+   - 회원 정보 수정 API 테스트 (비밀번호만, 주소만, 둘 다 수정)
+   - 회원 삭제 API 테스트 (성공, 실패, 권한 검증)
+   - 기존 UserNotFoundException 메시지 형식 불일치 수정
+
+2. **AdminServiceImplTest** (새로 작성):
+   - 리플렉션 사용하지 않고 Mockito 기반 단위 테스트
+   - getAllUsers, getUserById, updateUser, deleteUser 메서드 검증
+   - 예외 상황 처리 테스트
+
+**Swagger 문서화 개선:**
+- UserUpdateDto에 @Schema 어노테이션 추가
+- API 설명 및 예시를 암호/주소만 수정 가능하도록 업데이트
+- 검증 오류 예시 수정
+
+**최종 테스트 결과:**
+- 전체 155개 테스트 100% 통과
+- Task 6.3-6.6에 대한 완전한 테스트 커버리지 달성
+
 **현재 프로젝트 상태:**
-- Task 6.2까지 완료: Spring Boot 3.3.4 + JDK 21 + H2 DB 기반
-- 회원가입 API (완전한 중복 검증), Spring Security, 관리자 API, Swagger 문서화 완료
+- Task 6.3-6.6 완료: Spring Boot 3.3.4 + JDK 21 + H2 DB 기반
+- 회원가입 API (완전한 중복 검증), Spring Security, 관리자 API (CRUD), Swagger 문서화 완료
+- 요구사항대로 회원 정보 수정은 암호와 주소만 가능

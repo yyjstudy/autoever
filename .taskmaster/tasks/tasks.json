@@ -302,7 +302,7 @@
         "dependencies": [
           5
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -310,7 +310,7 @@
             "description": "관리자 회원 관리를 위한 AdminController 클래스를 생성하고 기본 구조와 보안 설정을 구현합니다.",
             "dependencies": [],
             "details": "@RestController, @RequestMapping(\"/api/admin\") 어노테이션 추가. @PreAuthorize(\"hasRole('ADMIN')\") 보안 설정. 기본 생성자 및 AdminService 의존성 주입 설정. 컨트롤러 레벨 예외 처리 준비.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -319,7 +319,7 @@
             "description": "회원 정보 수정을 위한 DTO 클래스를 생성하고 선택적 업데이트를 위한 검증 로직을 구현합니다.",
             "dependencies": [],
             "details": "password, address 필드를 Optional로 설정. @Valid 검증 어노테이션 추가. 암호 패턴 검증 (@Pattern). 주소 길이 제한 검증. null 체크 및 빈 문자열 처리 로직.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-05T06:25:56.875Z",
+      "updated": "2025-08-05T09:39:13.035Z",
       "description": "Tasks for master context"
     }
   }

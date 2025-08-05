@@ -68,6 +68,7 @@ public class User {
     
     public void updatePassword(String newPassword) {
         this.password = newPassword;
+        this.updatedAt = LocalDateTime.now();
     }
     
     public void updateProfile(String name, String phoneNumber, String address) {
@@ -91,4 +92,31 @@ public class User {
         }
         return phoneNumber.substring(0, 3) + "-****-" + phoneNumber.substring(9);
     }
+    
+    // === 업데이트 메서드들 ===
+    
+    /**
+     * 이름 업데이트
+     */
+    public void updateName(String name) {
+        this.name = name;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    /**
+     * 전화번호 업데이트
+     */
+    public void updatePhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    /**
+     * 주소 업데이트
+     */
+    public void updateAddress(String address) {
+        this.address = address;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
 }

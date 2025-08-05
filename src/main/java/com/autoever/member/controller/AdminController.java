@@ -2,6 +2,7 @@ package com.autoever.member.controller;
 
 import com.autoever.member.dto.ApiResponse;
 import com.autoever.member.dto.UserResponseDto;
+import com.autoever.member.dto.UserUpdateDto;
 import com.autoever.member.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -304,6 +306,273 @@ public class AdminController {
         ApiResponse<UserResponseDto> response = ApiResponse.success(
             "회원 정보 조회가 완료되었습니다.", 
             user
+        );
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 회원 정보 수정 API
+     * 
+     * @param id 수정할 회원의 ID
+     * @param updateDto 수정할 정보 (선택적 필드)
+     * @return 수정된 회원 정보
+     */
+    @PutMapping("/users/{id}")
+    @Operation(
+        summary = "회원 정보 수정",
+        description = """
+            관리자 권한으로 특정 회원의 정보를 수정합니다.
+            
+            **수정 가능한 필드**:
+            - 주소 (address)
+            - 비밀번호 (password)
+            
+            **참고사항**:
+            - null인 필드는 수정하지 않습니다
+            - 최소 하나 이상의 필드가 제공되어야 합니다
+            - 주소만, 비밀번호만, 또는 둘 다 수정 가능합니다
+            """,
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "수정할 회원 정보 (암호/주소만 수정 가능)",
+            required = true,
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UserUpdateDto.class),
+                examples = {
+                    @ExampleObject(
+                        name = "비밀번호만 수정",
+                        description = "비밀번호만 변경하는 경우",
+                        value = """
+                            {
+                              "address": null,
+                              "password": "NewPassword123!"
+                            }
+                            """
+                    ),
+                    @ExampleObject(
+                        name = "주소만 수정",
+                        description = "주소만 변경하는 경우",
+                        value = """
+                            {
+                              "address": "부산광역시 해운대구 센텀로 200",
+                              "password": null
+                            }
+                            """
+                    ),
+                    @ExampleObject(
+                        name = "주소와 비밀번호 동시 수정",
+                        description = "주소와 비밀번호를 모두 수정하는 경우",
+                        value = """
+                            {
+                              "address": "대구광역시 수성구 동대구로 100",
+                              "password": "UpdatedPassword123!"
+                            }
+                            """
+                    )
+                }
+            )
+        )
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "회원 정보 수정 성공",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiResponse.class),
+                examples = @ExampleObject(
+                    name = "성공 응답 예시",
+                    value = """
+                        {
+                          "success": true,
+                          "message": "회원 정보가 성공적으로 수정되었습니다.",
+                          "data": {
+                            "id": 1,
+                            "username": "testuser123",
+                            "name": "홍길동",
+                            "socialNumber": "901201-*******",
+                            "email": "test@example.com",
+                            "phoneNumber": "010-****-5678",
+                            "address": "대구광역시 수성구 동대구로 100"
+                          },
+                          "timestamp": "2025-08-05 15:30:45"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "잘못된 요청 데이터",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "검증 오류 예시",
+                    value = """
+                        {
+                          "success": false,
+                          "message": "입력 값이 올바르지 않습니다.",
+                          "data": {
+                            "address": "주소는 5-500자 사이여야 합니다",
+                            "password": "비밀번호는 대소문자, 숫자, 특수문자를 포함해야 합니다"
+                          },
+                          "timestamp": "2025-08-05 15:30:45"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "회원을 찾을 수 없음",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "회원 없음 예시",
+                    value = """
+                        {
+                          "success": false,
+                          "message": "ID가 999인 사용자를 찾을 수 없습니다.",
+                          "data": null,
+                          "timestamp": "2025-08-05 15:30:45"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "409",
+            description = "중복 데이터로 인한 수정 실패 (현재 더 이상 사용되지 않음)",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "예시",
+                    value = """
+                        {
+                          "success": false,
+                          "message": "오류 메시지",
+                          "data": null,
+                          "timestamp": "2025-08-05 15:30:45"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 - 로그인 필요"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403",
+            description = "권한 부족 - 관리자 권한 필요"
+        )
+    })
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
+            @Parameter(description = "수정할 회원의 ID", required = true, example = "1")
+            @PathVariable Long id,
+            @Valid @RequestBody UserUpdateDto updateDto) {
+        
+        log.info("관리자 회원 정보 수정 요청: userId={}, updateFields={}", 
+            id, getUpdateFields(updateDto));
+        
+        UserResponseDto updatedUser = adminService.updateUser(id, updateDto);
+        
+        log.info("관리자 회원 정보 수정 완료: userId={}, username={}", 
+            updatedUser.id(), updatedUser.username());
+        
+        ApiResponse<UserResponseDto> response = ApiResponse.success(
+            "회원 정보가 성공적으로 수정되었습니다.", 
+            updatedUser
+        );
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 업데이트할 필드 목록을 문자열로 반환 (로깅용)
+     */
+    private String getUpdateFields(UserUpdateDto updateDto) {
+        StringBuilder fields = new StringBuilder();
+        if (updateDto.hasAddress()) fields.append("address,");
+        if (updateDto.hasPassword()) fields.append("password,");
+        
+        return fields.length() > 0 
+            ? fields.substring(0, fields.length() - 1) 
+            : "none";
+    }
+
+    /**
+     * 회원 삭제 API
+     * 
+     * @param id 삭제할 회원의 ID
+     * @return 삭제 완료 메시지
+     */
+    @DeleteMapping("/users/{id}")
+    @Operation(
+        summary = "회원 삭제",
+        description = "관리자 권한으로 특정 회원을 시스템에서 완전히 삭제합니다. 이 작업은 되돌릴 수 없습니다."
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "회원 삭제 성공",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiResponse.class),
+                examples = @ExampleObject(
+                    name = "성공 응답 예시",
+                    value = """
+                        {
+                          "success": true,
+                          "message": "회원이 성공적으로 삭제되었습니다.",
+                          "data": null,
+                          "timestamp": "2025-08-05 15:30:45"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "회원을 찾을 수 없음",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "회원 없음 예시",
+                    value = """
+                        {
+                          "success": false,
+                          "message": "ID가 999인 사용자를 찾을 수 없습니다.",
+                          "data": null,
+                          "timestamp": "2025-08-05 15:30:45"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 - 로그인 필요"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403",
+            description = "권한 부족 - 관리자 권한 필요"
+        )
+    })
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
+            @Parameter(description = "삭제할 회원의 ID", required = true, example = "1")
+            @PathVariable Long id) {
+        
+        log.info("관리자 회원 삭제 요청: userId={}", id);
+        
+        adminService.deleteUser(id);
+        
+        log.info("관리자 회원 삭제 완료: userId={}", id);
+        
+        ApiResponse<Void> response = ApiResponse.success(
+            "회원이 성공적으로 삭제되었습니다.", 
+            null
         );
         
         return ResponseEntity.ok(response);

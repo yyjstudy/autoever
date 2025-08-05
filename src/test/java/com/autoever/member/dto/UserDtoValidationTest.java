@@ -142,7 +142,7 @@ class UserDtoValidationTest {
     @DisplayName("UserUpdateDto 유효한 데이터 검증 테스트")
     void userUpdateDtoValidDataTest() {
         // given
-        UserUpdateDto dto = new UserUpdateDto("김철수", "010-9876-5432", "부산시 해운대구 센텀로 456");
+        UserUpdateDto dto = new UserUpdateDto("부산시 해운대구 센텀로 456", null);
 
         // when
         Set<ConstraintViolation<UserUpdateDto>> violations = validator.validate(dto);

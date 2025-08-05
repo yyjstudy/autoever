@@ -1,19 +1,46 @@
 package com.autoever.member.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 회원 정보 수정 요청 DTO
+ * - 암호만 수정
+ * - 주소만 수정  
+ * - 암호와 주소 동시 수정
+ * null 값은 해당 필드를 업데이트하지 않음을 의미합니다.
+ */
+@Schema(description = "회원 정보 수정 요청 DTO - 주소와 비밀번호만 수정 가능")
 public record UserUpdateDto(
-    @NotBlank(message = "이름은 필수입니다")
-    @Size(max = 100, message = "이름은 100자를 초과할 수 없습니다")
-    String name,
+    @Schema(description = "변경할 주소 (null인 경우 변경하지 않음)", example = "서울특별시 강남구 테헤란로 123", nullable = true)
+    @Size(min = 5, max = 500, message = "주소는 5-500자 사이여야 합니다")
+    String address,
     
-    @NotBlank(message = "전화번호는 필수입니다")
-    @Pattern(regexp = "^\\d{3}-\\d{4}-\\d{4}$", message = "전화번호 형식이 올바르지 않습니다 (XXX-XXXX-XXXX)")
-    String phoneNumber,
+    @Schema(description = "변경할 비밀번호 (null인 경우 변경하지 않음)", example = "NewPassword123!", nullable = true)
+    @Size(min = 8, max = 100, message = "비밀번호는 8-100자 사이여야 합니다")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$", 
+             message = "비밀번호는 대소문자, 숫자, 특수문자를 포함해야 합니다")
+    String password
+) {
+    /**
+     * 주소 업데이트 여부 확인
+     */
+    public boolean hasAddress() {
+        return address != null && !address.trim().isEmpty();
+    }
     
-    @NotBlank(message = "주소는 필수입니다")
-    @Size(max = 500, message = "주소는 500자를 초과할 수 없습니다")
-    String address
-) {}
+    /**
+     * 비밀번호 업데이트 여부 확인
+     */
+    public boolean hasPassword() {
+        return password != null && !password.trim().isEmpty();
+    }
+    
+    /**
+     * 업데이트할 필드가 있는지 확인
+     */
+    public boolean hasAnyUpdate() {
+        return hasAddress() || hasPassword();
+    }
+}
