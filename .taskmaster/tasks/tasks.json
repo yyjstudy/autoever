@@ -179,7 +179,7 @@
         "dependencies": [
           3
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -231,7 +231,7 @@
               "4.4"
             ],
             "details": "성공 응답: 201 Created, ApiResponse<UserResponseDto> 형태로 반환. 실패 응답: 400 Bad Request (validation 실패), 409 Conflict (중복 데이터). UserControllerTest 작성: 정상 회원가입, 사용자명 중복, 주민등록번호 중복, validation 실패 테스트. UserServiceTest 작성: 비즈니스 로직 단위 테스트. @WebMvcTest, @MockBean 사용한 통합 테스트.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -246,7 +246,7 @@
         "dependencies": [
           4
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -254,7 +254,7 @@
             "description": "Spring Security의 핵심 설정을 담당하는 SecurityConfig 클래스를 생성하고 기본적인 보안 설정을 구성합니다.",
             "dependencies": [],
             "details": "@Configuration, @EnableWebSecurity 어노테이션을 사용하여 SecurityConfig 클래스 생성. WebSecurityConfigurerAdapter를 상속받아 configure(HttpSecurity http) 메서드 오버라이드. HttpSecurity 기본 설정: 보안 헤더, 프레임 옵션, 컨텐츠 타입 옵션 등 기본 보안 설정 적용. Spring Security 필터체인 구성을 위한 기반 코드 작성.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -265,7 +265,7 @@
               "5.1"
             ],
             "details": "httpBasic() 메서드를 사용하여 Basic Authentication 활성화. configure(AuthenticationManagerBuilder auth) 메서드 오버라이드하여 인메모리 사용자 설정. 관리자 계정 생성: username='admin', password='1212', roles='ADMIN'. inMemoryAuthentication() 사용하여 메모리 기반 사용자 저장소 구성. 패스워드 인코딩 적용.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -276,7 +276,7 @@
               "5.1"
             ],
             "details": "authorizeRequests() 메서드를 사용하여 경로별 권한 설정. /api/admin/** 경로에 대해 hasRole('ADMIN') 권한 요구. /api/users/register 경로에 대해 permitAll() 설정으로 모든 사용자 접근 허용. 기타 /api/** 경로에 대한 기본 인증 요구 설정. antMatchers() 사용하여 URL 패턴 매칭 및 권한 부여.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -287,7 +287,7 @@
               "5.2"
             ],
             "details": "csrf().disable() 설정으로 CSRF 보호 비활성화 (REST API용). sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) 설정으로 세션 사용하지 않도록 구성. @Bean 어노테이션을 사용하여 PasswordEncoder 빈 등록 (BCryptPasswordEncoder 사용). 패스워드 인코딩 강도 설정 및 보안 정책 적용.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-05T05:26:07.926Z",
+      "updated": "2025-08-05T06:25:56.875Z",
       "description": "Tasks for master context"
     }
   }
