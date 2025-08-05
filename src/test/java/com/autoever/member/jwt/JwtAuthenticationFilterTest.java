@@ -33,6 +33,9 @@ class JwtAuthenticationFilterTest {
     private JwtProperties jwtProperties;
 
     @Mock
+    private TokenBlacklistService tokenBlacklistService;
+
+    @Mock
     private HttpServletRequest request;
 
     @Mock
@@ -61,6 +64,7 @@ class JwtAuthenticationFilterTest {
         // Given
         when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn(BEARER_TOKEN);
         when(jwtUtil.extractTokenFromHeader(BEARER_TOKEN)).thenReturn(VALID_TOKEN);
+        when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(false);
         when(jwtUtil.validateToken(VALID_TOKEN)).thenReturn(true);
         when(jwtUtil.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
 
@@ -83,6 +87,7 @@ class JwtAuthenticationFilterTest {
         // Given
         when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn("Bearer " + INVALID_TOKEN);
         when(jwtUtil.extractTokenFromHeader("Bearer " + INVALID_TOKEN)).thenReturn(INVALID_TOKEN);
+        when(tokenBlacklistService.isBlacklisted(INVALID_TOKEN)).thenReturn(false);
         when(jwtUtil.validateToken(INVALID_TOKEN)).thenReturn(false);
 
         // When
@@ -253,5 +258,25 @@ class JwtAuthenticationFilterTest {
 
         // Then
         assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("블랙리스트에 등록된 토큰으로 인증 실패")
+    void doFilterInternal_BlacklistedToken_NoAuthentication() throws ServletException, IOException {
+        // Given
+        when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn(BEARER_TOKEN);
+        when(jwtUtil.extractTokenFromHeader(BEARER_TOKEN)).thenReturn(VALID_TOKEN);
+        when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(true);
+
+        // When
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Then
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(authentication).isNull();
+
+        verify(filterChain).doFilter(request, response);
+        verify(jwtUtil, never()).validateToken(any());
+        verify(jwtUtil, never()).extractUsername(any());
     }
 }

@@ -20,6 +20,7 @@ import java.util.List;
 /**
  * JWT 토큰을 검증하고 Spring Security Context에 인증 정보를 설정하는 필터
  * HTTP 요청의 Authorization 헤더에서 JWT 토큰을 추출하여 유효성을 검증
+ * 토큰 블랙리스트 체크 및 고급 보안 기능 제공
  */
 @Slf4j
 @Component
@@ -28,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     private final JwtUtil jwtUtil;
     private final JwtProperties jwtProperties;
+    private final TokenBlacklistService tokenBlacklistService;
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, 
@@ -37,11 +39,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = extractTokenFromRequest(request);
             
-            if (token != null && jwtUtil.validateToken(token)) {
+            if (token != null && isValidToken(token)) {
                 setAuthentication(token);
                 log.debug("JWT 토큰 인증 성공: {}", jwtUtil.extractUsername(token));
             } else if (token != null) {
-                log.debug("유효하지 않은 JWT 토큰");
+                log.debug("유효하지 않은 JWT 토큰 또는 블랙리스트에 등록된 토큰");
             }
         } catch (Exception e) {
             log.error("JWT 토큰 처리 중 오류 발생: {}", e.getMessage());
@@ -61,6 +63,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String extractTokenFromRequest(HttpServletRequest request) {
         String authorizationHeader = request.getHeader(JwtProperties.HEADER_STRING);
         return jwtUtil.extractTokenFromHeader(authorizationHeader);
+    }
+    
+    /**
+     * JWT 토큰의 유효성과 블랙리스트 상태를 종합적으로 검증
+     * 
+     * @param token 검증할 JWT 토큰
+     * @return 토큰이 유효하고 블랙리스트에 없으면 true
+     */
+    private boolean isValidToken(String token) {
+        // 1. 블랙리스트 체크
+        if (tokenBlacklistService.isBlacklisted(token)) {
+            log.warn("블랙리스트에 등록된 토큰 사용 시도 감지");
+            return false;
+        }
+        
+        // 2. JWT 토큰 유효성 검증
+        return jwtUtil.validateToken(token);
     }
     
     /**

@@ -237,6 +237,31 @@ public class GlobalExceptionHandler {
         ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
         return ResponseEntity.status(ex.getHttpStatus()).body(response);
     }
+    
+    /**
+     * JJWT 라이브러리 예외 처리 (고급 JWT 예외 처리)
+     */
+    @ExceptionHandler(io.jsonwebtoken.JwtException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJjwtException(io.jsonwebtoken.JwtException ex) {
+        log.warn("JJWT library exception: {}", ex.getMessage());
+        
+        String message = "토큰 처리 중 오류가 발생했습니다.";
+        
+        if (ex instanceof io.jsonwebtoken.ExpiredJwtException) {
+            message = "토큰이 만료되었습니다. 다시 로그인해 주세요.";
+        } else if (ex instanceof io.jsonwebtoken.MalformedJwtException) {
+            message = "잘못된 형식의 토큰입니다.";
+        } else if (ex instanceof io.jsonwebtoken.UnsupportedJwtException) {
+            message = "지원하지 않는 토큰 형식입니다.";
+        } else if (ex instanceof io.jsonwebtoken.security.SignatureException) {
+            message = "토큰 서명이 유효하지 않습니다.";
+        } else if (ex instanceof io.jsonwebtoken.PrematureJwtException) {
+            message = "토큰이 아직 유효하지 않습니다.";
+        }
+        
+        ApiResponse<Object> response = ApiResponse.error(message);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
 
     /**
      * 지원하지 않는 HTTP 메서드 예외 처리
