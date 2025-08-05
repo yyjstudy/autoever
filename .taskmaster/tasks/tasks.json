@@ -124,7 +124,7 @@
         "dependencies": [
           2
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -153,7 +153,7 @@
               "3.2"
             ],
             "details": "GlobalExceptionHandler 클래스 생성. @RestControllerAdvice 어노테이션 적용. 각 커스텀 예외별 @ExceptionHandler 메서드 구현. 일반적인 예외(Exception, RuntimeException) 처리 핸들러. 예외 발생 시 적절한 HTTP 상태 코드와 ApiResponse 형태로 응답 반환. 로깅 처리 추가.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -164,7 +164,7 @@
               "3.3"
             ],
             "details": "@Valid 검증 실패 시 MethodArgumentNotValidException 처리. BindingResult에서 필드별 에러 메시지 추출하여 상세한 에러 응답 생성. 400(잘못된 요청), 401(인증 실패), 403(권한 없음), 404(리소스 없음), 409(중복), 500(서버 오류) 상태 코드 매핑. 각 HTTP 상태별 표준 에러 메시지 정의. 개발/운영 환경별 에러 메시지 상세도 조정.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-05T02:47:33.557Z",
+      "updated": "2025-08-05T03:43:17.086Z",
       "description": "Tasks for master context"
     }
   }
