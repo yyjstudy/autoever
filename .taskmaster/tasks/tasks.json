@@ -68,7 +68,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -76,7 +76,7 @@
             "description": "H2 인메모리 데이터베이스 또는 MySQL/PostgreSQL 연결을 위한 데이터베이스 설정을 구성합니다.",
             "dependencies": [],
             "details": "application.yml 또는 application.properties에서 데이터베이스 연결 설정 구성. H2 인메모리 데이터베이스를 기본으로 설정하고 MySQL/PostgreSQL 대안 제공. JPA/Hibernate 설정 추가: ddl-auto, show-sql, format-sql 등. 데이터베이스 드라이버 의존성 추가 (H2, MySQL Connector, PostgreSQL). 데이터베이스 연결 풀 설정 (HikariCP).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-04T13:32:29.981Z",
+      "updated": "2025-08-04T13:55:38.696Z",
       "description": "Tasks for master context"
     }
   }

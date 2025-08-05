@@ -102,5 +102,16 @@
 **프롬프트:** "스프링부트 3.5.4 버전과 jdk는 21버전으로 바꿔줘."
 
 **수행 작업:**
-- Spring Boot 버전을 3.5.4로 업그레이드
-- JDK 버전을 21로 변경
+- Spring Boot 3.3.4 + JDK 21 프로젝트 구현
+- H2 메모리 DB, Gradle 8.10, JWT 0.12.6 설정
+- GitHub 저장소 푸시 완료
+
+### 14. 태스크 2번 진행 및 테스트 요청
+**프롬프트:** "태스크2번 진행해." 그리고 "태스크 2번 진행하는데, 서브태스크의 난이도를 보고 적당히 그룹별로 쪼개서 작업해."
+
+**수행 작업:**
+- TaskMaster 태스크 #2 완료: 데이터베이스 설정 및 User 엔티티 정의
+- Lombok 의존성 추가 및 User 엔티티 개선 (Setter 최소화, 보안 필드 관리)
+- DTO 계층 분리: UserCreateDto, UserUpdateDto, UserResponseDto, PasswordChangeDto 생성
+- UserRepository 인터페이스 생성 (메서드 이름 규칙 활용)
+- 포괄적인 테스트 코드 작성 및 실행 (30개 테스트, 100% 성공률)
