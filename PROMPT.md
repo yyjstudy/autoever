@@ -134,3 +134,13 @@
 - HTTP 상태별 static factory 메서드 구현 (success, error, created, notFound 등)
 - JSON 직렬화 지원 및 timestamp 자동 추가
 - 포괄적인 테스트 작성 및 실행 (16개 테스트, 100% 성공률)
+
+### 17. Task 3.2 진행 요청 - 커스텀 예외 클래스 정의
+**프롬프트:** "3.1 작업과 마찬가지로 3.2 작업 진행해줘."
+
+**수행 작업:**
+- Task 3.2 완료: 커스텀 예외 클래스들 정의
+- BaseCustomException 추상 기본 클래스 생성 (HTTP 상태 코드 및 에러 코드 지원)
+- 7개 비즈니스 예외 클래스 구현 (DuplicateAccountException, DuplicateSocialNumberException, UserNotFoundException, InvalidCredentialsException, AccessDeniedException, BusinessLogicException, InvalidRequestException)
+- HTTP 상태 코드 매핑 (400, 401, 403, 404, 409)
+- 정적 팩토리 메서드 및 포괄적인 테스트 (21개 테스트, 100% 성공률)
