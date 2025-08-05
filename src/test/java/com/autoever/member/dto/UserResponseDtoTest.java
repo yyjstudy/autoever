@@ -22,14 +22,14 @@ class UserResponseDtoTest {
                 .build();
 
         // when
-        UserResponseDto responseDto = new UserResponseDto(user);
+        UserResponseDto responseDto = UserResponseDto.from(user);
 
         // then
-        assertThat(responseDto.getUsername()).isEqualTo("testuser");
-        assertThat(responseDto.getName()).isEqualTo("홍길동");
-        assertThat(responseDto.getSocialNumber()).isEqualTo("901201-*******"); // 마스킹된 주민번호
-        assertThat(responseDto.getPhoneNumber()).isEqualTo("010-****-5678"); // 마스킹된 전화번호
-        assertThat(responseDto.getAddress()).isEqualTo("서울시 강남구 테헤란로 123");
+        assertThat(responseDto.username()).isEqualTo("testuser");
+        assertThat(responseDto.name()).isEqualTo("홍길동");
+        assertThat(responseDto.socialNumber()).isEqualTo("901201-*******"); // 마스킹된 주민번호
+        assertThat(responseDto.phoneNumber()).isEqualTo("010-****-5678"); // 마스킹된 전화번호
+        assertThat(responseDto.address()).isEqualTo("서울시 강남구 테헤란로 123");
     }
 
     @Test
@@ -49,11 +49,11 @@ class UserResponseDtoTest {
         UserResponseDto responseDto = UserResponseDto.from(user);
 
         // then
-        assertThat(responseDto.getUsername()).isEqualTo("testuser2");
-        assertThat(responseDto.getName()).isEqualTo("김철수");
-        assertThat(responseDto.getSocialNumber()).isEqualTo("890101-*******");
-        assertThat(responseDto.getPhoneNumber()).isEqualTo("010-****-5432");
-        assertThat(responseDto.getAddress()).isEqualTo("부산시 해운대구");
+        assertThat(responseDto.username()).isEqualTo("testuser2");
+        assertThat(responseDto.name()).isEqualTo("김철수");
+        assertThat(responseDto.socialNumber()).isEqualTo("890101-*******");
+        assertThat(responseDto.phoneNumber()).isEqualTo("010-****-5432");
+        assertThat(responseDto.address()).isEqualTo("부산시 해운대구");
     }
 
     @Test
@@ -77,11 +77,11 @@ class UserResponseDtoTest {
         assertThat(responseDto.toString()).doesNotContain("verySensitivePassword123!");
         
         // 주민번호와 전화번호는 마스킹됨
-        assertThat(responseDto.getSocialNumber()).isNotEqualTo("951010-1234567");
-        assertThat(responseDto.getPhoneNumber()).isNotEqualTo("010-5555-1234");
+        assertThat(responseDto.socialNumber()).isNotEqualTo("951010-1234567");
+        assertThat(responseDto.phoneNumber()).isNotEqualTo("010-5555-1234");
         
         // 마스킹된 형태로 포함됨
-        assertThat(responseDto.getSocialNumber()).isEqualTo("951010-*******");
-        assertThat(responseDto.getPhoneNumber()).isEqualTo("010-****-1234");
+        assertThat(responseDto.socialNumber()).isEqualTo("951010-*******");
+        assertThat(responseDto.phoneNumber()).isEqualTo("010-****-1234");
     }
 }

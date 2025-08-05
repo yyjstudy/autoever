@@ -115,3 +115,12 @@
 - DTO 계층 분리: UserCreateDto, UserUpdateDto, UserResponseDto, PasswordChangeDto 생성
 - UserRepository 인터페이스 생성 (메서드 이름 규칙 활용)
 - 포괄적인 테스트 코드 작성 및 실행 (30개 테스트, 100% 성공률)
+
+### 15. Record 클래스 및 불변성 개선 요청
+**프롬프트:** "여태까지 작업한 태스크2에 대해서, record 클래스를 활용하도록 바꾸어라. 또한, setter를활용하지 않는 코드는 final키워드로 확실히 immutable하게해줘."
+
+**수행 작업:**
+- 모든 DTO를 record 클래스로 변환 (완전한 불변성 제공)
+- User 엔티티의 핵심 식별 필드(username, socialNumber) 불변성 보장
+- 테스트 코드를 record 클래스 호환으로 업데이트
+- TaskMaster Task 2 및 모든 서브태스크 완료 상태로 업데이트

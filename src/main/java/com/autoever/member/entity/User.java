@@ -72,6 +72,8 @@ public class User {
         this.address = address;
     }
     
+    // username과 socialNumber는 불변이므로 setter 메서드를 제공하지 않음
+    
     public String getMaskedSocialNumber() {
         if (socialNumber == null || socialNumber.length() < 8) {
             return "***-***";

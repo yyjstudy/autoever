@@ -68,7 +68,7 @@
         "dependencies": [
           1
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -87,7 +87,7 @@
               "2.1"
             ],
             "details": "User 엔티티 클래스 생성: id(PK, Long), username(계정명), password(암호), name(성명), socialNumber(주민등록번호), phoneNumber(핸드폰번호), address(주소) 필드 정의. JPA 어노테이션 설정: @Entity, @Table, @Id, @GeneratedValue(strategy = GenerationType.IDENTITY), @Column 설정. 엔티티 필드에 적절한 데이터 타입과 길이 제한 설정.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -98,7 +98,7 @@
               "2.2"
             ],
             "details": "username과 socialNumber 필드에 @Column(unique = true) 설정. 데이터 검증 어노테이션 추가: @NotBlank, @Size, @Pattern 등을 사용한 입력값 검증. 주민등록번호 형식 검증을 위한 정규식 패턴 적용. 핸드폰번호 형식 검증 추가. 데이터베이스 레벨에서 UNIQUE 인덱스 자동 생성 확인.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -109,7 +109,7 @@
               "2.3"
             ],
             "details": "JpaRepository를 상속하는 UserRepository 인터페이스 생성. 기본 CRUD 메서드 외 추가 쿼리 메서드 정의: existsByUsername(), existsBySocialNumber(), findByUsername(), findBySocialNumber(). Optional을 사용한 안전한 조회 메서드 구현. Repository 패키지 구조 설정 및 @Repository 어노테이션 적용. JPA 쿼리 메서드 네이밍 규칙 준수.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-04T13:55:38.696Z",
+      "updated": "2025-08-05T02:15:30.693Z",
       "description": "Tasks for master context"
     }
   }
