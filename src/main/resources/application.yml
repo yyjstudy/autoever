@@ -41,7 +41,7 @@ server:
   
 # JWT Configuration
 jwt:
-  secret-key: autoeverSecretKeyForJWTTokenGenerationAndValidation2024!
+  secret-key: YXV0b2V2ZXJTZWNyZXRLZXlGb3JKV1RUb2tlbkdlbmVyYXRpb25BbmRWYWxpZGF0aW9uMjAyNCE=
   expiration-time: 3600000  # 1 hour in milliseconds
   token-prefix: Bearer
 

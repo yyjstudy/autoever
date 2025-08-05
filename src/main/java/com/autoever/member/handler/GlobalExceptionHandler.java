@@ -203,6 +203,41 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(response);
     }
 
+    // ===== JWT 관련 예외 처리 =====
+
+    /**
+     * JWT 예외 처리 (기본)
+     */
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtException(JwtException ex) {
+        log.warn("JWT exception: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    /**
+     * JWT 만료 예외 처리
+     */
+    @ExceptionHandler(JwtExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtExpiredException(JwtExpiredException ex) {
+        log.warn("JWT expired: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    /**
+     * JWT 유효하지 않음 예외 처리
+     */
+    @ExceptionHandler(JwtInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtInvalidException(JwtInvalidException ex) {
+        log.warn("Invalid JWT: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
     /**
      * 지원하지 않는 HTTP 메서드 예외 처리
      */
