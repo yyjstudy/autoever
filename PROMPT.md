@@ -497,3 +497,95 @@
 - 기존 123개 테스트로 충분한 검증 확인하여 별도 테스트 추가 없이 진행
 
 **프롬프트 갱신 및 커밋 요청:** "prompt.md를 갱신하고 커밋 찍고 푸쉬하자."
+
+### 32. Task 6 진행 및 완료 - 관리자 회원 관리 API 구현
+**프롬프트:** "이제 태스크마스터 6번 시작할건데, 6-1, 6-2 같이진행해줘."
+
+**사용자 의도:**
+- Task 6.1과 6.2를 동시에 진행하여 관리자 API를 일괄 구현
+- 관리자 전용 회원 목록 조회 및 상세 조회 API 구현
+- Spring Security와 연동된 권한 기반 접근 제어 적용
+
+**수행 작업:**
+
+#### Task 6.1 & 6.2 동시 완료: 관리자 전용 API 구현
+
+**AdminService 및 AdminServiceImpl 생성:**
+- getAllUsers() 메서드: 페이징된 회원 목록 조회 (@Transactional(readOnly = true))
+- getUserById() 메서드: 특정 회원 상세 조회
+- UserResponseDto 변환 로직으로 민감정보 마스킹 처리
+
+**AdminController 완전한 구현:**
+- @PreAuthorize("hasRole('ADMIN')") 클래스 레벨 권한 설정
+- GET /api/admin/users: 페이징 및 정렬 지원 회원 목록 조회
+- GET /api/admin/users/{id}: 특정 회원 상세 조회
+- @SecurityRequirement(name = "basicAuth") Swagger 인증 스키마 적용
+- 포괄적인 OpenAPI 문서화 (한국어 설명, 예시 포함)
+
+**Swagger UI Pageable 파라미터 개선:**
+**사용자 피드백:** "내가 직접 메뉴얼 테스트 한 결과, 스웨거 UI에서 /api/admin/users 를 조회할때 pagable파라미터를 json object로 취급하려 한다. 더욱 정형화된 방법으로 개선해라."
+
+**문제 해결:**
+- 기존 @PageableDefault Pageable pageable을 개별 @RequestParam으로 분리
+- createPageable() 메서드로 커스텀 페이징 파라미터 처리
+- 페이지 크기 제한 (최대 100개), 유효한 정렬 속성 검증
+- isValidSortProperty() 메서드로 허용된 필드만 정렬 가능
+
+**OpenApiConfig 생성:**
+- Basic Authentication 스키마 정의
+- Swagger UI에서 admin/1212 자격증명으로 테스트 가능
+- API 문서화 및 보안 설정 통합
+
+**SecurityConfig 보안 강화:**
+**사용자 피드백:** "스웨거상에서 admin api들이 admin 정보 입력안하고도 조회가 가능한데 확인해서 고쳐라"
+
+**보안 문제 해결:**
+- Swagger UI 경로를 authenticated()에서 hasRole("ADMIN")으로 변경
+- H2 콘솔도 ADMIN 권한 필요로 강화
+- 관리자 API에 대한 완전한 접근 제어 구현
+
+**포괄적인 테스트 코드 작성:**
+**사용자 요청:** "지금 curl로 직접 매뉴얼 테스트 하던것을 테스트코드로 작성해줘."
+
+**AdminControllerIntegrationTest 구현 (11개 테스트):**
+- 인증 없이 접근 시 401 Unauthorized 검증
+- 잘못된 자격증명 사용 시 401 Unauthorized 검증
+- 올바른 관리자 자격증명으로 200 OK 응답 검증
+- 빈 회원 목록 조회 및 회원 등록 후 목록 조회 테스트
+- 페이징 파라미터 테스트 (page=0, size=1)
+- 정렬 파라미터 테스트 (username 오름차순)
+- 잘못된 정렬 속성 처리 (기본값으로 대체)
+- 특정 회원 상세 조회 및 존재하지 않는 회원 404 처리
+- 페이지 크기 제한 테스트 (최대 100개 제한)
+
+**테스트 코드 개선 과정:**
+- ID 시퀀스 문제 해결: hard-coded ID 검증을 username 기반 검증으로 변경
+- 데이터베이스 초기화: @BeforeEach에서 userRepository.deleteAll() 실행
+- MockMvc + Spring Security 통합 테스트 환경 구축
+
+**최종 테스트 검증:**
+**사용자 요청:** "testcode들도 수행해봐"
+- 전체 134개 테스트 100% 통과 확인
+- AdminControllerIntegrationTest 11개 테스트 모두 성공
+- Spring Security Basic Auth 정상 동작 검증
+- Swagger UI ADMIN 권한 접근 제어 정상 동작
+
+**최종 구현 상태:**
+- ✅ **Basic Auth**: admin/1212로 정상 작동
+- ✅ **Swagger UI**: ADMIN 권한 필요, Basic Auth로 접근 가능  
+- ✅ **Admin API**: /api/admin/users (목록), /api/admin/users/{id} (상세) 완전 구현
+- ✅ **페이징 및 정렬**: 커스텀 파라미터 처리로 Swagger UI 호환성 확보
+- ✅ **민감정보 마스킹**: 주민등록번호, 전화번호 등 응답에서 마스킹 처리
+- ✅ **포괄적인 테스트**: 134개 테스트로 검증된 안정적인 코드베이스
+
+**TaskMaster 상태:** Task 6.1, 6.2 완료 (✓ done)
+
+**다음 단계:** Task 7 또는 후속 기능 개발 준비 완료
+
+### 33. 최종 프롬프트 갱신 및 커밋 요청
+**프롬프트:** "prompt.md를 갱신하고 여태까지 작업한 내역과 함께 커밋찎어서 푸쉬해줘."
+
+**수행 작업 예정:**
+- prompt.md 파일 최종 갱신 (Task 6 완료 내역 포함)
+- 전체 작업 내역 커밋 및 원격 저장소 푸시
+- 프로젝트 현재 상태 문서화 완료

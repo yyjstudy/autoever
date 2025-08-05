@@ -83,11 +83,11 @@ public class SecurityConfig {
                 // 관리자 전용 API는 ADMIN 권한 필요
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 
-                // Swagger UI 및 API 문서는 인증 필요
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").authenticated()
+                // Swagger UI 및 API 문서는 ADMIN 권한 필요 (보안 강화)
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").hasRole("ADMIN")
                 
-                // H2 콘솔은 개발 환경에서만 허용 (추후 프로덕션에서 제거 예정)
-                .requestMatchers("/h2-console/**").authenticated()
+                // H2 콘솔은 ADMIN 권한 필요 (보안 강화)
+                .requestMatchers("/h2-console/**").hasRole("ADMIN")
                 
                 // 기타 모든 API 요청은 인증 필요
                 .requestMatchers("/api/**").authenticated()
