@@ -23,8 +23,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("UserServiceImpl 테스트")
-class UserServiceImplTest {
+@DisplayName("UserService 테스트")
+class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -33,7 +33,7 @@ class UserServiceImplTest {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private UserServiceImpl userService;
+    private UserService userService;
 
     private UserRegistrationDto validRegistrationDto;
 

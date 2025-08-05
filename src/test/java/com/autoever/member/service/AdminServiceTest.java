@@ -27,10 +27,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * AdminServiceImpl 단위 테스트
+ * AdminService 단위 테스트
  */
 @ExtendWith(MockitoExtension.class)
-class AdminServiceImplTest {
+class AdminServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -39,7 +39,7 @@ class AdminServiceImplTest {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private AdminServiceImpl adminService;
+    private AdminService adminService;
 
     @Test
     @DisplayName("전체 회원 목록 조회 성공")

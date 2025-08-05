@@ -660,7 +660,28 @@ public record UserUpdateDto(
 - 전체 155개 테스트 100% 통과
 - Task 6.3-6.6에 대한 완전한 테스트 커버리지 달성
 
+### 35. Service 인터페이스 제거 및 구체 클래스로 통합
+**프롬프트:** "service 패키지에서 인터페이스랑 impl 나누는건 너무 올드하다. 최신으로 바꿔주고 앞으로도 이런식으로 작업해."
+
+**수행 작업:**
+- **Service 계층 리팩토링**:
+  * UserService 인터페이스 제거, UserServiceImpl → UserService로 변경
+  * AdminService 인터페이스 제거, AdminServiceImpl → AdminService로 변경
+  * 테스트 파일명 변경: UserServiceImplTest → UserServiceTest, AdminServiceImplTest → AdminServiceTest
+  * @Override 어노테이션 제거 (인터페이스가 없으므로 불필요)
+
+**리팩토링 이유:**
+- 불필요한 추상화 제거로 코드 단순화
+- 최신 Spring Boot 베스트 프랙티스 준수
+- 유지보수성 향상 및 테스트 모킹 간소화
+- 구체 클래스 직접 사용이 현대적 접근 방식
+
+**테스트 결과:**
+- 전체 155개 테스트 100% 통과
+- 리팩토링 후에도 모든 기능 정상 동작 확인
+
 **현재 프로젝트 상태:**
 - Task 6.3-6.6 완료: Spring Boot 3.3.4 + JDK 21 + H2 DB 기반
 - 회원가입 API (완전한 중복 검증), Spring Security, 관리자 API (CRUD), Swagger 문서화 완료
 - 요구사항대로 회원 정보 수정은 암호와 주소만 가능
+- Service 계층은 인터페이스 없이 구체 클래스만 사용하는 모던 패턴 적용

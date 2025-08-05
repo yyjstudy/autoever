@@ -302,7 +302,7 @@
         "dependencies": [
           5
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -330,7 +330,7 @@
               "6.1"
             ],
             "details": "Pageable 파라미터 처리. AdminService.getAllUsers() 메서드 호출. Page<User>를 PageDto로 변환. content, totalElements, totalPages, currentPage 포함. 정렬 옵션 지원 (id, username, createdDate).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -342,7 +342,7 @@
               "6.2"
             ],
             "details": "@PathVariable Long id, @Valid @RequestBody UserUpdateDto 처리. AdminService.updateUser() 메서드 호출. 부분 업데이트 로직 (암호만, 주소만, 둘 다 가능). 수정 성공 시 업데이트된 사용자 정보 반환 (암호 제외).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -353,7 +353,7 @@
               "6.1"
             ],
             "details": "@PathVariable Long id 처리. AdminService.deleteUser() 메서드 호출. 삭제 전 회원 존재 여부 확인. 성공 시 204 No Content 응답. 삭제된 회원의 관련 데이터 처리 고려.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -364,7 +364,7 @@
               "6.2"
             ],
             "details": "getAllUsers(Pageable) 메서드 구현. updateUser(Long, UserUpdateDto) 메서드 - BCrypt 암호 해싱 포함. deleteUser(Long) 메서드 구현. UserNotFoundException 예외 처리. PageDto 클래스 생성 및 Page<T> 변환 로직. 트랜잭션 처리 (@Transactional).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-05T09:39:13.035Z",
+      "updated": "2025-08-05T14:05:04.537Z",
       "description": "Tasks for master context"
     }
   }
