@@ -63,6 +63,16 @@ message:
       connect-timeout-ms: 5000
       read-timeout-ms: 10000
 
+# Async Configuration
+async:
+  thread-pool:
+    core-size: 10
+    max-size: 50
+    queue-capacity: 1000
+    keep-alive-seconds: 60
+    thread-name-prefix: message-sender-
+    await-termination-seconds: 30
+
 # Logging Configuration
 logging:
   level:

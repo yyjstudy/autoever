@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 
 import jakarta.validation.Validation;
 import java.util.Set;
@@ -14,6 +15,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
+@TestPropertySource(properties = "async.enabled=false")
 class UserDtoValidationTest {
 
     private Validator validator;

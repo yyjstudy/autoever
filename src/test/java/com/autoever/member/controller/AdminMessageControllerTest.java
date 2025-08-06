@@ -33,7 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("AdminMessageController 테스트")
 @TestPropertySource(properties = {
     "jwt.secret-key=dGVzdC1zZWNyZXQta2V5LWZvci10ZXN0aW5nLXB1cnBvc2VzLW9ubHktMTIzNDU2Nzg5MA==",
-    "jwt.expiration-time=3600"
+    "jwt.expiration-time=3600",
+    "async.enabled=false"
 })
 class AdminMessageControllerTest {
     
