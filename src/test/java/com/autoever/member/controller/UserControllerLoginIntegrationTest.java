@@ -200,6 +200,11 @@ class UserControllerLoginIntegrationTest {
         // When & Then - 보호된 엔드포인트 접근
         mockMvc.perform(get("/api/users/me")
                 .header("Authorization", "Bearer " + token))
-                .andExpect(status().isNotFound()); // API가 아직 구현되지 않았지만 인증은 통과
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("사용자 정보를 성공적으로 조회했습니다."))
+                .andExpect(jsonPath("$.data.username").value(TEST_USERNAME))
+                .andExpect(jsonPath("$.data.socialNumber").value("900101-1******"))
+                .andExpect(jsonPath("$.data.address").value("서울특별시"));
     }
 }

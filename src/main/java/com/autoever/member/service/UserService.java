@@ -2,6 +2,7 @@ package com.autoever.member.service;
 
 import com.autoever.member.dto.JwtTokenDto;
 import com.autoever.member.dto.LoginDto;
+import com.autoever.member.dto.UserInfoDto;
 import com.autoever.member.dto.UserRegistrationDto;
 import com.autoever.member.dto.UserResponseDto;
 import com.autoever.member.entity.User;
@@ -10,6 +11,7 @@ import com.autoever.member.exception.DuplicateEmailException;
 import com.autoever.member.exception.DuplicatePhoneNumberException;
 import com.autoever.member.exception.DuplicateSocialNumberException;
 import com.autoever.member.exception.InvalidCredentialsException;
+import com.autoever.member.exception.UserNotFoundException;
 import com.autoever.member.jwt.JwtTokenProvider;
 import com.autoever.member.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -238,5 +240,33 @@ public class UserService {
             log.warn("로그인 실패 - 잘못된 자격증명: username={}", loginDto.username());
             throw new InvalidCredentialsException("사용자명 또는 비밀번호가 올바르지 않습니다.");
         }
+    }
+    
+    /**
+     * 현재 인증된 사용자의 개인정보 조회
+     * SecurityContext에서 현재 사용자 정보를 추출하여 민감정보 마스킹 후 반환
+     * 
+     * @param username 현재 인증된 사용자명 (SecurityContext에서 추출)
+     * @return 마스킹 처리된 사용자 개인정보
+     * @throws UserNotFoundException 사용자를 찾을 수 없는 경우
+     */
+    @Transactional(readOnly = true)
+    public UserInfoDto getCurrentUserInfo(String username) {
+        log.info("현재 사용자 정보 조회: username={}", username);
+        
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    log.warn("사용자 정보 조회 실패 - 존재하지 않는 사용자: username={}", username);
+                    return new UserNotFoundException("사용자를 찾을 수 없습니다: " + username);
+                });
+        
+        log.debug("사용자 정보 조회 성공: userId={}, username={}", user.getId(), user.getUsername());
+        
+        // 민감정보 마스킹 및 주소 필터링 적용
+        UserInfoDto userInfo = UserInfoDto.from(user);
+        
+        log.info("사용자 개인정보 응답 준비 완료: username={}", username);
+        
+        return userInfo;
     }
 }
