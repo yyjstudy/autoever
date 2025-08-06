@@ -602,7 +602,7 @@
         "dependencies": [
           9
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -610,7 +610,7 @@
             "description": "메시지 발송을 위한 DTO와 REST API 엔드포인트의 기본 구조를 구현합니다.",
             "dependencies": [],
             "details": "POST /api/admin/messages/send API 엔드포인트 생성. MessageSendDto 클래스 정의 (ageGroup, message 필드). AdminMessageController 생성 및 기본 요청 처리 로직 구현. 요청 데이터 유효성 검증 (@Valid 어노테이션 활용). Swagger 문서화 어노테이션 추가.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -621,7 +621,7 @@
               "10.1"
             ],
             "details": "AgeCalculatorUtil 클래스 생성. 주민등록번호에서 생년월일 추출 로직 구현. 현재 날짜 기준 만 나이 계산 메서드. 연령대 판별 로직 (예: 10대, 20대, 30대 등). 유효하지 않은 주민등록번호 처리 예외 처리. 단위 테스트 작성.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -632,7 +632,7 @@
               "10.2"
             ],
             "details": "UserRepository에 연령대별 사용자 조회 메서드 추가 (Pageable 활용). BatchProcessingService 클래스 생성. 페이지 단위 사용자 데이터 조회 로직. 메모리 효율성을 위한 배치 크기 설정 (기본 1000건). 처리 진행률 추적 기능. 대량 데이터 처리 시 GC 최적화 고려사항 적용.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -643,7 +643,7 @@
               "10.3"
             ],
             "details": "AsyncConfig 클래스 생성 (@EnableAsync 어노테이션). ThreadPoolTaskExecutor 빈 설정 (코어 풀 크기, 최대 풀 크기, 큐 용량). 비동기 처리 예외 핸들러 설정 (AsyncUncaughtExceptionHandler). 스레드 네이밍 규칙 설정. 비동기 메서드 실행 통계 및 모니터링 준비. application.yml에 스레드 풀 관련 설정 추가.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -654,7 +654,7 @@
               "10.4"
             ],
             "details": "AsyncMessageService 클래스 생성. @Async 어노테이션을 사용한 비동기 메시지 발송 메서드. CompletableFuture<MessageSendResult> 반환 타입 설정. 메시지 발송 실패 시 예외 처리 및 재시도 로직. 발송 결과 콜백 처리. 동시 발송 개수 제한 및 백프레셔 처리. 비동기 작업 완료 추적 메커니즘.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -665,7 +665,7 @@
               "10.5"
             ],
             "details": "MessageSendStatus 엔티티 생성 (발송 ID, 상태, 성공/실패 건수, 시작/종료 시간). MessageTrackingService 클래스 구현. 발송 진행률 실시간 추적 API (GET /api/admin/messages/status/{sendId}). 발송 통계 조회 API (성공률, 실패율, 소요시간). Redis 또는 인메모리 캐시를 활용한 실시간 상태 관리. 발송 히스토리 저장 및 조회 기능.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -676,7 +676,7 @@
               "10.6"
             ],
             "details": "메시지 발송 성능 최적화 (Connection Pool, HTTP Keep-Alive). 글로벌 예외 처리 핸들러 (@ControllerAdvice). 구조화된 로깅 시스템 (SLF4J + Logback). 발송 실패 시 재시도 정책 및 Circuit Breaker 패턴 적용. 메모리 사용량 모니터링 및 최적화. 대량 발송 시 시스템 부하 제어 메커니즘. 성능 테스트 및 부하 테스트 준비.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-06T08:21:54.830Z",
+      "updated": "2025-08-06T09:44:23.647Z",
       "description": "Tasks for master context"
     }
   }

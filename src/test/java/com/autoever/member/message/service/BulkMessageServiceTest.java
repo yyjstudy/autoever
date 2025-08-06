@@ -21,6 +21,9 @@ import java.util.concurrent.CompletableFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -40,12 +43,40 @@ class BulkMessageServiceTest {
     @Mock
     private ExternalMessageService externalMessageService;
     
+    @Mock
+    private MessagePerformanceService performanceService;
+    
+    @Mock
+    private DynamicBatchOptimizer batchOptimizer;
+    
+    @Mock
+    private StructuredMessageLogger structuredLogger;
+    
     @InjectMocks
     private BulkMessageService bulkMessageService;
     
     @BeforeEach
     void setUp() {
-        // 모든 테스트에 불필요한 stubbing 제거
+        // 기본적으로 필요한 모킹만 설정 (lenient로 설정하여 사용되지 않아도 오류 없음)
+        MessagePerformanceService.PerformanceTracker mockTracker = 
+            mock(MessagePerformanceService.PerformanceTracker.class);
+        lenient().when(performanceService.startTracking(anyString(), anyInt())).thenReturn(mockTracker);
+        lenient().when(performanceService.stopTracking(anyString())).thenReturn(null);
+        
+        // batchOptimizer 기본 모킹
+        lenient().when(batchOptimizer.getOptimalBatchSize()).thenReturn(1000);
+        
+        // void 메서드들은 doNothing()으로 모킹
+        lenient().doNothing().when(mockTracker).recordSuccess(anyLong());
+        lenient().doNothing().when(mockTracker).recordFailure(anyLong());
+        lenient().doNothing().when(mockTracker).recordBatchProcessed(anyInt(), anyLong());
+        
+        // structuredLogger도 void 메서드들을 모킹
+        lenient().doNothing().when(structuredLogger).logJobStart(any(UUID.class), anyString(), anyString(), anyInt());
+        lenient().doNothing().when(structuredLogger).logBatchProcessing(any(UUID.class), anyInt(), anyInt(), anyLong(), anyInt(), anyInt());
+        lenient().doNothing().when(structuredLogger).logJobCompletion(any(UUID.class), anyString(), anyInt(), anyInt(), anyInt(), anyLong());
+        lenient().doNothing().when(structuredLogger).logMessageFailure(any(UUID.class), anyString(), anyString(), anyLong());
+        lenient().doNothing().when(structuredLogger).logPerformanceMetrics(any(UUID.class), any());
     }
     
     @Test

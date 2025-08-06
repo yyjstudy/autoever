@@ -33,6 +33,9 @@ public class BulkMessageService {
     private final UserQueryService userQueryService;
     private final BatchProcessingService batchProcessingService;
     private final ExternalMessageService externalMessageService;
+    private final MessagePerformanceService performanceService;
+    private final DynamicBatchOptimizer batchOptimizer;
+    private final StructuredMessageLogger structuredLogger;
     
     // 임시로 메모리에 작업 상태 저장 (실제로는 DB나 Redis 사용)
     private final ConcurrentHashMap<UUID, BulkMessageJobStatus> jobStatusMap = new ConcurrentHashMap<>();
@@ -53,6 +56,9 @@ public class BulkMessageService {
         // 실제 사용자 수 조회
         int totalUsers = userQueryService.countUsersByAgeGroup(ageGroup);
         
+        // 구조화된 로그 기록 (실제 사용자 수 포함)
+        structuredLogger.logJobStart(jobId, request.ageGroup(), request.message(), totalUsers);
+        
         if (totalUsers == 0) {
             log.warn("해당 연령대에 사용자가 없습니다 - ageGroup: {}", ageGroup);
             return createEmptyResponse(jobId);
@@ -63,6 +69,11 @@ public class BulkMessageService {
         // 진행 상태 추적기 초기화
         JobProgressTracker tracker = new JobProgressTracker(jobId, totalUsers);
         jobProgressMap.put(jobId, tracker);
+        
+        // 성능 추적 시작
+        MessagePerformanceService.PerformanceTracker performanceTracker = 
+            performanceService.startTracking(jobId.toString(), totalUsers);
+        tracker.setPerformanceTracker(performanceTracker);
         
         // 작업 상태 초기화
         BulkMessageJobStatus initialStatus = new BulkMessageJobStatus(
@@ -134,26 +145,61 @@ public class BulkMessageService {
      * 사용자 리스트에게 메시지 발송
      */
     private void sendMessagesToUsers(UUID jobId, List<User> users, String message, JobProgressTracker tracker) {
+        long batchStartTime = System.currentTimeMillis();
         log.debug("배치 메시지 발송 - jobId: {}, userCount: {}", jobId, users.size());
         
         updateJobStatus(jobId, BulkMessageResponse.JobStatus.SENDING_MESSAGES);
         
+        int batchSuccessCount = 0;
+        int batchFailureCount = 0;
+        
         for (User user : users) {
+            long messageStartTime = System.currentTimeMillis();
+            
             try {
                 // 외부 메시지 서비스를 통한 실제 발송
                 externalMessageService.sendMessage(user.getPhoneNumber(), message);
-                tracker.incrementSuccess();
                 
-                log.trace("메시지 발송 성공 - userId: {}, phone: {}", 
-                         user.getId(), user.getPhoneNumber());
+                long responseTime = System.currentTimeMillis() - messageStartTime;
+                tracker.incrementSuccess();
+                batchSuccessCount++;
+                
+                // 성능 추적기에 성공 기록
+                if (tracker.getPerformanceTracker() != null) {
+                    tracker.getPerformanceTracker().recordSuccess(responseTime);
+                }
+                
+                log.trace("메시지 발송 성공 - userId: {}, phone: {}, responseTime: {}ms", 
+                         user.getId(), user.getPhoneNumber(), responseTime);
                 
             } catch (Exception e) {
+                long responseTime = System.currentTimeMillis() - messageStartTime;
                 tracker.incrementFailure();
+                batchFailureCount++;
+                
+                // 성능 추적기에 실패 기록
+                if (tracker.getPerformanceTracker() != null) {
+                    tracker.getPerformanceTracker().recordFailure(responseTime);
+                }
+                
+                // 구조화된 에러 로그
+                structuredLogger.logMessageFailure(jobId, user.getPhoneNumber(), e.getMessage(), responseTime);
+                
                 log.warn("메시지 발송 실패 - userId: {}, phone: {}, error: {}", 
                         user.getId(), user.getPhoneNumber(), e.getMessage());
             }
             
             tracker.incrementProcessed();
+        }
+        
+        // 배치 처리 완료 로그
+        long batchDuration = System.currentTimeMillis() - batchStartTime;
+        structuredLogger.logBatchProcessing(jobId, tracker.getBatchNumber(), users.size(), 
+            batchDuration, batchSuccessCount, batchFailureCount);
+        
+        // 성능 추적기에 배치 처리 기록
+        if (tracker.getPerformanceTracker() != null) {
+            tracker.getPerformanceTracker().recordBatchProcessed(users.size(), batchDuration);
         }
     }
     
@@ -226,6 +272,17 @@ public class BulkMessageService {
                 jobId, finalStatus, tracker.getTotalUsers(), tracker.getSuccessCount(), 
                 tracker.getFailureCount(), duration.toMillis());
         
+        // 성능 추적 완료 및 로깅
+        MessagePerformanceService.PerformanceMetrics performanceMetrics = 
+            performanceService.stopTracking(jobId.toString());
+        if (performanceMetrics != null) {
+            structuredLogger.logPerformanceMetrics(jobId, performanceMetrics);
+        }
+        
+        // 구조화된 작업 완료 로그
+        structuredLogger.logJobCompletion(jobId, finalStatus.toString(), 
+            tracker.getTotalUsers(), tracker.getSuccessCount(), tracker.getFailureCount(), duration.toMillis());
+        
         // 추적기 정리
         jobProgressMap.remove(jobId);
     }
@@ -285,6 +342,8 @@ public class BulkMessageService {
         private final AtomicInteger processedCount = new AtomicInteger(0);
         private final AtomicInteger successCount = new AtomicInteger(0);
         private final AtomicInteger failureCount = new AtomicInteger(0);
+        private final AtomicInteger batchNumber = new AtomicInteger(0);
+        private MessagePerformanceService.PerformanceTracker performanceTracker;
         
         public JobProgressTracker(UUID jobId, int totalUsers) {
             this.jobId = jobId;
@@ -294,10 +353,19 @@ public class BulkMessageService {
         public void incrementProcessed() { processedCount.incrementAndGet(); }
         public void incrementSuccess() { successCount.incrementAndGet(); }
         public void incrementFailure() { failureCount.incrementAndGet(); }
+        public int getBatchNumber() { return batchNumber.incrementAndGet(); }
         
         public int getTotalUsers() { return totalUsers; }
         public int getProcessedCount() { return processedCount.get(); }
         public int getSuccessCount() { return successCount.get(); }
         public int getFailureCount() { return failureCount.get(); }
+        
+        public MessagePerformanceService.PerformanceTracker getPerformanceTracker() {
+            return performanceTracker;
+        }
+        
+        public void setPerformanceTracker(MessagePerformanceService.PerformanceTracker performanceTracker) {
+            this.performanceTracker = performanceTracker;
+        }
     }
 }

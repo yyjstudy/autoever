@@ -44,8 +44,7 @@ public class AsyncConfig implements AsyncConfigurer {
      * 메시지 발송용 ThreadPoolTaskExecutor
      */
     @Bean(name = "messageTaskExecutor")
-    @Override
-    public Executor getAsyncExecutor() {
+    public ThreadPoolTaskExecutor messageTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         
         // 기본 스레드 풀 설정
@@ -88,6 +87,14 @@ public class AsyncConfig implements AsyncConfigurer {
     }
     
     /**
+     * 기본 비동기 실행자
+     */
+    @Override
+    public Executor getAsyncExecutor() {
+        return messageTaskExecutor();
+    }
+    
+    /**
      * 비동기 예외 처리기
      */
     @Override
@@ -96,13 +103,5 @@ public class AsyncConfig implements AsyncConfigurer {
             log.error("비동기 메서드 실행 중 예외 발생 - 메서드: {}, 파라미터: {}", 
                     method.getName(), params, throwable);
         };
-    }
-    
-    /**
-     * 스레드 풀 상태 조회용 빈
-     */
-    @Bean
-    public ThreadPoolTaskExecutor messageTaskExecutor() {
-        return (ThreadPoolTaskExecutor) getAsyncExecutor();
     }
 }

@@ -65,6 +65,7 @@ message:
 
 # Async Configuration
 async:
+  enabled: true  # 비동기 처리 활성화
   thread-pool:
     core-size: 10
     max-size: 50

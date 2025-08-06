@@ -27,8 +27,8 @@ public class MessageClientFactory {
         
         log.info("MessageClientFactory 초기화 완료 - 등록된 클라이언트 수: {}", clients.size());
         for (MessageApiClient client : clients) {
-            log.info("등록된 클라이언트: {} (사용가능: {})", 
-                client.getApiType().getDisplayName(), client.isAvailable());
+            log.info("등록된 클라이언트: {}", 
+                client.getApiType().getDisplayName());
         }
     }
     
