@@ -725,3 +725,17 @@ public record UserUpdateDto(
 - Basic Authentication 실패 (admin 계정 BCrypt 해시 수정)
 
 **최종 결과:** 234개 테스트 100% 통과, JWT + 로그인 시스템 완성
+
+### 38. Task 8 그룹 2 완료 - JWT 토큰 통합 (Task 8.3)
+
+**프롬프트:** "다음 그룹 진행시켜"
+
+**수행 작업:**
+- **JwtTokenProvider 클래스 생성**: JWT 토큰 생성 전용 컴포넌트 구현
+- **관심사 분리**: UserService에서 JwtTokenProvider 사용하도록 리팩토링
+- **포괄적인 테스트**: JwtTokenProviderTest 9개 단위 테스트 추가
+- **UserServiceLoginTest 업데이트**: JwtTokenProvider 의존성 반영
+- **토큰 생성 로직 개선**: Authentication 객체와 username 모두 지원
+- **완전한 JWT 응답 구조**: Bearer 토큰, 만료시간 포함
+
+**최종 결과:** 242개 테스트 100% 통과 (8개 테스트 추가), Task 8.3 완료

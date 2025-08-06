@@ -10,7 +10,7 @@ import com.autoever.member.exception.DuplicateEmailException;
 import com.autoever.member.exception.DuplicatePhoneNumberException;
 import com.autoever.member.exception.DuplicateSocialNumberException;
 import com.autoever.member.exception.InvalidCredentialsException;
-import com.autoever.member.jwt.JwtUtil;
+import com.autoever.member.jwt.JwtTokenProvider;
 import com.autoever.member.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 사용자 회원가입 처리
@@ -226,14 +226,13 @@ public class UserService {
             
             log.debug("인증 성공: username={}", loginDto.username());
             
-            // 2. JWT 토큰 생성
-            String token = jwtUtil.generateToken(authentication.getName());
-            long expiresIn = jwtUtil.getExpirationTime();
+            // 2. JwtTokenProvider를 통한 JWT 토큰 생성
+            JwtTokenDto tokenDto = jwtTokenProvider.generateToken(authentication);
             
             log.info("JWT 토큰 발급 완료: username={}", loginDto.username());
             
             // 3. JWT 토큰 응답 DTO 반환
-            return JwtTokenDto.of(token, expiresIn);
+            return tokenDto;
             
         } catch (AuthenticationException e) {
             log.warn("로그인 실패 - 잘못된 자격증명: username={}", loginDto.username());
