@@ -47,6 +47,22 @@ jwt:
   token-cleanup:
     enabled: true  # JWT 토큰 자동 정리 활성화
 
+# Message API Configuration
+message:
+  api:
+    kakaotalk:
+      base-url: http://localhost:8081
+      username: autoever
+      password: 1234
+      connect-timeout-ms: 5000
+      read-timeout-ms: 10000
+    sms:
+      base-url: http://localhost:8082
+      username: autoever
+      password: 5678
+      connect-timeout-ms: 5000
+      read-timeout-ms: 10000
+
 # Logging Configuration
 logging:
   level:

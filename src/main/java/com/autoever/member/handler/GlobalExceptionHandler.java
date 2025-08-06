@@ -203,6 +203,43 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(response);
     }
 
+    // ===== 메시지 API 관련 예외 처리 =====
+    
+    /**
+     * 메시지 API 예외 처리
+     */
+    @ExceptionHandler(com.autoever.member.message.exception.MessageApiException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMessageApiException(com.autoever.member.message.exception.MessageApiException ex) {
+        log.warn("Message API exception - API: {}, ErrorCode: {}, Message: {}", 
+            ex.getApiType(), ex.getErrorCode(), ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.badRequest(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+    
+    /**
+     * API 연결 예외 처리
+     */
+    @ExceptionHandler(com.autoever.member.message.exception.ApiConnectionException.class)
+    public ResponseEntity<ApiResponse<Object>> handleApiConnectionException(com.autoever.member.message.exception.ApiConnectionException ex) {
+        log.error("API connection failed - API: {}, Message: {}", ex.getApiType(), ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.internalServerError("외부 서비스 연결에 실패했습니다: " + ex.getApiType().getDisplayName());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+    
+    /**
+     * 메시지 발송 예외 처리
+     */
+    @ExceptionHandler(com.autoever.member.message.exception.MessageSendException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMessageSendException(com.autoever.member.message.exception.MessageSendException ex) {
+        log.warn("Message send failed - API: {}, ErrorCode: {}, Message: {}", 
+            ex.getApiType(), ex.getErrorCode(), ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.badRequest("메시지 발송에 실패했습니다: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     // ===== JWT 관련 예외 처리 =====
 
     /**

@@ -523,7 +523,7 @@
         "dependencies": [
           8
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -531,7 +531,7 @@
             "description": "외부 메시지 API 클라이언트의 공통 인터페이스와 기본 구조를 설계하고 구현합니다.",
             "dependencies": [],
             "details": "MessageApiClient 인터페이스 정의 (sendMessage, validateConnection 메서드), ApiResponse DTO 클래스 생성, MessageType enum 정의 (KAKAOTALK, SMS), 기본 예외 클래스들 정의 (ApiConnectionException, MessageSendException), 공통 설정 클래스 구조 설계",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -542,7 +542,7 @@
               "9.1"
             ],
             "details": "KakaoTalkApiClient 클래스 구현, POST localhost:8081/kakaotalk-messages 엔드포인트 연동, Basic Auth 인증 구현 (autoever:1234), RestTemplate 또는 WebClient 설정, 요청/응답 DTO 매핑, 연결 테스트 메서드 구현",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -553,7 +553,7 @@
               "9.1"
             ],
             "details": "SmsApiClient 클래스 구현, POST localhost:8082/sms 엔드포인트 연동, Basic Auth 인증 구현 (autoever:5678), HTTP 헤더 설정, 요청/응답 처리 로직, 에러 응답 핸들링, 연결 상태 확인 기능",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-06T01:59:48.618Z",
+      "updated": "2025-08-06T04:31:53.641Z",
       "description": "Tasks for master context"
     }
   }
