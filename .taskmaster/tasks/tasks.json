@@ -523,7 +523,7 @@
         "dependencies": [
           8
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -565,7 +565,7 @@
               "9.3"
             ],
             "details": "Bucket4j 라이브러리 의존성 추가, RateLimiter 설정 클래스 구현, 카카오톡 100회/분 제한 설정, SMS 500회/분 제한 설정, Token Bucket 알고리즘 적용, Rate Limit 초과 시 예외 처리, 메트릭 수집 기능 추가",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -576,7 +576,7 @@
               "9.4"
             ],
             "details": "@Retryable 어노테이션 설정, 지수 백오프 재시도 전략 구현, 최대 재시도 횟수 설정, 카카오톡 실패 시 SMS 자동 전환 로직, FallbackService 클래스 구현, 재시도 상태 추적, 서킷 브레이커 패턴 적용 고려",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -587,7 +587,7 @@
               "9.5"
             ],
             "details": "API 호출 로그 포맷 정의, 요청/응답 로깅 AOP 구현, 성능 메트릭 수집 (응답시간, 성공률), 알림 시스템 연동, HealthCheck 엔드포인트 구현, 대시보드용 통계 API 구현, 예외 상황별 알림 설정, 로그 레벨별 정책 수립",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -602,7 +602,7 @@
         "dependencies": [
           9
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-06T04:31:53.641Z",
+      "updated": "2025-08-06T08:21:54.830Z",
       "description": "Tasks for master context"
     }
   }
