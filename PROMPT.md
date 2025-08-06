@@ -762,3 +762,128 @@ public record UserUpdateDto(
 - **총 274개 테스트 100% 통과** ✅
 - Spring Boot 3.3.4 + JDK 21 + H2 메모리 DB 기반
 - 완성된 기능: 회원가입, JWT 로그인, 관리자 API, 본인 정보 조회, Swagger 문서화
+
+---
+
+## 2025-08-06
+
+### 41. 인텔리제이 머메이드 플러그인 환경 공유
+**프롬프트:** "나는 지금 너와 인텔리제이 IDE와 작업하고있다. 그리고 나의 인텔리제이에는 머메이드 플러그인이 설치되어 있다."
+
+**사용자 의도:**
+- 개발 환경에 대한 정보 공유 (IntelliJ IDE + Mermaid Plugin)
+- 향후 머메이드 다이어그램 활용 가능성 제시
+- 시각적 문서화 도구 활용 준비
+
+**응답:** 머메이드 다이어그램을 통한 시스템 구조나 플로우 표현 가능성 확인
+
+### 42. Design 폴더 및 아키텍처 문서화 계획 수립
+**프롬프트:** "나중에 최종 작업 산출물들을 머메이드로 사람이 이해하기 쉽게 잘 정리하는게 목적이야. design폴더를 만들어놨어."
+
+**사용자 의도:**
+- design 폴더 활용하여 최종 산출물 시각적 정리 계획
+- 머메이드 다이어그램으로 사람이 이해하기 쉬운 문서화
+- 체계적인 설계 문서 관리 구조 준비
+
+**응답:** 전체 시스템 아키텍처, API 플로우차트, JWT 인증 시퀀스, 데이터베이스 ERD 등 다이어그램화 계획 제시
+
+### 43. TaskMaster 9,10번 아키텍처 설계 요청
+**프롬프트:** "최우선으로 design디렉토리에 taskmaster 남은 작업인 9번, 10번에 해당하는 작업을 파악해서 러프하게 아키텍처를 그려봐라. 하위디렉토리와 파일명은 너가 적절하게 맞추고(나중에 다른 작업 산출물도 정리할것을 고려하라는 것임), 전체 아키텍처뿐만 아니라 클래스다이어그램도 md파일로 저장해봐."
+
+**사용자 의도:**
+- TaskMaster 9번, 10번 태스크 분석 및 아키텍처 사전 설계
+- design 디렉토리 구조화 (확장성 고려)
+- 러프한 수준에서 전체적인 구조 파악 목적
+- 클래스 다이어그램까지 포함한 상세 설계 요구
+
+**수행 작업:**
+
+#### TaskMaster 9,10번 태스크 분석
+- **Task 9**: 외부 메시지 API 클라이언트 및 Rate Limiting 구현 (복잡도: 8)
+  * 6개 서브태스크: 인터페이스 설계, KakaoTalk/SMS 클라이언트, Rate Limiting, 재시도 메커니즘, 모니터링
+  * 카카오톡 API: localhost:8081, Basic Auth (autoever:1234), 100회/분 제한
+  * SMS API: localhost:8082, Basic Auth (autoever:5678), 500회/분 제한
+  * Bucket4j 또는 커스텀 Rate Limiting, @Retryable 재시도, 외부API 로깅/모니터링
+
+- **Task 10**: 대용량 메시지 발송 시스템 구현 (복잡도: 9)
+  * 7개 서브태스크: API 구조, 연령계산, 페이지네이션, @Async 설정, CompletableFuture, 상태추적, 성능최적화
+  * POST /api/admin/messages/send - 연령대별 전체회원 메시지 발송
+  * 주민등록번호 기반 연령계산, 대량데이터 페이지네이션, ThreadPoolTaskExecutor 비동기 처리
+
+#### Design 디렉토리 구조 생성
+```
+design/
+├── messaging/          # 메시지 시스템 관련 설계
+├── architecture/       # 전체 아키텍처 문서
+```
+
+#### 아키텍처 문서 작성 완료
+1. **`design/messaging/task9-external-api-architecture.md`**
+   - 외부 메시지 API 클라이언트 시스템 전체 아키텍처
+   - MessageApiClient 인터페이스 및 구현체 설계
+   - Rate Limiting 시스템 (Token Bucket 방식)
+   - 재시도 메커니즘 및 대체 발송 로직 (KakaoTalk 실패 시 SMS 전환)
+   - 모니터링 및 알림 체계, 에러 처리 전략
+   - application.yml 설정 관리 및 성능 최적화 방안
+
+2. **`design/messaging/task10-bulk-messaging-architecture.md`**
+   - 대용량 메시지 발송 시스템 비동기 처리 아키텍처
+   - 연령 계산 시스템 (주민등록번호 → 10대/20대/30대/40대/50대+)
+   - 페이지네이션 및 배치 처리 (1000명 단위 페이지, 100명 단위 배치)
+   - ThreadPoolTaskExecutor 설정 (Core: 10, Max: 50, Queue: 1000)
+   - CompletableFuture 비동기 처리 파이프라인
+   - 메시지 발송 상태 추적 (CREATED → IN_PROGRESS → COMPLETED)
+   - API 설계: POST /api/admin/messages/send, GET /api/admin/messages/send/{jobId}/status
+
+3. **`design/messaging/messaging-class-diagram.md`**
+   - 전체 메시지 시스템 클래스 다이어그램 및 관계 정의
+   - 컨트롤러 레이어: AdminController → MessageSendService
+   - 서비스 레이어: MessageSendService, AgeCalculationService, AsyncMessageProcessingService
+   - 메시지 클라이언트: MessageClientFactory, KakaoTalkApiClient, SmsApiClient
+   - Rate Limiting: RateLimiter, TokenBucket, RetryMechanism
+   - 상태 추적: MessageStatusTracker, BulkMessageJob
+   - 모니터링: MessageSendMonitor, MessageSendMetrics
+   - DTO 클래스: MessageSendDto, BulkMessageResponse, MessageResult 등
+
+4. **`design/messaging/api-sequence-diagram.md`**
+   - 8가지 주요 시나리오별 시퀀스 다이어그램
+   - 단일 메시지 발송 (정상 케이스)
+   - Rate Limiting으로 인한 대기 시퀀스
+   - 재시도 메커니즘 (3회 재시도 + 지수 백오프)
+   - 대체 발송 (KakaoTalk 실패 → SMS 전환)
+   - 대용량 메시지 발송 (비동기 배치 처리)
+   - 에러 처리 및 복구 (Circuit Breaker 패턴)
+   - 메시지 발송 모니터링
+   - 설정 및 초기화
+
+**설계 특징:**
+- **확장 가능한 구조**: 다른 메시지 서비스 추가 용이한 인터페이스 설계
+- **내결함성**: Circuit Breaker, 재시도, 대체 발송으로 시스템 안정성 확보
+- **성능 최적화**: 비동기 처리, 배치 처리, Rate Limiting으로 대용량 처리 지원
+- **모니터링**: 실시간 메트릭, 알림 시스템으로 운영 지원
+- **보안**: 개인정보 마스킹, 관리자 권한 검증
+
+### 44. 카프카 도입 검토 및 현실적 결정
+**프롬프트:** "나중에 요구사항이 바뀌어서 분당 처리량을 높여야 할 경우 스케일아웃을 해야만 한다면, 카프카같은 브로커를 도입하는게 나을것 같은데. 메세지간의 순서 의존성은 없어보이는 기획이야. 지금 미리 확장할 수 있는 구조로 아키텍처를 개선하는건 어떻게 생각하니"
+
+**사용자 분석:**
+- ThreadPoolTaskExecutor 방식의 수직 확장 한계 인식
+- 카프카 브로커 도입을 통한 수평 확장 가능성 검토
+- 메시지 순서 의존성 없음 확인으로 병렬 처리 최적화 가능
+- 확장성 있는 아키텍처 사전 설계 필요성 제기
+
+**응답:** 카프카 도입의 장점 (수평 확장, 내결함성, 처리량) 인정하면서도 현재 단계에서의 개발/운영 복잡성 및 비용 증가 지적
+
+**최종 결정:**
+**프롬프트:** "지금 카프카 브로커까지 도입하게 되면 개발비용이 너무 커진다. 일단 너가 먼저 설계했던대로 진행하겠다."
+
+**사용자 결정 사항:**
+- 현실적인 개발 비용 고려하여 카프카 도입 보류
+- 현재 ThreadPoolTaskExecutor 기반 설계로 구현 진행
+- 단계적 접근: 현재 구조로 시작 → 필요시 카프카 도입 검토
+
+**현재 프로젝트 상태:**
+- **Tasks 1-8**: 완료 (회원가입, JWT 로그인, 관리자 API, 사용자 정보 조회)
+- **Tasks 9-10**: 아키텍처 설계 완료, 구현 대기
+- **Design 문서**: 4개 상세 설계 문서 작성 완료
+- **다음 단계**: Task 9,10 구현 시작 준비 완료
