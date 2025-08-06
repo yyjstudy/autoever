@@ -379,7 +379,7 @@
         "dependencies": [
           6
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -387,7 +387,7 @@
             "description": "JWT 토큰의 생성, 검증, 파싱을 담당하는 JwtUtil 유틸리티 클래스를 구현합니다.",
             "dependencies": [],
             "details": "JJWT 라이브러리를 사용하여 JWT 토큰 생성 메서드(generateToken), 토큰 검증 메서드(validateToken), 클레임 파싱 메서드(parseClaimsFromToken) 구현. Secret Key 주입 및 토큰 만료 시간 설정. username, authorities, 발급/만료 시간을 포함한 Claims 생성 로직 구현.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -396,7 +396,7 @@
             "description": "JWT 토큰 시스템에 필요한 설정값들을 application.yml에 정의하고 구성 클래스를 생성합니다.",
             "dependencies": [],
             "details": "application.yml에 jwt.secret-key, jwt.expiration-time, jwt.token-prefix 등의 설정 추가. @ConfigurationProperties를 사용한 JwtProperties 설정 클래스 생성. Secret Key는 최소 256비트 길이로 설정하고 Base64 인코딩 적용. 토큰 만료 시간은 1시간(3600초)으로 설정.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -408,7 +408,7 @@
               "7.2"
             ],
             "details": "OncePerRequestFilter를 상속받은 JwtAuthenticationFilter 클래스 구현. Authorization 헤더에서 Bearer 토큰 추출 로직 구현. JwtUtil을 사용한 토큰 검증 및 사용자 정보 추출. 유효한 토큰인 경우 Authentication 객체 생성 및 SecurityContext 설정. 토큰이 없거나 유효하지 않은 경우 필터 체인 계속 진행.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -419,7 +419,7 @@
               "7.3"
             ],
             "details": "JWT 토큰에서 추출한 username과 authorities를 사용하여 UsernamePasswordAuthenticationToken 생성. UserDetailsService를 통한 사용자 정보 로드 또는 토큰 클레임 직접 사용. SecurityContextHolder에 Authentication 객체 설정. 인증된 사용자 정보가 컨트롤러에서 @AuthenticationPrincipal로 접근 가능하도록 구성.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -430,7 +430,7 @@
               "7.4"
             ],
             "details": "SecurityConfig 클래스에서 JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 앞에 추가. /api/users/login 엔드포인트는 permitAll() 설정하여 인증 없이 접근 가능하도록 구성. 나머지 /api/** 경로는 authenticated() 설정. CORS 설정 및 CSRF 비활성화. 세션 관리를 STATELESS로 설정하여 JWT 기반 무상태 인증 구현.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -441,7 +441,7 @@
               "7.5"
             ],
             "details": "토큰 블랙리스트를 관리하는 TokenBlacklistService 구현 (Redis 또는 In-Memory 캐시 사용). 로그아웃 시 토큰을 블랙리스트에 추가하는 로직 구현. JwtAuthenticationFilter에서 블랙리스트 토큰 체크 로직 추가. JWT 관련 예외 처리: 만료된 토큰, 잘못된 토큰, 파싱 실패 등에 대한 커스텀 예외 및 글로벌 예외 핸들러 구현. 예외 발생 시 적절한 HTTP 상태 코드와 에러 메시지 반환.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -456,7 +456,7 @@
         "dependencies": [
           7
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -684,7 +684,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-05T14:05:04.537Z",
+      "updated": "2025-08-06T01:59:48.618Z",
       "description": "Tasks for master context"
     }
   }

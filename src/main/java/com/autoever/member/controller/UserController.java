@@ -1,6 +1,8 @@
 package com.autoever.member.controller;
 
 import com.autoever.member.dto.ApiResponse;
+import com.autoever.member.dto.JwtTokenDto;
+import com.autoever.member.dto.LoginDto;
 import com.autoever.member.dto.UserRegistrationDto;
 import com.autoever.member.dto.UserResponseDto;
 import com.autoever.member.service.UserService;
@@ -149,5 +151,115 @@ public class UserController {
         );
         
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    
+    /**
+     * 로그인 API
+     * 
+     * @param loginDto 로그인 요청 데이터 (username, password)
+     * @return JWT 토큰 정보
+     */
+    @PostMapping("/login")
+    @Operation(
+        summary = "사용자 로그인",
+        description = "사용자명과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다.",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "로그인 요청 정보",
+            required = true,
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = LoginDto.class),
+                examples = @ExampleObject(
+                    name = "로그인 요청 예시",
+                    value = """
+                        {
+                          "username": "testuser123",
+                          "password": "Password123!"
+                        }
+                        """
+                )
+            )
+        )
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "로그인 성공",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiResponse.class),
+                examples = @ExampleObject(
+                    name = "성공 응답 예시",
+                    value = """
+                        {
+                          "success": true,
+                          "message": "로그인이 성공적으로 완료되었습니다.",
+                          "data": {
+                            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                            "tokenType": "Bearer",
+                            "expiresIn": 86400
+                          },
+                          "timestamp": "2025-08-05 13:45:23"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "입력값 검증 실패",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "검증 실패 예시",
+                    value = """
+                        {
+                          "success": false,
+                          "message": "입력값 검증에 실패했습니다.",
+                          "data": [
+                            "username: 사용자명은 필수입니다",
+                            "password: 비밀번호는 필수입니다"
+                          ],
+                          "timestamp": "2025-08-05 13:45:23"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "인증 실패 예시",
+                    value = """
+                        {
+                          "success": false,
+                          "message": "사용자명 또는 비밀번호가 올바르지 않습니다.",
+                          "data": null,
+                          "timestamp": "2025-08-05 13:45:23"
+                        }
+                        """
+                )
+            )
+        )
+    })
+    public ResponseEntity<ApiResponse<JwtTokenDto>> login(
+            @Parameter(description = "로그인 요청 정보", required = true)
+            @Valid @RequestBody LoginDto loginDto) {
+        
+        log.info("로그인 요청: username={}", loginDto.username());
+        
+        JwtTokenDto tokenDto = userService.login(loginDto);
+        
+        log.info("로그인 성공: username={}", loginDto.username());
+        
+        ApiResponse<JwtTokenDto> response = ApiResponse.success(
+            "로그인이 성공적으로 완료되었습니다.", 
+            tokenDto
+        );
+        
+        return ResponseEntity.ok(response);
     }
 }

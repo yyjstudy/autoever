@@ -2,17 +2,19 @@ package com.autoever.member.config;
 
 import com.autoever.member.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -40,24 +42,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * 인메모리 사용자 세부 정보 서비스 설정
-     * Basic Authentication을 위한 관리자 계정 구성
-     * 
-     * @param passwordEncoder BCrypt 패스워드 인코더
-     * @return UserDetailsService 인메모리 사용자 관리 서비스
-     */
-    @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-        // 관리자 계정 생성: admin/1212, ROLE_ADMIN 권한
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(passwordEncoder.encode("1212"))  // BCrypt로 암호화
-                .roles("ADMIN")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin);
-    }
 
     /**
      * Spring Security 필터체인 설정
@@ -122,4 +106,36 @@ public class SecurityConfig {
 
         return http.build();
     }
+    
+    /**
+     * AuthenticationProvider Bean 설정
+     * UserDetailsService와 PasswordEncoder를 사용하여 인증 처리
+     * 
+     * @param userDetailsService 사용자 정보 서비스 (@Primary로 CompositeUserDetailsService가 주입됨)
+     * @param passwordEncoder 패스워드 인코더
+     * @return DaoAuthenticationProvider 인스턴스
+     */
+    @Bean
+    public AuthenticationProvider authenticationProvider(
+            UserDetailsService userDetailsService, 
+            PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
+    }
+    
+    /**
+     * AuthenticationManager Bean 설정
+     * 로그인 시 사용자 인증을 처리하는 관리자
+     * 
+     * @param authConfig Spring Security 인증 설정
+     * @return AuthenticationManager 인스턴스
+     * @throws Exception 설정 중 발생할 수 있는 예외
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+    
 }

@@ -707,3 +707,21 @@ public record UserUpdateDto(
 - JwtAuthenticationFilterTest에 TokenBlacklistService Mock 추가
 
 **최종 결과:** 213개 테스트 100% 통과, JWT 시스템 완전 구현 완료
+
+### 37. Task 8 그룹 1 완료 - 로그인 시스템 기본 구조
+
+**프롬프트:** "태스크마스터 8번 진행하자. 마찬가지로 서브태스크가 5개 있는데, 한번에 작업할 그룹단위를 먼저 설정하고 진행해. 커밋단위를 적절히 가져갈거야."
+
+**수행 작업:**
+- **그룹 1 완료**: Task 8.1 + 8.2 (로그인 시스템 기본 구조)
+- LoginDto 생성 및 POST /api/users/login 엔드포인트 구현
+- UserService 로그인 로직 (AuthenticationManager 활용)
+- CustomUserDetailsService, CompositeUserDetailsService 구현
+- SecurityConfig 인증 설정 (AuthenticationManager, AuthenticationProvider)
+- 포괄적인 테스트 작성 (8개 로그인 통합 테스트 + 5개 단위 테스트)
+
+**주요 문제 해결:**
+- StackOverflowError (AuthenticationProvider 순환 참조 해결)
+- Basic Authentication 실패 (admin 계정 BCrypt 해시 수정)
+
+**최종 결과:** 234개 테스트 100% 통과, JWT + 로그인 시스템 완성

@@ -1,5 +1,7 @@
 package com.autoever.member.service;
 
+import com.autoever.member.dto.JwtTokenDto;
+import com.autoever.member.dto.LoginDto;
 import com.autoever.member.dto.UserRegistrationDto;
 import com.autoever.member.dto.UserResponseDto;
 import com.autoever.member.entity.User;
@@ -7,9 +9,15 @@ import com.autoever.member.exception.DuplicateAccountException;
 import com.autoever.member.exception.DuplicateEmailException;
 import com.autoever.member.exception.DuplicatePhoneNumberException;
 import com.autoever.member.exception.DuplicateSocialNumberException;
+import com.autoever.member.exception.InvalidCredentialsException;
+import com.autoever.member.jwt.JwtUtil;
 import com.autoever.member.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +33,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
     /**
      * 사용자 회원가입 처리
@@ -192,5 +202,42 @@ public class UserService {
         
         // 기타 형식
         return "***-****-****";
+    }
+    
+    /**
+     * 사용자 로그인 처리
+     * 
+     * @param loginDto 로그인 요청 데이터 (username, password)
+     * @return JWT 토큰 정보
+     * @throws InvalidCredentialsException 인증 실패 시
+     */
+    @Transactional(readOnly = true)
+    public JwtTokenDto login(LoginDto loginDto) {
+        log.info("로그인 시도: username={}", loginDto.username());
+        
+        try {
+            // 1. Spring Security AuthenticationManager를 통한 인증
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    loginDto.username(),
+                    loginDto.password()
+                )
+            );
+            
+            log.debug("인증 성공: username={}", loginDto.username());
+            
+            // 2. JWT 토큰 생성
+            String token = jwtUtil.generateToken(authentication.getName());
+            long expiresIn = jwtUtil.getExpirationTime();
+            
+            log.info("JWT 토큰 발급 완료: username={}", loginDto.username());
+            
+            // 3. JWT 토큰 응답 DTO 반환
+            return JwtTokenDto.of(token, expiresIn);
+            
+        } catch (AuthenticationException e) {
+            log.warn("로그인 실패 - 잘못된 자격증명: username={}", loginDto.username());
+            throw new InvalidCredentialsException("사용자명 또는 비밀번호가 올바르지 않습니다.");
+        }
     }
 }

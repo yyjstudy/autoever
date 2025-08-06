@@ -170,4 +170,13 @@ public class JwtUtil {
         }
         return null;
     }
+    
+    /**
+     * JWT 토큰 만료 시간 (밀리초) 반환
+     * 
+     * @return 토큰 만료 시간 (밀리초)
+     */
+    public long getExpirationTime() {
+        return jwtProperties.expirationTime();
+    }
 }

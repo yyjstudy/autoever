@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,8 +39,12 @@ class SecurityConfigIntegrationTest {
     @Test
     @DisplayName("로그인 API는 인증 없이 접근 가능")
     void loginEndpoint_NoAuth_Accessible() throws Exception {
-        mockMvc.perform(post("/api/users/login"))
-                .andExpect(status().isNotFound()); // 컨트롤러 없어서 404지만 인증은 통과
+        String loginJson = "{\"username\":\"testuser\",\"password\":\"Test1234!\"}";
+        
+        mockMvc.perform(post("/api/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginJson))
+                .andExpect(status().isUnauthorized()); // 사용자가 없어서 401이지만 인증 필터는 통과
     }
 
     @Test
