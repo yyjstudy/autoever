@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * 대량 데이터 배치 처리 서비스
@@ -115,6 +116,48 @@ public class BatchProcessingService {
         log.info("배치 작업 완료 - {}", result);
         
         return result;
+    }
+    
+    /**
+     * 콜백 기반 배치 처리 (BulkMessageService용)
+     * 
+     * @param ageGroup 연령대
+     * @param batchCallback 배치별 콜백 (사용자 리스트 처리)
+     * @param progressCallback 진행률 콜백
+     */
+    public void processBatchWithCallback(
+            AgeGroup ageGroup,
+            Consumer<List<User>> batchCallback,
+            Consumer<BatchProgress> progressCallback) {
+        
+        UUID jobId = UUID.randomUUID(); // 임시 ID
+        AgeRange ageRange = ageCalculationService.calculateAgeRange(ageGroup);
+        long totalUsers = userQueryService.countUsersByAgeRange(ageRange);
+        
+        log.info("콜백 배치 처리 시작 - 연령대: {}, 총 사용자: {}", ageGroup, totalUsers);
+        
+        AtomicInteger processedCount = new AtomicInteger(0);
+        
+        // 페이지 단위로 사용자 처리
+        userQueryService.processUsersByAgeRangeInBatches(ageRange, users -> {
+            // 배치 콜백 실행
+            batchCallback.accept(users);
+            
+            // 진행률 업데이트
+            int processed = processedCount.addAndGet(users.size());
+            BatchProgress progress = new BatchProgress(
+                jobId, totalUsers, processed, processed, 0 // success는 외부에서 관리
+            );
+            
+            progressCallback.accept(progress);
+            
+            if (processed % 1000 == 0 || processed == totalUsers) {
+                log.debug("배치 진행률 - 처리: {}/{} ({}%)", 
+                         processed, totalUsers, progress.getProgressPercentage());
+            }
+        });
+        
+        log.info("콜백 배치 처리 완료 - 연령대: {}, 처리된 사용자: {}", ageGroup, processedCount.get());
     }
     
     /**

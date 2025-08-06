@@ -1,6 +1,7 @@
 package com.autoever.member.message.service;
 
 import com.autoever.member.entity.User;
+import com.autoever.member.message.dto.AgeGroup;
 import com.autoever.member.message.dto.AgeRange;
 import com.autoever.member.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.function.Consumer;
 public class UserQueryService {
     
     private final UserRepository userRepository;
+    private final AgeCalculationService ageCalculationService;
     
     // 기본 배치 크기
     private static final int DEFAULT_BATCH_SIZE = 1000;
@@ -35,6 +37,21 @@ public class UserQueryService {
         long count = userRepository.countUsersByAgeRange(ageRange.getMinAge(), ageRange.getMaxAge());
         log.info("연령대 {} 사용자 수: {}", ageRange, count);
         return count;
+    }
+    
+    /**
+     * 연령대별 사용자 수 조회
+     * 
+     * @param ageGroup 연령대
+     * @return 해당 연령대의 사용자 수
+     */
+    public int countUsersByAgeGroup(AgeGroup ageGroup) {
+        AgeRange ageRange = ageCalculationService.calculateAgeRange(ageGroup);
+        long count = countUsersByAgeRange(ageRange);
+        
+        log.debug("연령대별 사용자 수 조회 - 연령대: {}, 사용자 수: {}", ageGroup, count);
+        
+        return (int) count;
     }
     
     /**
