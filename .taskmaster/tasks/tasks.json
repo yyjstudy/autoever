@@ -821,7 +821,7 @@
         "description": "카카오톡 Mock 서버와 SMS Mock 서버와 실제 연동하여 카카오톡 우선 전송 후 실패 시 SMS로 자동 전환하는 메시지 전송 시스템을 구현합니다.",
         "details": "기존 MessageApiClient를 실제 Mock 서버 연동으로 수정: KakaoTalkApiClient는 localhost:8081/kakaotalk-messages로 POST 요청, SmsApiClient는 localhost:8082/sms?phone={phone}로 POST 요청. 각각 Basic Auth 적용 (카카오톡: autoever/1234, SMS: autoever/5678). FallbackMessageService 개선: sendWithFallback 메서드에서 카카오톡 API 호출 후 실패 시 자동으로 SMS API 호출하도록 구현. Rate Limiting 정책 적용: 카카오톡은 토큰당 1분에 100회 제한, SMS는 분당 500회 제한으로 Bucket4j 또는 커스텀 구현 사용. 메시지 전송 결과 상태 추가: SUCCESS_KAKAO, SUCCESS_SMS_FALLBACK, FAILED_BOTH 등. 에러 핸들링 강화: 카카오톡 API 응답 코드별 처리 (200성공, 400잘못된요청, 401인증실패, 500서버오류), SMS API 실패 시에도 적절한 에러 응답. 템플릿 시스템과 연동: 기존 MessageTemplate과 통합하여 통일된 메시지 형식 유지. 로깅 및 모니터링: 각 API 호출 결과와 폴백 동작을 상세히 로깅.",
         "testStrategy": "Mock 서버 연동 테스트: 카카오톡 Mock 서버(8081)와 SMS Mock 서버(8082) 정상 연결 확인, Basic Auth 인증 테스트. 폴백 메커니즘 테스트: 카카오톡 API 의도적 실패 시나리오에서 SMS 자동 전환 확인, 카카오톡 성공 시 SMS 호출 안 됨 확인. Rate Limiting 테스트: 카카오톡 1분에 100회 초과 시 제한 동작 확인, SMS 분당 500회 초과 시 제한 동작 확인. 에러 처리 테스트: 각 Mock 서버의 다양한 응답 코드(400, 401, 500) 처리 확인, 두 API 모두 실패 시 FAILED_BOTH 상태 확인. 대량 발송 통합 테스트: Task 10의 대량 발송 기능과 연동하여 실제 Mock 서버로 메시지 전송 확인, 템플릿 적용된 메시지가 올바르게 전송되는지 검증. 성능 테스트: Rate Limiting 하에서 최대 처리량 측정, 폴백 시나리오에서의 응답 시간 확인.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           11,
           12
@@ -834,7 +834,7 @@
             "description": "기존 MessageApiClient의 KakaoTalkApiClient와 SmsApiClient를 실제 Mock 서버 엔드포인트로 연결하고 Basic Auth 인증을 적용합니다.",
             "dependencies": [],
             "details": "KakaoTalkApiClient를 localhost:8081/kakaotalk-messages POST 요청으로 수정, SmsApiClient를 localhost:8082/sms?phone={phone} POST 요청으로 수정. Basic Auth 설정: 카카오톡(autoever/1234), SMS(autoever/5678). RestTemplate 또는 WebClient에 Basic Auth 헤더 추가. 기존 Mock 구현 제거하고 실제 HTTP 요청으로 변경.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock 서버 연결 테스트: 8081, 8082 포트 정상 연결 확인. Basic Auth 인증 테스트: 올바른/잘못된 인증 정보로 테스트. API 호출 결과 검증: JSON 요청/응답 형식 확인."
           },
           {
@@ -845,7 +845,7 @@
               "13.1"
             ],
             "details": "Bucket4j 라이브러리 추가 또는 커스텀 Rate Limiter 구현. 카카오톡: 토큰당 1분에 100회 제한, SMS: 분당 500회 제한. RateLimitService 클래스 생성하여 각 API별 제한 정책 관리. MessageApiClient에 Rate Limiting 체크 로직 추가. 제한 초과 시 적절한 예외 발생.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Rate Limiting 동작 테스트: 카카오톡 1분에 100회 초과 시 제한 확인, SMS 분당 500회 초과 시 제한 확인. 토큰별/전체별 제한 정책 검증."
           },
           {
@@ -857,7 +857,7 @@
               "13.2"
             ],
             "details": "MessageSendResult enum에 SUCCESS_KAKAO, SUCCESS_SMS_FALLBACK, FAILED_BOTH 상태 추가. FallbackMessageService.sendWithFallback() 메서드 수정: 카카오톡 API 호출 후 성공 시 SUCCESS_KAKAO 반환, 실패 시 SMS API 호출하여 SUCCESS_SMS_FALLBACK 또는 FAILED_BOTH 반환. Rate Limiting과 통합하여 제한 초과 시에도 적절한 폴백 동작 구현.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "폴백 메커니즘 테스트: 카카오톡 성공 시 SMS 호출 안 됨 확인, 카카오톡 실패 시 SMS 자동 전환 확인. 새로운 상태값 반환 테스트: 각 시나리오별 올바른 MessageSendResult 확인."
           },
           {
@@ -868,7 +868,7 @@
               "13.3"
             ],
             "details": "ApiException 클래스 생성하여 API 호출 에러 표현. 카카오톡 API 응답 코드별 처리: 200(성공), 400(잘못된 요청), 401(인증 실패), 500(서버 오류). SMS API 응답 코드별 처리 로직 추가. MessageApiClient에서 HTTP 상태 코드에 따른 예외 발생 및 처리. 재시도 로직 구현: 일시적 오류(500, 503) 시 자동 재시도.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "에러 처리 테스트: Mock 서버의 400, 401, 500 응답에 대한 적절한 예외 처리 확인. 재시도 로직 테스트: 일시적 오류 시 재시도 동작 검증. 두 API 모두 실패 시 FAILED_BOTH 상태 반환 확인."
           },
           {
@@ -889,7 +889,7 @@
         "id": 14,
         "title": "Mock 서버에 토큰 관리 시스템 구현",
         "description": "카카오톡과 SMS Mock 서버에 간단한 Rate Limiting 기능을 구현합니다. 복잡한 토큰 인증 없이 메모리 기반 카운터로만 요청 횟수를 제한하는 기본적인 튜토리얼 수준의 기능입니다.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           12,
           13
@@ -946,7 +946,7 @@
             "id": 5,
             "title": "Rate Limiting 통합 테스트 구현",
             "description": "카카오톡과 SMS Mock 서버의 Rate Limiting 동작 확인을 위한 기본적인 통합 테스트를 구현합니다.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               3,
               4
@@ -959,7 +959,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-07T06:02:47.796Z",
+      "updated": "2025-08-07T06:10:05.321Z",
       "description": "Tasks for master context"
     }
   }
