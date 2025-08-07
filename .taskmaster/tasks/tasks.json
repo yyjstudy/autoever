@@ -922,7 +922,7 @@
             "id": 3,
             "title": "카카오톡 Mock 서버에 Rate Limiting 적용",
             "description": "카카오톡 Mock 서버(포트 8081)에 1분당 100회 제한을 적용합니다.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1,
               2
@@ -934,7 +934,7 @@
             "id": 4,
             "title": "SMS Mock 서버에 Rate Limiting 적용",
             "description": "SMS Mock 서버(포트 8082)에 1분당 500회 제한을 적용합니다.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1,
               2
@@ -959,7 +959,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-07T05:58:39.059Z",
+      "updated": "2025-08-07T06:02:47.796Z",
       "description": "Tasks for master context"
     }
   }

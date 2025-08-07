@@ -1546,3 +1546,37 @@ design/
 - ✅ Thread-safe 동시성 구현 완료
 
 **현재 상태:** Group 1 완료, Group 2 진행 예정
+
+### 75. Task 14 Group 2 완료 - Mock 서버 Rate Limiting 적용
+**프롬프트:** "14.3과 14.4를 그룹2로 하고, 14.5를 그룹 3으로 한다음에 그룹 2부터 진행해."
+
+**그룹 재구성:**
+- Group 1: 기본 Rate Limiting 인프라 (14.1 + 14.2) ✅
+- Group 2: Mock 서버 Rate Limiting 적용 (14.3 + 14.4) ✅
+- Group 3: Rate Limiting 통합 테스트 (14.5) 대기 중
+
+**Group 2 완료: Mock 서버 Rate Limiting 적용**
+
+**Task 14.3: 카카오톡 Mock 서버에 Rate Limiting 적용**
+- `RateLimitConfig` 클래스 생성으로 Spring Boot 필터 등록
+- `FilterRegistrationBean`으로 RateLimitFilter 활성화
+- `/kakaotalk-messages/*` 경로에만 선택적 적용
+- 필터 실행 순서 설정 (Order=1, 인증 필터보다 우선)
+
+**Task 14.4: SMS Mock 서버에 Rate Limiting 적용**
+- `RateLimitConfig` 클래스 생성 (SMS Mock 서버용)
+- `/sms/*` 경로에만 Rate Limiting 적용
+- 동일한 필터 등록 패턴으로 일관성 확보
+
+**Group 2 구현 특징:**
+- **Spring Boot 통합**: FilterRegistrationBean으로 필터 등록
+- **선택적 적용**: API 엔드포인트별 URL 패턴 매칭
+- **구성 분리**: 각 Mock 서버별 독립적인 설정 클래스
+- **간소화**: 복잡한 설정 없이 기본적인 필터 등록만
+
+**적용 결과:**
+- KakaoTalk Mock (8081): 100 requests/minute, 500 에러 응답 (텍스트)
+- SMS Mock (8082): 500 requests/minute, 500 에러 응답 (JSON)
+- 양쪽 Mock 서버 빌드 성공 및 Rate Limiting 활성화
+
+**현재 상태:** Group 1,2 완료, Group 3 진행 예정
