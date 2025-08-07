@@ -1,7 +1,6 @@
 package com.autoever.member.controller;
 
 import com.autoever.member.dto.ApiResponse;
-import com.autoever.member.message.dto.BulkMessageJobStatus;
 import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
 import com.autoever.member.message.result.MessageSendTracker;
@@ -116,20 +115,6 @@ public class AdminMessageController {
             .body(ApiResponse.success("대량 메시지 발송이 시작되었습니다.", response));
     }
     
-    /**
-     * 메시지 발송 작업 상태 조회
-     */
-    @GetMapping("/send/{jobId}/status")
-    @Operation(summary = "메시지 발송 작업 상태 조회", 
-        description = "진행 중인 메시지 발송 작업의 상태를 조회합니다. 현재 큐 상태도 함께 제공됩니다.")
-    public ResponseEntity<ApiResponse<BulkMessageJobStatus>> getJobStatus(
-            @PathVariable UUID jobId) {
-        
-        BulkMessageJobStatus status = bulkMessageService.getJobStatus(jobId);
-        
-        return ResponseEntity
-            .ok(ApiResponse.success("작업 상태 조회 성공", status));
-    }
 
     /**
      * 메시지 발송 통계 조회 API

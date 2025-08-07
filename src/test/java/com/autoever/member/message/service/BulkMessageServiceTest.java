@@ -2,7 +2,6 @@ package com.autoever.member.message.service;
 
 import com.autoever.member.entity.User;
 import com.autoever.member.message.dto.AgeGroup;
-import com.autoever.member.message.dto.BulkMessageJobStatus;
 import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
 import com.autoever.member.message.queue.MessageQueueService;
@@ -92,19 +91,7 @@ class BulkMessageServiceTest {
         assertThat(response.startedAt()).isNotNull();
         assertThat(response.estimatedDuration()).isNotNull();
         
-        // 작업 상태가 초기화되었는지 확인
-        BulkMessageJobStatus status = bulkMessageService.getJobStatus(response.jobId());
-        assertThat(status.jobId()).isEqualTo(response.jobId());
-        assertThat(status.totalUsers()).isEqualTo(100);
-        // 비동기 처리로 인해 상태가 변경될 수 있으므로 여러 상태를 허용
-        assertThat(status.status()).isIn(
-            BulkMessageResponse.JobStatus.IN_PROGRESS,
-            BulkMessageResponse.JobStatus.PROCESSING_BATCH,
-            BulkMessageResponse.JobStatus.SENDING_MESSAGES,
-            BulkMessageResponse.JobStatus.COMPLETED,
-            BulkMessageResponse.JobStatus.PARTIALLY_FAILED,
-            BulkMessageResponse.JobStatus.FAILED
-        );
+        // 응답 검증만 수행 (작업 상태 조회 기능 제거됨)
     }
     
     @Test
@@ -122,24 +109,8 @@ class BulkMessageServiceTest {
         assertThat(response.jobId()).isNotNull();
         assertThat(response.totalUsers()).isEqualTo(0);
         assertThat(response.status()).isEqualTo(BulkMessageResponse.JobStatus.COMPLETED);
-        
-        // 작업 상태 확인
-        BulkMessageJobStatus status = bulkMessageService.getJobStatus(response.jobId());
-        assertThat(status.status()).isEqualTo(BulkMessageResponse.JobStatus.COMPLETED);
-        assertThat(status.progressPercentage()).isEqualTo(100.0);
     }
     
-    @Test
-    @DisplayName("작업 상태 조회 - 존재하지 않는 작업 ID")
-    void getJobStatus_NonExistentJobId() {
-        // Given
-        UUID nonExistentJobId = UUID.randomUUID();
-        
-        // When & Then
-        assertThatThrownBy(() -> bulkMessageService.getJobStatus(nonExistentJobId))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("존재하지 않는 작업 ID입니다: " + nonExistentJobId);
-    }
     
     @Test
     @DisplayName("비동기 메시지 발송 처리 - CompletableFuture 반환")
@@ -175,12 +146,6 @@ class BulkMessageServiceTest {
         assertThat(response.totalUsers()).isEqualTo(0);
         assertThat(response.status()).isEqualTo(BulkMessageResponse.JobStatus.FAILED);
         assertThat(response.startedAt()).isNotNull();
-        
-        // 작업 상태 확인
-        BulkMessageJobStatus status = bulkMessageService.getJobStatus(response.jobId());
-        assertThat(status.status()).isEqualTo(BulkMessageResponse.JobStatus.FAILED);
-        assertThat(status.totalUsers()).isEqualTo(0);
-        assertThat(status.progressPercentage()).isEqualTo(0.0);
         
         // userQueryService.countUsersByAgeGroup이 호출되지 않았는지 확인 (큐 체크에서 미리 실패)
         verify(userQueryService, never()).countUsersByAgeGroup(any());

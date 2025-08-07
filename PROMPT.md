@@ -1863,3 +1863,66 @@ design/
 - 기존 모든 테스트 통과 (BUILD SUCCESSFUL)
 
 **결과:** Rate limiting 즉시 실패에서 큐 기반 대기 처리로 사용자 경험 대폭 개선
+
+## 2025-08-07
+
+### 87. MessageQueueProcessor 재추가 로직 제거 및 실패 처리 개선
+**프롬프트:** "MessageQueueProcessor클래스에서 // 처리되지 못한 경우 큐에 다시 추가 부분에 재추가 하지 말고 그냥 소비시키고 fail처리해."
+
+**문제:** 처리되지 못한 메시지를 큐에 재추가하여 무한 루프 및 큐 적체 발생 가능성
+
+**해결 작업:**
+- MessageQueueProcessor의 89-94라인 수정
+- 재추가 로직 (`messageQueueService.enqueue()` 호출) 제거
+- Rate limit으로 처리 불가한 메시지는 큐에서 소비하고 실패 처리
+- 로그 레벨을 DEBUG에서 WARN으로 변경 (중요한 이벤트이므로)
+
+**개선 효과:**
+- 큐 무한 증가 방지
+- 시스템 안정성 향상
+- 메시지 손실 방지 (소비는 하되 실패로 기록)
+
+### 88. ApiRateLimiter 윈도우 크기 상수화 및 초 단위 설정 개선
+**프롬프트:** "ApiRateLimiter 클래스에서 // 1분이 지났으면 윈도우 리셋 이 부분을 상수로 하여 초단위로 설정할 수 있게 변경해줘. 기본값은 1분으로 하고"
+
+**수행 작업:**
+1. **상수 정의**
+   ```java
+   private static final int RATE_LIMIT_WINDOW_SECONDS = 60;
+   ```
+
+2. **하드코딩 제거**
+   - `ChronoUnit.MINUTES.between(windowStart, now) >= 1` → `ChronoUnit.SECONDS.between(windowStart, now) >= RATE_LIMIT_WINDOW_SECONDS`
+   - 남은 시간 계산: `60 - ChronoUnit.SECONDS...` → `RATE_LIMIT_WINDOW_SECONDS - ChronoUnit.SECONDS...`
+
+3. **로그 개선**
+   - 초기화 로그에 윈도우 크기 정보 포함
+   - "API Rate Limiter 초기화 완료 - 윈도우: 60초, 카카오톡: X회/60초, SMS: Y회/60초"
+
+**장점:** 윈도우 크기 변경 시 상수 하나만 수정하면 되는 유연성 확보
+
+### 90. /api/admin/messages/send/{jobId}/status API 완전 제거
+**프롬프트:** "api/admin/messages/send/param/status 이 api에 해당하는 기능 전부 지워."
+**명확화:** "public ResponseEntity<ApiResponse<BulkMessageJobStatus>> getJobStatus( 이부분이야"
+
+**제거된 기능:**
+1. **AdminMessageController**
+   - `getJobStatus()` 메서드 및 `@GetMapping("/send/{jobId}/status")` 엔드포인트 제거
+   - `BulkMessageJobStatus` import 제거
+
+2. **BulkMessageService**
+   - `getJobStatus(UUID jobId)` 메서드 완전 제거
+   - 작업 상태 조회 기능 제거
+
+3. **테스트 파일 정리**
+   - `AdminMessageControllerTest`: `getJobStatus_Success` 테스트 제거
+   - `BulkMessageServiceTest`: 모든 `getJobStatus()` 호출 제거
+   - 관련 import문 정리 (`BulkMessageJobStatus` 제거)
+
+4. **테스트 코드 수정**
+   - 응답 검증만 수행하도록 변경 (상태 조회 기능 제거됨)
+   - Mock 설정 유지하되 검증 로직 단순화
+
+**검증:** 405개 테스트 모두 통과 유지 ✅
+
+**결과:** `/api/admin/messages/send/{jobId}/status` API 완전 제거로 시스템 단순화

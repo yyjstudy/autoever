@@ -1,6 +1,5 @@
 package com.autoever.member.controller;
 
-import com.autoever.member.message.dto.BulkMessageJobStatus;
 import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
 import com.autoever.member.message.result.MessageSendTracker;
@@ -106,38 +105,6 @@ class AdminMessageControllerTest {
             .andExpect(status().isForbidden());
     }
     
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    @DisplayName("작업 상태 조회 - 성공")
-    void getJobStatus_Success() throws Exception {
-        // Given
-        UUID jobId = UUID.randomUUID();
-        BulkMessageJobStatus status = new BulkMessageJobStatus(
-            jobId,
-            BulkMessageResponse.JobStatus.COMPLETED,
-            15000,
-            15000,
-            14950,
-            50,
-            LocalDateTime.now().minusMinutes(10),
-            LocalDateTime.now(),
-            Duration.ofMinutes(10),
-            100.0
-        );
-        
-        when(bulkMessageService.getJobStatus(jobId)).thenReturn(status);
-        
-        // When & Then
-        mockMvc.perform(get("/api/admin/messages/send/{jobId}/status", jobId)
-                .with(csrf()))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.message").value("작업 상태 조회 성공"))
-            .andExpect(jsonPath("$.data.jobId").value(jobId.toString()))
-            .andExpect(jsonPath("$.data.status").value("COMPLETED"))
-            .andExpect(jsonPath("$.data.totalUsers").value(15000))
-            .andExpect(jsonPath("$.data.successCount").value(14950));
-    }
     
     @Test
     @DisplayName("인증되지 않은 사용자 - 401")

@@ -119,16 +119,6 @@ public class BulkMessageService {
         return response;
     }
     
-    /**
-     * 작업 상태 조회
-     */
-    public BulkMessageJobStatus getJobStatus(UUID jobId) {
-        BulkMessageJobStatus status = jobStatusMap.get(jobId);
-        if (status == null) {
-            throw new IllegalArgumentException("존재하지 않는 작업 ID입니다: " + jobId);
-        }
-        return status;
-    }
     
     /**
      * 비동기 메시지 발송 처리
