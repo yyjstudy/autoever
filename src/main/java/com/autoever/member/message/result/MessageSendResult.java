@@ -26,6 +26,16 @@ public enum MessageSendResult {
     RATE_LIMITED("발송량 제한으로 대기 중"),
     
     /**
+     * 큐에 추가되어 대기 중
+     */
+    QUEUED("대기열에 추가됨 - 순서대로 처리 예정"),
+    
+    /**
+     * 큐가 가득 참 - 나중에 다시 시도 필요
+     */
+    QUEUE_FULL("대기열이 가득참 - 나중에 다시 시도해주세요"),
+    
+    /**
      * 잘못된 수신자 정보
      */
     INVALID_RECIPIENT("잘못된 수신자 정보");

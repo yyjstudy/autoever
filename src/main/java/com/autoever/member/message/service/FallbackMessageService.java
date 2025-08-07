@@ -6,6 +6,7 @@ import com.autoever.member.message.client.KakaoTalkApiClient;
 import com.autoever.member.message.client.MessageApiClient;
 import com.autoever.member.message.client.SmsApiClient;
 import com.autoever.member.message.ratelimit.ApiRateLimiter;
+import com.autoever.member.message.queue.MessageQueueService;
 import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.logging.MessageTraceContext;
@@ -29,6 +30,7 @@ public class FallbackMessageService {
     private final MessageTemplateService messageTemplateService;
     private final MessageSendTracker messageSendTracker;
     private final ApiRateLimiter apiRateLimiter;
+    private final MessageQueueService messageQueueService;
 
     /**
      * 템플릿이 적용된 메시지를 Fallback 메커니즘과 함께 발송합니다.

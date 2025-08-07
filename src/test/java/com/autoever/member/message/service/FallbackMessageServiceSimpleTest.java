@@ -10,6 +10,7 @@ import com.autoever.member.message.result.MessageSendResult;
 import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.message.template.MessageTemplateService;
 import com.autoever.member.message.ratelimit.ApiRateLimiter;
+import com.autoever.member.message.queue.MessageQueueService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,9 @@ class FallbackMessageServiceSimpleTest {
     @Mock
     private ApiRateLimiter apiRateLimiter;
     
+    @Mock
+    private MessageQueueService messageQueueService;
+    
     private FallbackMessageService fallbackMessageService;
     
     @BeforeEach
@@ -49,7 +53,7 @@ class FallbackMessageServiceSimpleTest {
         lenient().when(apiRateLimiter.tryAcquire(ApiType.SMS)).thenReturn(true);
         
         fallbackMessageService = new FallbackMessageService(
-            kakaoTalkApiClient, smsApiClient, messageTemplateService, messageSendTracker, apiRateLimiter);
+            kakaoTalkApiClient, smsApiClient, messageTemplateService, messageSendTracker, apiRateLimiter, messageQueueService);
     }
     
     @Test
