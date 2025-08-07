@@ -52,29 +52,35 @@ public class SmsController {
                     .body(SmsResponse.failure("INVALID_PHONE_FORMAT", "올바른 전화번호 형식이 아닙니다"));
             }
             
-            // 시뮬레이션 시나리오 처리
+            // 시뮬레이션 시나리오 처리 (200, 400, 401, 500만 사용)
             if (phoneNumber.contains("9999")) {
-                log.warn("SMS 발송량 초과 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(SmsResponse.failure("QUOTA_EXCEEDED", "일일 발송량을 초과했습니다"));
-            }
-            
-            if (phoneNumber.contains("8888")) {
                 log.warn("SMS 서버 오류 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(SmsResponse.failure("SERVER_ERROR", "SMS 서버에 오류가 발생했습니다"));
             }
             
+            if (phoneNumber.contains("8888")) {
+                log.warn("SMS 잘못된 요청 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
+                return ResponseEntity.badRequest()
+                    .body(SmsResponse.failure("INVALID_REQUEST", "잘못된 요청입니다"));
+            }
+            
             if (phoneNumber.contains("7777")) {
-                log.warn("SMS 네트워크 오류 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(SmsResponse.failure("NETWORK_ERROR", "SMS 게이트웨이 연결에 실패했습니다"));
+                log.warn("SMS 인증 실패 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(SmsResponse.failure("AUTHENTICATION_FAILED", "SMS 인증에 실패했습니다"));
             }
             
             if (phoneNumber.contains("6666")) {
                 log.warn("잘못된 번호 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
                 return ResponseEntity.badRequest()
                     .body(SmsResponse.failure("INVALID_RECIPIENT", "유효하지 않은 수신번호입니다"));
+            }
+            
+            if (phoneNumber.contains("5555")) {
+                log.warn("SMS 추가 서버 오류 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(SmsResponse.failure("SYSTEM_ERROR", "시스템 오류가 발생했습니다"));
             }
             
             // 정상 처리

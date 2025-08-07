@@ -39,20 +39,30 @@ public class KakaoTalkController {
             // 시뮬레이션 시나리오 처리
             String phoneNumber = request.phoneNumber();
             
-            // 특정 번호로 에러 시나리오 테스트
+            // 특정 번호로 에러 시나리오 테스트 (200, 400, 401, 500만 사용)
             if (phoneNumber.contains("9999")) {
                 log.warn("서버 오류 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
             
             if (phoneNumber.contains("8888")) {
-                log.warn("네트워크 오류 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+                log.warn("잘못된 요청 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
+                return ResponseEntity.badRequest().build();
             }
             
             if (phoneNumber.contains("7777")) {
-                log.warn("타임아웃 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
-                return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).build();
+                log.warn("인증 실패 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            if (phoneNumber.contains("6666")) {
+                log.warn("잘못된 번호 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
+                return ResponseEntity.badRequest().build();
+            }
+            
+            if (phoneNumber.contains("5555")) {
+                log.warn("시스템 오류 시뮬레이션 - phone: {}", maskPhoneNumber(phoneNumber));
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
             
             // 정상 처리
