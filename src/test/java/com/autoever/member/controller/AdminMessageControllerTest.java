@@ -122,6 +122,9 @@ class AdminMessageControllerTest {
         // Given
         MessageSendTracker.SendStatistics statistics = new MessageSendTracker.SendStatistics(
             1523,      // totalAttempts
+            1089,      // kakaoSuccessCount
+            352,       // smsSuccessCount  
+            82,        // failureCount (72 + 10)
             10,        // currentQueueSize
             1500       // maxQueueSize
         );
@@ -135,6 +138,9 @@ class AdminMessageControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("메시지 발송 통계 조회가 완료되었습니다."))
             .andExpect(jsonPath("$.data.totalAttempts").value(1523))
+            .andExpect(jsonPath("$.data.kakaoSuccessCount").value(1089))
+            .andExpect(jsonPath("$.data.smsSuccessCount").value(352))
+            .andExpect(jsonPath("$.data.failureCount").value(82))
             .andExpect(jsonPath("$.data.currentQueueSize").value(10))
             .andExpect(jsonPath("$.data.maxQueueSize").value(1500));
     }

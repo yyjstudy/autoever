@@ -89,8 +89,21 @@ public class MessageSendTracker {
     public SendStatistics getStatistics() {
         MessageQueueService.QueueStatus queueStatus = messageQueueService.getQueueStatus();
         
+        // 성공 카운트
+        int kakaoSuccessCount = resultCounters.get(MessageSendResult.SUCCESS_KAKAO).get();
+        int smsSuccessCount = resultCounters.get(MessageSendResult.SUCCESS_SMS_FALLBACK).get();
+        
+        // 실패 카운트 계산 (카카오톡과 SMS 실패를 합산)
+        int failureCount = resultCounters.get(MessageSendResult.FAILED_BOTH).get() +
+                          resultCounters.get(MessageSendResult.RATE_LIMITED).get() +
+                          resultCounters.get(MessageSendResult.QUEUE_FULL).get() +
+                          resultCounters.get(MessageSendResult.INVALID_RECIPIENT).get();
+        
         return new SendStatistics(
             totalAttempts.get(),
+            kakaoSuccessCount,
+            smsSuccessCount,
+            failureCount,
             queueStatus.getCurrentSize(),
             queueStatus.getMaxSize()
         );
@@ -123,14 +136,19 @@ public class MessageSendTracker {
      */
     public record SendStatistics(
         long totalAttempts,
+        int kakaoSuccessCount,
+        int smsSuccessCount,
+        int failureCount,
         int currentQueueSize,
         int maxQueueSize
     ) {
         @Override
         public String toString() {
             return String.format(
-                "전체 시도: %d, 큐상태: %d/%d",
-                totalAttempts, currentQueueSize, maxQueueSize
+                "전체 시도: %d, 카카오톡 성공: %d, SMS 성공: %d, " +
+                "실패: %d, 큐상태: %d/%d",
+                totalAttempts, kakaoSuccessCount, smsSuccessCount,
+                failureCount, currentQueueSize, maxQueueSize
             );
         }
     }

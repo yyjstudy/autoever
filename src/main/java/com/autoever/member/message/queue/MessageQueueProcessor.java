@@ -6,6 +6,8 @@ import com.autoever.member.message.client.SmsApiClient;
 import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.ratelimit.ApiRateLimiter;
+import com.autoever.member.message.result.MessageSendResult;
+import com.autoever.member.message.result.MessageSendTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,15 +25,18 @@ public class MessageQueueProcessor {
     private final ApiRateLimiter apiRateLimiter;
     private final KakaoTalkApiClient kakaoTalkApiClient;
     private final SmsApiClient smsApiClient;
+    private final MessageSendTracker messageSendTracker;
     
     public MessageQueueProcessor(MessageQueueService messageQueueService, 
                                ApiRateLimiter apiRateLimiter,
                                KakaoTalkApiClient kakaoTalkApiClient,
-                               SmsApiClient smsApiClient) {
+                               SmsApiClient smsApiClient,
+                               MessageSendTracker messageSendTracker) {
         this.messageQueueService = messageQueueService;
         this.apiRateLimiter = apiRateLimiter;
         this.kakaoTalkApiClient = kakaoTalkApiClient;
         this.smsApiClient = smsApiClient;
+        this.messageSendTracker = messageSendTracker;
         log.info("MessageQueueProcessor 초기화 완료");
     }
     
@@ -89,6 +94,7 @@ public class MessageQueueProcessor {
             // 처리되지 못한 경우 큐에서 소비하고 실패 처리
             if (!processed) {
                 log.warn("Rate limit으로 처리 불가 - 메시지 소비 및 실패 처리: {}", item.getId());
+                messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, item.getPreferredApiType());
             }
             
         } catch (Exception e) {
@@ -106,14 +112,17 @@ public class MessageQueueProcessor {
             
             if (response.success()) {
                 log.info("카카오톡 발송 성공 - ID: {}, MessageId: {}", item.getId(), response.messageId());
+                messageSendTracker.recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
                 return true;
             } else {
                 log.warn("카카오톡 발송 실패 - ID: {}, Error: {}", item.getId(), response.errorMessage());
+                messageSendTracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.KAKAOTALK);
                 return false;
             }
             
         } catch (Exception e) {
             log.error("카카오톡 발송 중 오류 - ID: " + item.getId(), e);
+            messageSendTracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.KAKAOTALK);
             return false;
         }
     }
@@ -128,14 +137,23 @@ public class MessageQueueProcessor {
             
             if (response.success()) {
                 log.info("SMS 발송 성공 - ID: {}, MessageId: {}", item.getId(), response.messageId());
+                // 카카오톡에서 SMS로 fallback된 경우와 처음부터 SMS인 경우 구분
+                if (item.getPreferredApiType() == ApiType.KAKAOTALK) {
+                    messageSendTracker.recordResult(MessageSendResult.SUCCESS_SMS_FALLBACK, ApiType.SMS);
+                } else {
+                    // 처음부터 SMS로 요청된 경우는 SMS 성공으로 처리하되, 별도 결과 타입 필요
+                    messageSendTracker.recordResult(MessageSendResult.SUCCESS_SMS_FALLBACK, ApiType.SMS);
+                }
                 return true;
             } else {
                 log.warn("SMS 발송 실패 - ID: {}, Error: {}", item.getId(), response.errorMessage());
+                messageSendTracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.SMS);
                 return false;
             }
             
         } catch (Exception e) {
             log.error("SMS 발송 중 오류 - ID: " + item.getId(), e);
+            messageSendTracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.SMS);
             return false;
         }
     }

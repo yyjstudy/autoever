@@ -74,8 +74,8 @@ class FallbackMessageServiceSimpleTest {
         
         // Then
         assertThat(result).isEqualTo(MessageSendResult.QUEUED);
-        verify(messageSendTracker).recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
         verify(messageQueueService).enqueue(memberName, phoneNumber, templatedMessage, ApiType.KAKAOTALK);
+        // QUEUED는 더 이상 기록하지 않음 (실제 발송 시에만 기록)
     }
     
     @Test
@@ -98,8 +98,8 @@ class FallbackMessageServiceSimpleTest {
         
         // Then
         assertThat(result).isEqualTo(MessageSendResult.QUEUED);
-        verify(messageSendTracker).recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
         verify(messageQueueService).enqueue("이영희", "010-9876-5432", templatedMessage, ApiType.KAKAOTALK);
+        // QUEUED는 더 이상 기록하지 않음 (실제 발송 시에만 기록)
     }
     
     @Test
@@ -144,6 +144,6 @@ class FallbackMessageServiceSimpleTest {
         assertThat(result).isEqualTo(MessageSendResult.QUEUED);
         verify(messageTemplateService).applyTemplate(memberName, originalMessage);
         verify(messageQueueService).enqueue(memberName, phoneNumber, templatedMessage, ApiType.KAKAOTALK);
-        verify(messageSendTracker).recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
+        // QUEUED는 더 이상 기록하지 않음 (실제 발송 시에만 기록)
     }
 }

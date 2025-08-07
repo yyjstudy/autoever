@@ -128,15 +128,32 @@ public class AdminMessageController {
             관리자 권한으로 메시지 발송 통계를 조회합니다.
             
             **제공되는 정보**:
-            - 전체 발송 시도 수
-            - 성공률 (%)
-            - Fallback 발생률 (%)
-            - 채널별 성공/실패 건수
-            - Rate Limiting 발생 건수
-            - 큐에 대기 중인 메시지 건수
-            - 현재 큐 상태 (사용량/최대용량)
+            - 전체 발송 시도 수 (totalAttempts)
+            - 카카오톡 성공 건수 (kakaoSuccessCount)
+            - SMS 성공 건수 (smsSuccessCount) 
+            - 실패 건수 (failureCount) - 모든 실패 케이스 포함
+            - 현재 큐 대기 건수 (currentQueueSize)
+            - 최대 큐 용량 (maxQueueSize)
             
             **실시간 통계**: 시스템 시작 이후 누적 데이터를 제공합니다.
+            
+            **응답 예시**:
+            ```json
+            {
+              "success": true,
+              "message": "메시지 발송 통계 조회가 완료되었습니다.",
+              "data": {
+                "totalAttempts": 1523,
+                "kakaoSuccessCount": 1089,
+                "smsSuccessCount": 352,
+                "failureCount": 82,
+                "currentQueueSize": 10,
+                "maxQueueSize": 1500
+              }
+            }
+            ```
+            
+            **주의**: totalAttempts = kakaoSuccessCount + smsSuccessCount + failureCount
             """
     )
     public ResponseEntity<ApiResponse<MessageSendTracker.SendStatistics>> getMessageStatistics() {

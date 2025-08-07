@@ -214,8 +214,8 @@ public class BulkMessageService {
         
         // 구조화된 작업 완료 로그 (발송 통계 포함)
         MessageSendTracker.SendStatistics sendStats = messageSendTracker.getStatistics();
-        log.info("작업 완료 시점의 전체 발송 통계 - 전체시도: {}, 큐상태: {}/{}", 
-            sendStats.totalAttempts(), sendStats.currentQueueSize(), sendStats.maxQueueSize());
+        log.info("작업 완료 시점의 전체 발송 통계 - 카카오성공: {}, SMS성공: {}, 실패: {}", 
+            sendStats.kakaoSuccessCount(), sendStats.smsSuccessCount(), sendStats.failureCount());
             
         structuredLogger.logJobCompletion(jobId, finalStatus, 
             tracker.getTotalUsers(), tracker.getSuccessCount(), tracker.getFailureCount(), 0L);

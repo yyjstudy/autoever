@@ -68,7 +68,6 @@ public class FallbackMessageService {
         if (queueResult.isSuccess()) {
             log.info("메시지 큐에 추가 완료 - QueueId: {}, Position: {}", 
                 queueResult.getQueueId(), queueResult.getQueuePosition());
-            messageSendTracker.recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
             return MessageSendResult.QUEUED;
         } else {
             log.error("큐 용량 초과 - {}", queueResult.getMessage());
@@ -118,7 +117,6 @@ public class FallbackMessageService {
         if (queueResult.isSuccess()) {
             log.info("메시지 큐에 추가 완료 - QueueId: {}, Position: {}", 
                 queueResult.getQueueId(), queueResult.getQueuePosition());
-            messageSendTracker.recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
             return MessageSendResult.QUEUED;
         } else {
             log.error("큐 용량 초과 - {}", queueResult.getMessage());

@@ -31,38 +31,45 @@ class MessageSendTrackerTest {
         
         // then
         assertThat(stats.totalAttempts()).isEqualTo(0);
+        assertThat(stats.kakaoSuccessCount()).isEqualTo(0);
+        assertThat(stats.smsSuccessCount()).isEqualTo(0);
+        assertThat(stats.failureCount()).isEqualTo(0);
         assertThat(stats.currentQueueSize()).isEqualTo(0);
         assertThat(stats.maxQueueSize()).isEqualTo(1500);
     }
     
     @Test
-    @DisplayName("메시지 발송 기록")
-    void recordResult_MessageSending() {
+    @DisplayName("카카오톡 성공 기록")
+    void recordResult_KakaoSuccess() {
         // when
         tracker.recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
         
         // then
         MessageSendTracker.SendStatistics stats = tracker.getStatistics();
         assertThat(stats.totalAttempts()).isEqualTo(1);
-        assertThat(stats.currentQueueSize()).isEqualTo(0);
-        assertThat(stats.maxQueueSize()).isEqualTo(1500);
+        assertThat(stats.kakaoSuccessCount()).isEqualTo(1);
+        assertThat(stats.smsSuccessCount()).isEqualTo(0);
+        assertThat(stats.failureCount()).isEqualTo(0);
     }
     
     @Test
-    @DisplayName("복수 메시지 발송 통계")
-    void multipleMessageStatistics() {
-        // when
+    @DisplayName("복합 통계 계산")
+    void complexStatistics() {
+        // when - 카카오톡 2번 성공, 2번 실패 (FAILED_BOTH, RATE_LIMITED)
         tracker.recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
         tracker.recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
         tracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.KAKAOTALK);
         tracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.KAKAOTALK);
+        
+        // SMS 1번 성공, 1번 실패 (FAILED_BOTH만)
         tracker.recordResult(MessageSendResult.SUCCESS_SMS_FALLBACK, ApiType.SMS);
         
         // then
         MessageSendTracker.SendStatistics stats = tracker.getStatistics();
         assertThat(stats.totalAttempts()).isEqualTo(5);
-        assertThat(stats.currentQueueSize()).isEqualTo(0);
-        assertThat(stats.maxQueueSize()).isEqualTo(1500);
+        assertThat(stats.kakaoSuccessCount()).isEqualTo(2);
+        assertThat(stats.smsSuccessCount()).isEqualTo(1);
+        assertThat(stats.failureCount()).isEqualTo(2); // FAILED_BOTH + RATE_LIMITED = 2
     }
     
     
@@ -79,7 +86,8 @@ class MessageSendTrackerTest {
         // then
         MessageSendTracker.SendStatistics stats = tracker.getStatistics();
         assertThat(stats.totalAttempts()).isEqualTo(0);
-        assertThat(stats.currentQueueSize()).isEqualTo(0);
-        assertThat(stats.maxQueueSize()).isEqualTo(1500);
+        assertThat(stats.kakaoSuccessCount()).isEqualTo(0);
+        assertThat(stats.smsSuccessCount()).isEqualTo(0);
+        assertThat(stats.failureCount()).isEqualTo(0);
     }
 }
