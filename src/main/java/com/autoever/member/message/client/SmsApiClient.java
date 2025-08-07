@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -47,18 +49,17 @@ public class SmsApiClient implements MessageApiClient {
         
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             headers.set("Authorization", authHeader);
             
-            // SMS API 요청 형식에 맞게 변환
-            Map<String, Object> requestBody = Map.of(
-                "phoneNumber", request.recipient(),
-                "content", request.message()
-            );
+            // SMS API 요청 형식에 맞게 변환 (form-urlencoded)
+            MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+            requestBody.add("content", request.message());
             
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(requestBody, headers);
             
-            String url = config.getBaseUrl() + "/sms";
+            // URL 패턴: /sms?phone={phone}
+            String url = config.getBaseUrl() + "/sms?phone=" + request.recipient();
             ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {

@@ -709,7 +709,7 @@
             "description": "기존 MessageApiClient를 새로운 API 엔드포인트와 인증 정보로 업데이트합니다. 카카오톡과 SMS API의 URL, 파라미터 형식, Basic Auth 정보를 변경합니다.",
             "dependencies": [],
             "details": "카카오톡 API 엔드포인트 변경: localhost:8081/kakaotalk-messages로 수정. SMS API 변경: localhost:8082/sms?phone={phone}으로 수정, form-urlencoded 방식 적용. Basic Auth 업데이트: 카카오톡(autoever/1234), SMS(autoever/5678). 기존 Rate Limiting 설정 유지: 카카오톡 100회/분, SMS 500회/분.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "새로운 엔드포인트 연결 테스트. Basic Auth 인증 확인. 변경된 파라미터 형식 테스트. Rate Limiting 동작 확인."
           },
           {
@@ -818,7 +818,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-07T01:15:33.122Z",
+      "updated": "2025-08-07T01:33:36.844Z",
       "description": "Tasks for master context"
     }
   }

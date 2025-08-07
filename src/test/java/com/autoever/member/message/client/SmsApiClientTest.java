@@ -82,7 +82,7 @@ class SmsApiClientTest {
         assertThat(response.timestamp()).isNotNull();
         
         verify(restTemplate).postForEntity(
-            eq("http://localhost:8082/sms"),
+            eq("http://localhost:8082/sms?phone=010-9876-5432"),
             any(),
             eq(Map.class)
         );
