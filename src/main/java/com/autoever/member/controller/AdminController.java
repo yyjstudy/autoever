@@ -3,7 +3,6 @@ package com.autoever.member.controller;
 import com.autoever.member.dto.ApiResponse;
 import com.autoever.member.dto.UserResponseDto;
 import com.autoever.member.dto.UserUpdateDto;
-import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,13 +33,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@Tag(name = "Admin Management", description = "관리자 전용 API - 회원 관리, 시스템 관리")
+@Tag(name = "Admin User Management", description = "관리자 전용 API - 회원 관리")
 @SecurityRequirement(name = "basicAuth")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
-    private final MessageSendTracker messageSendTracker;
 
     /**
      * 전체 회원 목록 조회 API (페이징 지원)
@@ -580,139 +578,4 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * 메시지 발송 통계 조회 API
-     * 
-     * @return 메시지 발송 통계 정보
-     */
-    @GetMapping("/messages/statistics")
-    @Operation(
-        summary = "메시지 발송 통계 조회",
-        description = """
-            관리자 권한으로 메시지 발송 통계를 조회합니다.
-            
-            **제공되는 정보**:
-            - 전체 발송 시도 수
-            - 성공률 (%)
-            - Fallback 발생률 (%)
-            - 채널별 성공/실패 건수
-            - Rate Limiting 발생 건수
-            
-            **실시간 통계**: 시스템 시작 이후 누적 데이터를 제공합니다.
-            """
-    )
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "메시지 발송 통계 조회 성공",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class),
-                examples = @ExampleObject(
-                    name = "성공 응답 예시",
-                    value = """
-                        {
-                          "success": true,
-                          "message": "메시지 발송 통계 조회가 완료되었습니다.",
-                          "data": {
-                            "totalAttempts": 1523,
-                            "successRate": 94.7,
-                            "fallbackRate": 23.1,
-                            "kakaoSuccessCount": 1089,
-                            "smsFallbackCount": 352,
-                            "failedCount": 72,
-                            "rateLimitedCount": 10,
-                            "kakaoAttempts": 1523,
-                            "smsAttempts": 424
-                          },
-                          "timestamp": "2025-08-07 15:30:45"
-                        }
-                        """
-                )
-            )
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "401",
-            description = "인증 실패 - 로그인 필요"
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "403",
-            description = "권한 부족 - 관리자 권한 필요"
-        )
-    })
-    public ResponseEntity<ApiResponse<MessageSendTracker.SendStatistics>> getMessageStatistics() {
-        log.info("관리자 메시지 발송 통계 조회 요청");
-        
-        MessageSendTracker.SendStatistics statistics = messageSendTracker.getStatistics();
-        
-        log.info("관리자 메시지 발송 통계 조회 완료: {}", statistics);
-        
-        ApiResponse<MessageSendTracker.SendStatistics> response = ApiResponse.success(
-            "메시지 발송 통계 조회가 완료되었습니다.", 
-            statistics
-        );
-        
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * 메시지 발송 통계 초기화 API
-     * 
-     * @return 초기화 완료 메시지
-     */
-    @PostMapping("/messages/statistics/reset")
-    @Operation(
-        summary = "메시지 발송 통계 초기화",
-        description = """
-            관리자 권한으로 메시지 발송 통계를 초기화합니다.
-            
-            **주의사항**:
-            - 모든 누적 통계가 0으로 재설정됩니다
-            - 이 작업은 되돌릴 수 없습니다
-            - 시스템 성능에는 영향을 주지 않습니다
-            """
-    )
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "메시지 발송 통계 초기화 성공",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class),
-                examples = @ExampleObject(
-                    name = "성공 응답 예시",
-                    value = """
-                        {
-                          "success": true,
-                          "message": "메시지 발송 통계가 초기화되었습니다.",
-                          "data": null,
-                          "timestamp": "2025-08-07 15:30:45"
-                        }
-                        """
-                )
-            )
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "401",
-            description = "인증 실패 - 로그인 필요"
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "403",
-            description = "권한 부족 - 관리자 권한 필요"
-        )
-    })
-    public ResponseEntity<ApiResponse<Void>> resetMessageStatistics() {
-        log.info("관리자 메시지 발송 통계 초기화 요청");
-        
-        messageSendTracker.reset();
-        
-        log.info("관리자 메시지 발송 통계 초기화 완료");
-        
-        ApiResponse<Void> response = ApiResponse.success(
-            "메시지 발송 통계가 초기화되었습니다.", 
-            null
-        );
-        
-        return ResponseEntity.ok(response);
-    }
 }

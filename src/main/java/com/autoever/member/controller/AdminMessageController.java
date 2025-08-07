@@ -4,6 +4,7 @@ import com.autoever.member.dto.ApiResponse;
 import com.autoever.member.message.dto.BulkMessageJobStatus;
 import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
+import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.message.service.BulkMessageService;
 import com.autoever.member.message.service.MessagePerformanceService;
 import com.autoever.member.message.service.DynamicBatchOptimizer;
@@ -37,6 +38,7 @@ public class AdminMessageController {
     private final BulkMessageService bulkMessageService;
     private final MessagePerformanceService performanceService;
     private final DynamicBatchOptimizer batchOptimizer;
+    private final MessageSendTracker messageSendTracker;
     
     /**
      * 연령대별 대량 메시지 발송
@@ -166,5 +168,61 @@ public class AdminMessageController {
         
         return ResponseEntity
             .ok(ApiResponse.success(message, message));
+    }
+
+    /**
+     * 메시지 발송 통계 조회 API
+     * 
+     * @return 메시지 발송 통계 정보
+     */
+    @GetMapping("/statistics")
+    @Operation(
+        summary = "메시지 발송 통계 조회",
+        description = """
+            관리자 권한으로 메시지 발송 통계를 조회합니다.
+            
+            **제공되는 정보**:
+            - 전체 발송 시도 수
+            - 성공률 (%)
+            - Fallback 발생률 (%)
+            - 채널별 성공/실패 건수
+            - Rate Limiting 발생 건수
+            
+            **실시간 통계**: 시스템 시작 이후 누적 데이터를 제공합니다.
+            """
+    )
+    public ResponseEntity<ApiResponse<MessageSendTracker.SendStatistics>> getMessageStatistics() {
+        MessageSendTracker.SendStatistics statistics = messageSendTracker.getStatistics();
+        
+        return ResponseEntity.ok(ApiResponse.success(
+            "메시지 발송 통계 조회가 완료되었습니다.", 
+            statistics
+        ));
+    }
+
+    /**
+     * 메시지 발송 통계 초기화 API
+     * 
+     * @return 초기화 완료 메시지
+     */
+    @PostMapping("/statistics/reset")
+    @Operation(
+        summary = "메시지 발송 통계 초기화",
+        description = """
+            관리자 권한으로 메시지 발송 통계를 초기화합니다.
+            
+            **주의사항**:
+            - 모든 누적 통계가 0으로 재설정됩니다
+            - 이 작업은 되돌릴 수 없습니다
+            - 시스템 성능에는 영향을 주지 않습니다
+            """
+    )
+    public ResponseEntity<ApiResponse<Void>> resetMessageStatistics() {
+        messageSendTracker.reset();
+        
+        return ResponseEntity.ok(ApiResponse.success(
+            "메시지 발송 통계가 초기화되었습니다.", 
+            null
+        ));
     }
 }

@@ -1745,3 +1745,15 @@ design/
 - 응답: `{"status": "UP", "service": "서버명", "timestamp": 시간}`
 
 **결과:** Mock 서버 연결 상태 확인 정상화
+
+### 81. Swagger API 문서 정리 - Admin Message API 분리
+**프롬프트:** "스웨거에서 /api/admin/messages/statistics api를 Admin Message API 로 옮겨라."
+
+**수행 작업:**
+- AdminController의 메시지 통계 API를 AdminMessageController로 이동
+- AdminController Tag를 "Admin User Management"로 변경  
+- AdminMessageController에 통계 API 2개 추가 (`GET /statistics`, `POST /statistics/reset`)
+- 관련 테스트 코드 업데이트 (AdminMessageControllerTest에 4개 테스트 추가)
+- 전체 테스트 실행: BUILD SUCCESSFUL ✅
+
+**결과:** 스웨거에서 메시지 관련 API가 별도 섹션으로 깔끔하게 분리됨

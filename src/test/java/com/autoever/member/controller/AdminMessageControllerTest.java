@@ -3,6 +3,7 @@ package com.autoever.member.controller;
 import com.autoever.member.message.dto.BulkMessageJobStatus;
 import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
+import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.message.service.BulkMessageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +47,9 @@ class AdminMessageControllerTest {
     
     @MockBean
     private BulkMessageService bulkMessageService;
+    
+    @MockBean
+    private MessageSendTracker messageSendTracker;
     
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -142,5 +146,69 @@ class AdminMessageControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("메시지 발송 통계 조회 - 성공")
+    void getMessageStatistics_Success() throws Exception {
+        // Given
+        MessageSendTracker.SendStatistics statistics = new MessageSendTracker.SendStatistics(
+            1523,
+            94.7,
+            23.1,
+            1089,
+            352,
+            72,
+            10,
+            1523,
+            424
+        );
+        
+        when(messageSendTracker.getStatistics()).thenReturn(statistics);
+        
+        // When & Then
+        mockMvc.perform(get("/api/admin/messages/statistics")
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("메시지 발송 통계 조회가 완료되었습니다."))
+            .andExpect(jsonPath("$.data.totalAttempts").value(1523))
+            .andExpect(jsonPath("$.data.successRate").value(94.7))
+            .andExpect(jsonPath("$.data.fallbackRate").value(23.1))
+            .andExpect(jsonPath("$.data.kakaoSuccessCount").value(1089))
+            .andExpect(jsonPath("$.data.smsFallbackCount").value(352))
+            .andExpect(jsonPath("$.data.failedCount").value(72))
+            .andExpect(jsonPath("$.data.rateLimitedCount").value(10));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    @DisplayName("메시지 발송 통계 조회 - 권한 없음")
+    void getMessageStatistics_Forbidden() throws Exception {
+        mockMvc.perform(get("/api/admin/messages/statistics")
+                .with(csrf()))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("메시지 발송 통계 초기화 - 성공")
+    void resetMessageStatistics_Success() throws Exception {
+        // When & Then
+        mockMvc.perform(post("/api/admin/messages/statistics/reset")
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("메시지 발송 통계가 초기화되었습니다."));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    @DisplayName("메시지 발송 통계 초기화 - 권한 없음")
+    void resetMessageStatistics_Forbidden() throws Exception {
+        mockMvc.perform(post("/api/admin/messages/statistics/reset")
+                .with(csrf()))
+            .andExpect(status().isForbidden());
     }
 }
