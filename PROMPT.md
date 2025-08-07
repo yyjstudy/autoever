@@ -1276,3 +1276,37 @@ design/
 - **KakaoTalk/SMS Mock API 서버** (모노레포 구조)
 - **H2 메모리 데이터베이스**, **Gradle 멀티모듈** 프로젝트
 - **편의 스크립트**: start/stop/test 자동화 스크립트 완비
+
+### 67. Swagger API 문서화 개선
+**프롬프트:** "/api/admin/messages/send 이 api를 스웨거에 친절하게 ageGroup에 대한 example을 추가하고, RequestBody에 "ageGroupEnum": "TEENS"은 제거하자."
+
+**수행 작업:**
+- **Swagger 문서화 강화**: `/api/admin/messages/send` 엔드포인트 상세 문서화
+  * 연령대별 상세 설명 추가 (TEENS: 10~19세, TWENTIES: 20~29세 등)
+  * 메시지 템플릿 자동 추가 안내 ('{회원 성명}님, 안녕하세요. 현대 오토에버입니다.')
+  * 3가지 실용적 예제 추가:
+    - 20대 대상 할인 쿠폰 발송 (TWENTIES)
+    - 30대 대상 이벤트 안내 (THIRTIES)  
+    - 50대 이상 대상 건강 관련 안내 (FIFTIES_PLUS)
+
+- **RequestBody에서 ageGroupEnum 제거**: 
+  * `MessageSendDto.getAgeGroupEnum()` 메서드에 `@Schema(hidden = true)` 적용
+  * Swagger UI에서 "ageGroupEnum" 필드 완전 제거
+  * 내부 비즈니스 로직은 유지하면서 API 문서에서만 숨김 처리
+
+- **OpenAPI 어노테이션 통합**:
+  * `@RequestBody`, `@Content`, `@Schema`, `@ExampleObject` 정확한 임포트 및 적용
+  * OpenAPI 문서화 어노테이션과 Spring MVC 어노테이션 분리
+  * 메서드 레벨과 파라미터 레벨 어노테이션 올바른 위치 배치
+
+**테스트 결과:**
+- **컴파일 성공**: 모든 어노테이션 임포트 및 문법 오류 해결 ✅
+- **AdminMessageControllerTest**: 5개 테스트 100% 통과 ✅
+- **MessageSendDtoTest**: 모든 검증 테스트 통과 ✅
+- **전체 테스트**: 모든 테스트 성공적으로 통과 ✅
+
+**개선 효과:**
+1. **사용자 친화적 API 문서**: 실제 사용 예시가 포함된 상세한 Swagger 문서
+2. **깔끔한 RequestBody**: 불필요한 내부 필드(`ageGroupEnum`) 제거로 API 명세 간소화
+3. **기존 기능 유지**: 내부 비즈니스 로직은 변경 없이 문서화만 개선
+4. **높은 호환성**: 기존 테스트와 API 호출 방식 완전 호환

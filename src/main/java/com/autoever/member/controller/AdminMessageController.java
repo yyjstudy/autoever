@@ -8,6 +8,10 @@ import com.autoever.member.message.service.BulkMessageService;
 import com.autoever.member.message.service.MessagePerformanceService;
 import com.autoever.member.message.service.DynamicBatchOptimizer;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -38,9 +42,62 @@ public class AdminMessageController {
      * 연령대별 대량 메시지 발송
      */
     @PostMapping("/send")
-    @Operation(summary = "연령대별 대량 메시지 발송", description = "특정 연령대의 모든 회원에게 메시지를 발송합니다")
+    @Operation(
+        summary = "연령대별 대량 메시지 발송", 
+        description = """
+            특정 연령대의 모든 회원에게 메시지를 발송합니다.
+            
+            **연령대 분류:**
+            - TEENS: 10대 (10~19세)
+            - TWENTIES: 20대 (20~29세)  
+            - THIRTIES: 30대 (30~39세)
+            - FORTIES: 40대 (40~49세)
+            - FIFTIES_PLUS: 50대 이상 (50세~)
+            
+            **메시지 템플릿:**
+            입력한 메시지 앞에 '{회원 성명}님, 안녕하세요. 현대 오토에버입니다.' 템플릿이 자동으로 추가됩니다.
+            """)
+    @RequestBody(
+        description = "대량 메시지 발송 요청 정보",
+        content = @Content(
+            mediaType = "application/json",
+            schema = @Schema(implementation = MessageSendDto.class),
+            examples = {
+                @ExampleObject(
+                    name = "20대 대상 할인 쿠폰 발송",
+                    description = "20대 회원들에게 할인 쿠폰 안내 메시지 발송",
+                    value = """
+                        {
+                          "ageGroup": "TWENTIES",
+                          "message": "신제품 출시 기념 20% 할인 쿠폰이 발급되었습니다!"
+                        }
+                        """
+                ),
+                @ExampleObject(
+                    name = "30대 대상 이벤트 안내",
+                    description = "30대 회원들에게 특별 이벤트 안내",
+                    value = """
+                        {
+                          "ageGroup": "THIRTIES",
+                          "message": "가족과 함께하는 특별 이벤트에 참여하세요. 추가 혜택이 준비되어 있습니다."
+                        }
+                        """
+                ),
+                @ExampleObject(
+                    name = "50대 이상 대상 건강 관련 안내",
+                    description = "50대 이상 회원들에게 건강 관련 서비스 안내",
+                    value = """
+                        {
+                          "ageGroup": "FIFTIES_PLUS",
+                          "message": "건강한 라이프스타일을 위한 맞춤형 서비스를 확인해보세요."
+                        }
+                        """
+                )
+            }
+        )
+    )
     public ResponseEntity<ApiResponse<BulkMessageResponse>> sendBulkMessage(
-            @Valid @RequestBody MessageSendDto request) {
+            @Valid @org.springframework.web.bind.annotation.RequestBody MessageSendDto request) {
         
         BulkMessageResponse response = bulkMessageService.sendBulkMessage(request);
         
