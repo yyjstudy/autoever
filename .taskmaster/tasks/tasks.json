@@ -730,7 +730,7 @@
               "11.3"
             ],
             "details": "FallbackMessageService 클래스 구현: sendWithFallback(Member member, String message) 메서드. 카카오톡 우선 발송 로직 구현. 카카오톡 실패 시 SMS 자동 전환 로직. 각 단계별 결과 추적 및 로깅. 재시도 로직 및 최종 실패 처리. 발송 방식별 성공률 통계.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "카카오톡 성공 시나리오 테스트. 카카오톡 실패 후 SMS 자동 전환 테스트. 양쪽 모두 실패 시나리오 테스트. 결과 추적 정확성 테스트."
           },
           {
@@ -742,7 +742,7 @@
               "11.4"
             ],
             "details": "기존 MessageService의 대량 발송 로직에 MessageTemplateService 통합. 배치 처리 시 각 메시지에 템플릿 적용. 비동기 발송 시 FallbackMessageService 사용. 발송 통계에 Fallback 성공률 추가. 성능 최적화 및 메모리 관리. 에러 처리 및 로깅 강화.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "대량 발송 시 템플릿 적용 테스트. 배치 처리에서 Fallback 메커니즘 동작 확인. 발송 통계 정확성 테스트. 성능 및 메모리 사용량 테스트."
           }
         ]
@@ -818,7 +818,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-07T01:33:36.844Z",
+      "updated": "2025-08-07T01:56:43.552Z",
       "description": "Tasks for master context"
     }
   }

@@ -6,6 +6,8 @@ import com.autoever.member.message.dto.BulkMessageJobStatus;
 import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
 import com.autoever.member.service.ExternalMessageService;
+import com.autoever.member.message.result.MessageSendResult;
+import com.autoever.member.message.result.MessageSendTracker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,8 @@ public class BulkMessageService {
     private final UserQueryService userQueryService;
     private final BatchProcessingService batchProcessingService;
     private final ExternalMessageService externalMessageService;
+    private final FallbackMessageService fallbackMessageService;
+    private final MessageSendTracker messageSendTracker;
     private final MessagePerformanceService performanceService;
     private final DynamicBatchOptimizer batchOptimizer;
     private final StructuredMessageLogger structuredLogger;
@@ -157,20 +161,40 @@ public class BulkMessageService {
             long messageStartTime = System.currentTimeMillis();
             
             try {
-                // 외부 메시지 서비스를 통한 실제 발송
-                externalMessageService.sendMessage(user.getPhoneNumber(), message);
+                // FallbackMessageService를 통한 템플릿 적용 및 Fallback 발송
+                MessageSendResult result = fallbackMessageService.sendWithFallback(user, message);
                 
                 long responseTime = System.currentTimeMillis() - messageStartTime;
-                tracker.incrementSuccess();
-                batchSuccessCount++;
                 
-                // 성능 추적기에 성공 기록
-                if (tracker.getPerformanceTracker() != null) {
-                    tracker.getPerformanceTracker().recordSuccess(responseTime);
+                // 결과에 따른 분류 처리
+                if (result.isSuccess()) {
+                    tracker.incrementSuccess();
+                    batchSuccessCount++;
+                    
+                    // 성능 추적기에 성공 기록
+                    if (tracker.getPerformanceTracker() != null) {
+                        tracker.getPerformanceTracker().recordSuccess(responseTime);
+                    }
+                    
+                    log.trace("메시지 발송 성공 - userId: {}, phone: {}, result: {}, responseTime: {}ms", 
+                             user.getId(), maskPhoneNumber(user.getPhoneNumber()), result, responseTime);
+                    
+                } else {
+                    tracker.incrementFailure();
+                    batchFailureCount++;
+                    
+                    // 성능 추적기에 실패 기록
+                    if (tracker.getPerformanceTracker() != null) {
+                        tracker.getPerformanceTracker().recordFailure(responseTime);
+                    }
+                    
+                    // 구조화된 에러 로그
+                    String errorMessage = "발송 실패: " + result.getDescription();
+                    structuredLogger.logMessageFailure(jobId, user.getPhoneNumber(), errorMessage, responseTime);
+                    
+                    log.warn("메시지 발송 실패 - userId: {}, phone: {}, result: {}, responseTime: {}ms", 
+                            user.getId(), maskPhoneNumber(user.getPhoneNumber()), result, responseTime);
                 }
-                
-                log.trace("메시지 발송 성공 - userId: {}, phone: {}, responseTime: {}ms", 
-                         user.getId(), user.getPhoneNumber(), responseTime);
                 
             } catch (Exception e) {
                 long responseTime = System.currentTimeMillis() - messageStartTime;
@@ -185,8 +209,8 @@ public class BulkMessageService {
                 // 구조화된 에러 로그
                 structuredLogger.logMessageFailure(jobId, user.getPhoneNumber(), e.getMessage(), responseTime);
                 
-                log.warn("메시지 발송 실패 - userId: {}, phone: {}, error: {}", 
-                        user.getId(), user.getPhoneNumber(), e.getMessage());
+                log.warn("메시지 발송 중 예외 발생 - userId: {}, phone: {}, error: {}, responseTime: {}ms", 
+                        user.getId(), maskPhoneNumber(user.getPhoneNumber()), e.getMessage(), responseTime);
             }
             
             tracker.incrementProcessed();
@@ -279,7 +303,11 @@ public class BulkMessageService {
             structuredLogger.logPerformanceMetrics(jobId, performanceMetrics);
         }
         
-        // 구조화된 작업 완료 로그
+        // 구조화된 작업 완료 로그 (Fallback 통계 포함)
+        MessageSendTracker.SendStatistics sendStats = messageSendTracker.getStatistics();
+        log.info("작업 완료 시점의 전체 발송 통계 - 전체성공률: {:.1f}%, Fallback비율: {:.1f}%, 카카오성공: {}, SMS대체: {}", 
+            sendStats.successRate(), sendStats.fallbackRate(), sendStats.kakaoSuccessCount(), sendStats.smsFallbackCount());
+            
         structuredLogger.logJobCompletion(jobId, finalStatus.toString(), 
             tracker.getTotalUsers(), tracker.getSuccessCount(), tracker.getFailureCount(), duration.toMillis());
         
@@ -367,5 +395,23 @@ public class BulkMessageService {
         public void setPerformanceTracker(MessagePerformanceService.PerformanceTracker performanceTracker) {
             this.performanceTracker = performanceTracker;
         }
+    }
+    
+    /**
+     * 전화번호를 마스킹합니다.
+     */
+    private String maskPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.length() < 9) {
+            return "***-****-****";
+        }
+        
+        if (phoneNumber.contains("-") && phoneNumber.length() == 13) {
+            String[] parts = phoneNumber.split("-");
+            if (parts.length == 3) {
+                return parts[0] + "-****-" + parts[2];
+            }
+        }
+        
+        return "***-****-****";
     }
 }
