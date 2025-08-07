@@ -687,7 +687,7 @@
         "description": "모든 메시지에 통일된 템플릿을 적용하고, 카카오톡 실패 시 자동 SMS 전환하는 Fallback 메커니즘을 구현합니다.",
         "details": "MessageTemplate 클래스 구성: '{회원 성명}님, 안녕하세요. 현대 오토에버입니다.' 템플릿 적용 로직. MessageTemplateService: applyTemplate(String memberName, String content) 메서드 구현. FallbackMessageService 구현: sendWithFallback(Member member, String message) 메서드로 카카오톡 우선 발송 후 실패 시 SMS 자동 전환. 기존 MessageApiClient 수정: 카카오톡 API 엔드포인트 변경 (localhost:8081/kakaotalk-messages), SMS API 파라미터 변경 (localhost:8082/sms?phone={phone}, form-urlencoded). Basic Auth 정보 업데이트: 카카오톡(autoever/1234), SMS(autoever/5678). 기존 Rate Limiting 활용: 카카오톡 100회/분, SMS 500회/분 제한 유지. MessageSendResult enum 추가: SUCCESS_KAKAO, SUCCESS_SMS_FALLBACK, FAILED_BOTH. 대량 발송 시스템과 통합: 기존 배치 처리 및 비동기 발송 로직에 템플릿 및 Fallback 적용. 발송 통계에 Fallback 성공률 추가.",
         "testStrategy": "메시지 템플릿 적용 테스트: 회원 이름 치환 및 템플릿 형식 확인. Fallback 메커니즘 테스트: 카카오톡 API 실패 시뮬레이션 후 SMS 자동 전환 확인. API 엔드포인트 변경 테스트: 새로운 카카오톡/SMS API 연결 및 Basic Auth 인증 확인. Rate Limiting 동작 테스트: 카카오톡 100회/분, SMS 500회/분 제한 확인. 대량 발송 통합 테스트: 배치 처리 시 템플릿 적용 및 Fallback 동작 검증. 발송 결과 추적 테스트: SUCCESS_KAKAO, SUCCESS_SMS_FALLBACK, FAILED_BOTH 상태별 통계 확인. 부하 테스트: 대량 발송 시 Fallback 성능 및 안정성 검증.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           9,
           10
@@ -700,7 +700,7 @@
             "description": "메시지에 회원 성명을 적용하는 템플릿 시스템을 구현합니다. '{회원 성명}님, 안녕하세요. 현대 오토에버입니다.' 형태의 템플릿을 처리하고 회원 정보를 적용하는 서비스를 개발합니다.",
             "dependencies": [],
             "details": "MessageTemplate 클래스 생성: template 필드와 템플릿 문자열 치환 로직. MessageTemplateService 구현: applyTemplate(String memberName, String content) 메서드로 회원 이름을 템플릿에 적용. 템플릿 검증 로직 및 예외 처리. 다양한 템플릿 형식 지원을 위한 확장 가능한 구조.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "템플릿 적용 테스트: 회원 이름 정상 치환 확인. 빈 이름 및 null 값 예외 처리 테스트. 템플릿 형식 검증 테스트."
           },
           {
@@ -718,7 +718,7 @@
             "description": "메시지 발송 결과를 체계적으로 관리하기 위한 enum과 결과 추적 시스템을 구현합니다. 카카오톡 성공, SMS 대체 성공, 전체 실패 등의 상태를 관리합니다.",
             "dependencies": [],
             "details": "MessageSendResult enum 생성: SUCCESS_KAKAO, SUCCESS_SMS_FALLBACK, FAILED_BOTH 값 정의. 발송 결과 추적을 위한 MessageResult 엔티티 또는 DTO 생성. 결과 저장 로직 및 통계 집계 기능. 발송 성공률 및 Fallback 성공률 계산 로직.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "각 발송 결과 상태 테스트. 결과 저장 및 조회 테스트. 통계 계산 로직 테스트."
           },
           {
@@ -753,7 +753,7 @@
         "description": "외부 메시지 서비스를 시뮬레이션하는 모노레포 형태의 카카오톡 및 SMS Mock 서버 2개를 Spring Boot로 구현합니다.",
         "details": "프로젝트 구조: mock-servers/ 루트 디렉토리 하위에 kakaotalk-mock/, sms-mock/ 서브 모듈 생성. 각각 독립적인 Spring Boot 애플리케이션으로 구성. 카카오톡 Mock 서버 (포트 8081): @RestController로 POST /kakaotalk-messages 엔드포인트 구현, Basic Auth (autoever/1234) 설정, @RequestBody로 JSON 요청 받아서 JSON 응답, 응답 코드 200(성공), 400(잘못된 요청), 401(인증실패), 500(서버오류) 시뮬레이션. SMS Mock 서버 (포트 8082): POST /sms?phone={phone} 엔드포인트 구현, Basic Auth (autoever/5678) 설정, @RequestParam으로 phone 받고 form-urlencoded 요청 처리, JSON 응답 {\"result\": \"OK\"} 반환, 동일한 응답 코드 처리. 각 서버별 SecurityConfig 클래스로 Basic Auth 설정, application.yml에서 포트 및 인증 정보 관리. Gradle 멀티 모듈 설정: settings.gradle에 서브프로젝트 포함, 각 모듈별 build.gradle 구성. 실행 스크립트: gradle bootRun으로 각 서버 독립 실행 가능하도록 설정.",
         "testStrategy": "각 Mock 서버 독립 실행 테스트: gradle :mock-servers:kakaotalk-mock:bootRun (포트 8081), gradle :mock-servers:sms-mock:bootRun (포트 8082). API 엔드포인트 기능 테스트: curl 또는 Postman으로 POST 요청 전송, 올바른 Basic Auth 인증 확인, JSON 요청/응답 형식 검증. 에러 시나리오 테스트: 잘못된 인증 정보로 401 응답 확인, 잘못된 요청 형식으로 400 응답 확인, 의도적 서버 오류로 500 응답 테스트. 통합 테스트: 기존 메인 애플리케이션에서 localhost:8081, localhost:8082로 API 호출하여 Mock 서버 연동 확인. 멀티 모듈 빌드 테스트: gradle build로 전체 프로젝트 빌드 성공 확인. 동시 실행 테스트: 두 Mock 서버를 동시에 실행하여 포트 충돌 없이 정상 작동 확인.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           9,
           11
@@ -799,7 +799,7 @@
               "12.2"
             ],
             "details": "KakaotalkController 클래스 생성. POST /kakaotalk-messages 엔드포인트 구현. @RequestBody로 JSON 요청 처리. 응답 시나리오별 로직 구현: 200(성공), 400(잘못된 요청), 401(인증실패), 500(서버오류). 요청 파라미터에 따라 다른 응답 반환하는 로직. JSON 형태의 응답 구조 정의.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "curl 또는 Postman으로 POST 요청 테스트. 올바른 JSON 요청으로 200 응답 확인. 잘못된 형식 요청으로 400 응답 확인. 의도적 오류 발생으로 500 응답 테스트."
           },
           {
@@ -810,7 +810,7 @@
               "12.3"
             ],
             "details": "SmsController 클래스 생성. POST /sms 엔드포인트 구현. @RequestParam으로 phone 파라미터 처리. form-urlencoded 요청 지원. JSON 응답 {\"result\": \"OK\"} 구조 구현. 동일한 응답 코드 시나리오 처리 (200, 400, 401, 500). 각 모듈별 bootRun 태스크 설정 및 실행 스크립트 작성.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "curl로 form-urlencoded POST 요청 테스트. phone 파라미터와 함께 요청 시 올바른 JSON 응답 확인. gradle :mock-servers:kakaotalk-mock:bootRun, gradle :mock-servers:sms-mock:bootRun 명령으로 독립 실행 테스트. 두 서버 동시 실행 가능 여부 확인."
           }
         ]
@@ -818,7 +818,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-07T02:11:55.675Z",
+      "updated": "2025-08-07T02:37:17.932Z",
       "description": "Tasks for master context"
     }
   }
