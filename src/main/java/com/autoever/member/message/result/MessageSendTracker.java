@@ -80,37 +80,6 @@ public class MessageSendTracker {
         totalAttempts.incrementAndGet();
     }
     
-    /**
-     * 전체 성공률을 계산합니다.
-     * 
-     * @return 성공률 (0.0 ~ 100.0)
-     */
-    public double getSuccessRate() {
-        long total = totalAttempts.get();
-        if (total == 0) {
-            return 0.0;
-        }
-        
-        long successCount = resultCounters.get(MessageSendResult.SUCCESS_KAKAO).get() +
-                           resultCounters.get(MessageSendResult.SUCCESS_SMS_FALLBACK).get();
-        
-        return (double) successCount / total * 100;
-    }
-    
-    /**
-     * Fallback 발생률을 계산합니다.
-     * 
-     * @return Fallback 발생률 (0.0 ~ 100.0)
-     */
-    public double getFallbackRate() {
-        long total = totalAttempts.get();
-        if (total == 0) {
-            return 0.0;
-        }
-        
-        long fallbackCount = resultCounters.get(MessageSendResult.SUCCESS_SMS_FALLBACK).get();
-        return (double) fallbackCount / total * 100;
-    }
     
     /**
      * 현재 통계 정보를 반환합니다.
@@ -119,17 +88,9 @@ public class MessageSendTracker {
      */
     public SendStatistics getStatistics() {
         MessageQueueService.QueueStatus queueStatus = messageQueueService.getQueueStatus();
+        
         return new SendStatistics(
             totalAttempts.get(),
-            getSuccessRate(),
-            getFallbackRate(),
-            resultCounters.get(MessageSendResult.SUCCESS_KAKAO).get(),
-            resultCounters.get(MessageSendResult.SUCCESS_SMS_FALLBACK).get(),
-            resultCounters.get(MessageSendResult.FAILED_BOTH).get(),
-            resultCounters.get(MessageSendResult.RATE_LIMITED).get(),
-            resultCounters.get(MessageSendResult.QUEUED).get(),
-            apiAttemptCounters.get(ApiType.KAKAOTALK).get(),
-            apiAttemptCounters.get(ApiType.SMS).get(),
             queueStatus.getCurrentSize(),
             queueStatus.getMaxSize()
         );
@@ -162,26 +123,14 @@ public class MessageSendTracker {
      */
     public record SendStatistics(
         long totalAttempts,
-        double successRate,
-        double fallbackRate,
-        int kakaoSuccessCount,
-        int smsFallbackCount,
-        int failedCount,
-        int rateLimitedCount,
-        int queuedCount,
-        int kakaoAttempts,
-        int smsAttempts,
         int currentQueueSize,
         int maxQueueSize
     ) {
         @Override
         public String toString() {
             return String.format(
-                "전체 시도: %d, 성공률: %.1f%%, Fallback 비율: %.1f%%, " +
-                "카카오톡 성공: %d, SMS 대체: %d, 실패: %d, 제한: %d, 큐대기: %d, 큐상태: %d/%d",
-                totalAttempts, successRate, fallbackRate,
-                kakaoSuccessCount, smsFallbackCount, failedCount, rateLimitedCount,
-                queuedCount, currentQueueSize, maxQueueSize
+                "전체 시도: %d, 큐상태: %d/%d",
+                totalAttempts, currentQueueSize, maxQueueSize
             );
         }
     }

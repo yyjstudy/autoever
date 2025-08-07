@@ -299,10 +299,10 @@ public class BulkMessageService {
                 jobId, finalStatus, tracker.getTotalUsers(), tracker.getSuccessCount(), 
                 tracker.getFailureCount(), duration.toMillis());
         
-        // 구조화된 작업 완료 로그 (Fallback 통계 포함)
+        // 구조화된 작업 완료 로그 (발송 통계 포함)
         MessageSendTracker.SendStatistics sendStats = messageSendTracker.getStatistics();
-        log.info("작업 완료 시점의 전체 발송 통계 - 전체성공률: {:.1f}%, Fallback비율: {:.1f}%, 카카오성공: {}, SMS대체: {}", 
-            sendStats.successRate(), sendStats.fallbackRate(), sendStats.kakaoSuccessCount(), sendStats.smsFallbackCount());
+        log.info("작업 완료 시점의 전체 발송 통계 - 전체시도: {}, 큐상태: {}/{}", 
+            sendStats.totalAttempts(), sendStats.currentQueueSize(), sendStats.maxQueueSize());
             
         structuredLogger.logJobCompletion(jobId, finalStatus.toString(), 
             tracker.getTotalUsers(), tracker.getSuccessCount(), tracker.getFailureCount(), duration.toMillis());

@@ -121,18 +121,9 @@ class AdminMessageControllerTest {
     void getMessageStatistics_Success() throws Exception {
         // Given
         MessageSendTracker.SendStatistics statistics = new MessageSendTracker.SendStatistics(
-            1523,
-            94.7,
-            23.1,
-            1089,
-            352,
-            72,
-            10,
-            50,  // queuedCount
-            1523,
-            424,
-            10,  // currentQueueSize
-            1500  // maxQueueSize
+            1523,      // totalAttempts
+            10,        // currentQueueSize
+            1500       // maxQueueSize
         );
         
         when(messageSendTracker.getStatistics()).thenReturn(statistics);
@@ -144,12 +135,8 @@ class AdminMessageControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("메시지 발송 통계 조회가 완료되었습니다."))
             .andExpect(jsonPath("$.data.totalAttempts").value(1523))
-            .andExpect(jsonPath("$.data.successRate").value(94.7))
-            .andExpect(jsonPath("$.data.fallbackRate").value(23.1))
-            .andExpect(jsonPath("$.data.kakaoSuccessCount").value(1089))
-            .andExpect(jsonPath("$.data.smsFallbackCount").value(352))
-            .andExpect(jsonPath("$.data.failedCount").value(72))
-            .andExpect(jsonPath("$.data.rateLimitedCount").value(10));
+            .andExpect(jsonPath("$.data.currentQueueSize").value(10))
+            .andExpect(jsonPath("$.data.maxQueueSize").value(1500));
     }
 
     @Test
