@@ -1730,3 +1730,18 @@ design/
 - 연령대 범위를 10대부터로 최종 조정
 
 **최종 결과:** H2 메모리 DB 전용 실용적인 수동 테스트 도구 완성
+
+### 80. Mock 서버 Health Check API 추가
+**프롬프트:** "메뉴얼테스트 진행중이다. /api/admin/messages/send api를 수행하는데 에러가 발생하낟. 카카오톡과 sms 목서버의 시큐어 정책인 basicauth를 포함해서 보내도록 수정하고, 목서버로 잘 전달될 수 있게 살펴보아라."
+
+**문제 분석:**
+- "SMS 클라이언트 사용 불가 - 연결 상태 불량" 오류 발생
+- Basic Auth는 정상 구현되어 있음 (autoever/1234, autoever/5678)
+- 메인 서버에서 `/health` 엔드포인트로 연결 상태 확인하나 Mock 서버에 미구현
+
+**해결 작업:**
+- KakaoTalk Mock: `GET /health` 엔드포인트 추가
+- SMS Mock: `GET /health` 엔드포인트 추가  
+- 응답: `{"status": "UP", "service": "서버명", "timestamp": 시간}`
+
+**결과:** Mock 서버 연결 상태 확인 정상화

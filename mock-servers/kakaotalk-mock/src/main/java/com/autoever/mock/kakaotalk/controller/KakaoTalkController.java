@@ -5,10 +5,9 @@ import com.autoever.mock.kakaotalk.dto.KakaoTalkMessageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -94,5 +93,22 @@ public class KakaoTalkController {
         }
         
         return "***-****-****";
+    }
+    
+    /**
+     * Health Check 엔드포인트
+     * 메인 서버에서 연결 상태를 확인하는 용도
+     */
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> health() {
+        log.debug("Health check 요청 수신");
+        
+        Map<String, Object> response = Map.of(
+            "status", "UP",
+            "service", "KakaoTalk Mock Server",
+            "timestamp", System.currentTimeMillis()
+        );
+        
+        return ResponseEntity.ok(response);
     }
 }
