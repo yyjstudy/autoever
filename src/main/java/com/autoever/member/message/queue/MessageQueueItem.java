@@ -15,7 +15,6 @@ public class MessageQueueItem {
     private final String message;
     private final ApiType preferredApiType;
     private final Instant queuedAt;
-    private int retryCount;
 
     public MessageQueueItem(String memberName, String phoneNumber, String message, ApiType preferredApiType) {
         this.id = UUID.randomUUID().toString();
@@ -24,7 +23,6 @@ public class MessageQueueItem {
         this.message = message;
         this.preferredApiType = preferredApiType;
         this.queuedAt = Instant.now();
-        this.retryCount = 0;
     }
 
     // Getters
@@ -34,9 +32,6 @@ public class MessageQueueItem {
     public String getMessage() { return message; }
     public ApiType getPreferredApiType() { return preferredApiType; }
     public Instant getQueuedAt() { return queuedAt; }
-    public int getRetryCount() { return retryCount; }
-
-    public void incrementRetry() { this.retryCount++; }
 
     @Override
     public String toString() {

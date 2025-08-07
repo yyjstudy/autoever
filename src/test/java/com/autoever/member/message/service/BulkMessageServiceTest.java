@@ -121,7 +121,7 @@ class BulkMessageServiceTest {
         String message = "테스트 메시지";
         
         // When
-        CompletableFuture<Void> future = bulkMessageService.processMessageSendingAsync(jobId, ageGroup, message);
+        CompletableFuture<Void> future = bulkMessageService.processMessageSendingAsync(jobId, ageGroup, message, 100);
         
         // Then - 단순히 CompletableFuture가 반환되는지만 확인
         assertThat(future).isNotNull();

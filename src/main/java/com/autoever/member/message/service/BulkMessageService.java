@@ -2,7 +2,6 @@ package com.autoever.member.message.service;
 
 import com.autoever.member.entity.User;
 import com.autoever.member.message.dto.AgeGroup;
-import com.autoever.member.message.dto.BulkMessageJobStatus;
 import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
 import com.autoever.member.service.ExternalMessageService;
@@ -41,11 +40,6 @@ public class BulkMessageService {
     private final StructuredMessageLogger structuredLogger;
     private final MessageQueueService messageQueueService;
     
-    // 임시로 메모리에 작업 상태 저장 (실제로는 DB나 Redis 사용)
-    private final ConcurrentHashMap<UUID, BulkMessageJobStatus> jobStatusMap = new ConcurrentHashMap<>();
-    
-    // 작업별 진행 상태 추적
-    private final ConcurrentHashMap<UUID, JobProgressTracker> jobProgressMap = new ConcurrentHashMap<>();
     
     /**
      * 대량 메시지 발송 시작
@@ -62,18 +56,6 @@ public class BulkMessageService {
         if (queueStatus.isFull()) {
             log.error("큐가 가득참 - 대량 메시지 발송 작업 실패 - jobId: {}, 현재큐크기: {}, 최대큐크기: {}", 
                      jobId, queueStatus.getCurrentSize(), queueStatus.getMaxSize());
-            
-            // 실패 상태로 작업 등록
-            BulkMessageJobStatus failedStatus = new BulkMessageJobStatus(
-                jobId,
-                BulkMessageResponse.JobStatus.FAILED,
-                0, 0, 0, 0,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                Duration.ZERO,
-                0.0
-            );
-            jobStatusMap.put(jobId, failedStatus);
             
             structuredLogger.logJobStart(jobId, request.ageGroup(), request.message(), 0);
             
@@ -93,28 +75,8 @@ public class BulkMessageService {
         
         BulkMessageResponse response = BulkMessageResponse.inProgress(jobId, totalUsers);
         
-        // 진행 상태 추적기 초기화
-        JobProgressTracker tracker = new JobProgressTracker(jobId, totalUsers);
-        jobProgressMap.put(jobId, tracker);
-        
-        // 작업 상태 초기화
-        BulkMessageJobStatus initialStatus = new BulkMessageJobStatus(
-            jobId,
-            BulkMessageResponse.JobStatus.IN_PROGRESS,
-            totalUsers,
-            0, // processedUsers
-            0, // successCount
-            0, // failureCount
-            response.startedAt(),
-            null, // completedAt
-            null, // duration
-            0.0 // progressPercentage
-        );
-        
-        jobStatusMap.put(jobId, initialStatus);
-        
         // 비동기 발송 시작
-        processMessageSendingAsync(jobId, ageGroup, request.message());
+        processMessageSendingAsync(jobId, ageGroup, request.message(), totalUsers);
         
         return response;
     }
@@ -124,23 +86,19 @@ public class BulkMessageService {
      * 비동기 메시지 발송 처리
      */
     @Async("messageTaskExecutor")
-    public CompletableFuture<Void> processMessageSendingAsync(UUID jobId, AgeGroup ageGroup, String message) {
+    public CompletableFuture<Void> processMessageSendingAsync(UUID jobId, AgeGroup ageGroup, String message, int totalUsers) {
         return CompletableFuture.runAsync(() -> {
             try {
-                log.info("비동기 메시지 발송 시작 - jobId: {}", jobId);
-                updateJobStatus(jobId, BulkMessageResponse.JobStatus.PROCESSING_BATCH);
+                log.info("비동기 메시지 발송 시작 - jobId: {}, totalUsers: {}", jobId, totalUsers);
                 
-                JobProgressTracker tracker = jobProgressMap.get(jobId);
-                if (tracker == null) {
-                    log.error("작업 진행 추적기를 찾을 수 없습니다 - jobId: {}", jobId);
-                    return;
-                }
+                // 진행 상태 추적기 초기화
+                JobProgressTracker tracker = new JobProgressTracker(jobId, totalUsers);
                 
                 // 배치 처리로 사용자 조회 및 메시지 발송
                 batchProcessingService.processBatchWithCallback(
                     ageGroup,
                     users -> sendMessagesToUsers(jobId, users, message, tracker),
-                    progress -> updateJobProgress(jobId, progress, tracker)
+                    progress -> logJobProgress(jobId, progress, tracker)
                 );
                 
                 // 최종 완료 처리
@@ -148,7 +106,6 @@ public class BulkMessageService {
                 
             } catch (Exception e) {
                 log.error("메시지 발송 중 오류 발생 - jobId: {}", jobId, e);
-                updateJobStatus(jobId, BulkMessageResponse.JobStatus.FAILED);
             }
         });
     }
@@ -159,8 +116,6 @@ public class BulkMessageService {
     private void sendMessagesToUsers(UUID jobId, List<User> users, String message, JobProgressTracker tracker) {
         long batchStartTime = System.currentTimeMillis();
         log.debug("배치 메시지 발송 - jobId: {}, userCount: {}", jobId, users.size());
-        
-        updateJobStatus(jobId, BulkMessageResponse.JobStatus.SENDING_MESSAGES);
         
         int batchSuccessCount = 0;
         int batchFailureCount = 0;
@@ -187,7 +142,6 @@ public class BulkMessageService {
                             user.getId(), maskPhoneNumber(user.getPhoneNumber()), responseTime);
                     
                     // 큐가 가득 찬 경우 더 이상 발송하지 않고 실패로 처리
-                    updateJobStatus(jobId, BulkMessageResponse.JobStatus.FAILED);
                     throw new RuntimeException("큐 용량 초과로 인한 발송 실패");
                     
                 } else if (result.isSuccess()) {
@@ -231,31 +185,12 @@ public class BulkMessageService {
     }
     
     /**
-     * 작업 진행 상황 업데이트
+     * 작업 진행 상황 로그
      */
-    private void updateJobProgress(UUID jobId, BatchProcessingService.BatchProgress batchProgress, JobProgressTracker tracker) {
-        BulkMessageJobStatus currentStatus = jobStatusMap.get(jobId);
-        if (currentStatus == null) return;
+    private void logJobProgress(UUID jobId, BatchProcessingService.BatchProgress batchProgress, JobProgressTracker tracker) {
+        double progressPercentage = (double) tracker.getProcessedCount() / tracker.getTotalUsers() * 100.0;
         
-        double progressPercentage = BulkMessageJobStatus.calculateProgress(
-            tracker.getProcessedCount(), tracker.getTotalUsers());
-        
-        BulkMessageJobStatus updatedStatus = new BulkMessageJobStatus(
-            jobId,
-            currentStatus.status(),
-            tracker.getTotalUsers(),
-            tracker.getProcessedCount(),
-            tracker.getSuccessCount(),
-            tracker.getFailureCount(),
-            currentStatus.startedAt(),
-            currentStatus.completedAt(),
-            currentStatus.duration(),
-            progressPercentage
-        );
-        
-        jobStatusMap.put(jobId, updatedStatus);
-        
-        log.debug("작업 진행 상황 업데이트 - jobId: {}, progress: {}%, processed: {}/{}", 
+        log.debug("작업 진행 상황 - jobId: {}, progress: {:.1f}%, processed: {}/{}", 
                  jobId, progressPercentage, tracker.getProcessedCount(), tracker.getTotalUsers());
     }
     
@@ -263,93 +198,34 @@ public class BulkMessageService {
      * 작업 완료 처리
      */
     private void completeJob(UUID jobId, JobProgressTracker tracker) {
-        LocalDateTime completedAt = LocalDateTime.now();
-        BulkMessageJobStatus currentStatus = jobStatusMap.get(jobId);
-        
-        if (currentStatus == null) return;
-        
-        Duration duration = Duration.between(currentStatus.startedAt(), completedAt);
-        
         // 작업 상태 결정
-        BulkMessageResponse.JobStatus finalStatus;
+        String finalStatus;
         if (tracker.getFailureCount() == 0) {
-            finalStatus = BulkMessageResponse.JobStatus.COMPLETED;
+            finalStatus = "COMPLETED";
         } else if (tracker.getSuccessCount() > 0) {
-            finalStatus = BulkMessageResponse.JobStatus.PARTIALLY_FAILED;
+            finalStatus = "PARTIALLY_FAILED";
         } else {
-            finalStatus = BulkMessageResponse.JobStatus.FAILED;
+            finalStatus = "FAILED";
         }
         
-        BulkMessageJobStatus completedStatus = new BulkMessageJobStatus(
-            jobId,
-            finalStatus,
-            tracker.getTotalUsers(),
-            tracker.getProcessedCount(),
-            tracker.getSuccessCount(),
-            tracker.getFailureCount(),
-            currentStatus.startedAt(),
-            completedAt,
-            duration,
-            100.0
-        );
-        
-        jobStatusMap.put(jobId, completedStatus);
-        
-        log.info("메시지 발송 작업 완료 - jobId: {}, status: {}, total: {}, success: {}, failure: {}, duration: {}ms", 
+        log.info("메시지 발송 작업 완료 - jobId: {}, status: {}, total: {}, success: {}, failure: {}", 
                 jobId, finalStatus, tracker.getTotalUsers(), tracker.getSuccessCount(), 
-                tracker.getFailureCount(), duration.toMillis());
+                tracker.getFailureCount());
         
         // 구조화된 작업 완료 로그 (발송 통계 포함)
         MessageSendTracker.SendStatistics sendStats = messageSendTracker.getStatistics();
         log.info("작업 완료 시점의 전체 발송 통계 - 전체시도: {}, 큐상태: {}/{}", 
             sendStats.totalAttempts(), sendStats.currentQueueSize(), sendStats.maxQueueSize());
             
-        structuredLogger.logJobCompletion(jobId, finalStatus.toString(), 
-            tracker.getTotalUsers(), tracker.getSuccessCount(), tracker.getFailureCount(), duration.toMillis());
-        
-        // 추적기 정리
-        jobProgressMap.remove(jobId);
+        structuredLogger.logJobCompletion(jobId, finalStatus, 
+            tracker.getTotalUsers(), tracker.getSuccessCount(), tracker.getFailureCount(), 0L);
     }
     
-    /**
-     * 작업 상태 업데이트
-     */
-    private void updateJobStatus(UUID jobId, BulkMessageResponse.JobStatus status) {
-        BulkMessageJobStatus currentStatus = jobStatusMap.get(jobId);
-        if (currentStatus == null) return;
-        
-        BulkMessageJobStatus updatedStatus = new BulkMessageJobStatus(
-            currentStatus.jobId(),
-            status,
-            currentStatus.totalUsers(),
-            currentStatus.processedUsers(),
-            currentStatus.successCount(),
-            currentStatus.failureCount(),
-            currentStatus.startedAt(),
-            currentStatus.completedAt(),
-            currentStatus.duration(),
-            currentStatus.progressPercentage()
-        );
-        
-        jobStatusMap.put(jobId, updatedStatus);
-    }
     
     /**
      * 빈 응답 생성 (사용자가 없는 경우)
      */
     private BulkMessageResponse createEmptyResponse(UUID jobId) {
-        BulkMessageJobStatus emptyStatus = new BulkMessageJobStatus(
-            jobId,
-            BulkMessageResponse.JobStatus.COMPLETED,
-            0, 0, 0, 0,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            Duration.ZERO,
-            100.0
-        );
-        
-        jobStatusMap.put(jobId, emptyStatus);
-        
         return new BulkMessageResponse(
             jobId, 0, Duration.ZERO,
             BulkMessageResponse.JobStatus.COMPLETED,
