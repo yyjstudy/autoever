@@ -1757,3 +1757,26 @@ design/
 - 전체 테스트 실행: BUILD SUCCESSFUL ✅
 
 **결과:** 스웨거에서 메시지 관련 API가 별도 섹션으로 깔끔하게 분리됨
+
+### 82. 프로젝트 다이어트 - 성능 메트릭 및 배치 최적화 코드 제거
+**프롬프트:** "스웨거에서 보이는 배치 크기 수동설정, 시스템 성능 메트릭 조회, 배치 크기 최적화 정보 조회와 관련된 코드와 테스트코드 전부 제거해라. 지금 프로젝트 규모가 너무 크다. 다이어트 해야 한다."
+
+**제거된 항목들:**
+1. **API 엔드포인트 3개:**
+   - `GET /api/admin/messages/performance/metrics`
+   - `GET /api/admin/messages/performance/batch-optimization`
+   - `POST /api/admin/messages/performance/batch-size`
+
+2. **서비스 클래스 2개:**
+   - `MessagePerformanceService.java` 완전 삭제
+   - `DynamicBatchOptimizer.java` 완전 삭제
+
+3. **관련 코드 정리:**
+   - AdminMessageController 성능 관련 의존성/메서드 제거
+   - BulkMessageService 성능 추적 로직 제거
+   - StructuredMessageLogger 성능 메트릭 로깅 메서드 제거
+   - BulkMessageServiceTest Mock 설정 정리
+
+**테스트 결과:** `./gradlew test --rerun-tasks` 실행 → BUILD SUCCESSFUL ✅
+
+**결과:** 프로젝트가 간소화되어 핵심 기능에 집중할 수 있게 됨

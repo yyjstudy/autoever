@@ -37,8 +37,6 @@ public class BulkMessageService {
     private final ExternalMessageService externalMessageService;
     private final FallbackMessageService fallbackMessageService;
     private final MessageSendTracker messageSendTracker;
-    private final MessagePerformanceService performanceService;
-    private final DynamicBatchOptimizer batchOptimizer;
     private final StructuredMessageLogger structuredLogger;
     
     // 임시로 메모리에 작업 상태 저장 (실제로는 DB나 Redis 사용)
@@ -73,11 +71,6 @@ public class BulkMessageService {
         // 진행 상태 추적기 초기화
         JobProgressTracker tracker = new JobProgressTracker(jobId, totalUsers);
         jobProgressMap.put(jobId, tracker);
-        
-        // 성능 추적 시작
-        MessagePerformanceService.PerformanceTracker performanceTracker = 
-            performanceService.startTracking(jobId.toString(), totalUsers);
-        tracker.setPerformanceTracker(performanceTracker);
         
         // 작업 상태 초기화
         BulkMessageJobStatus initialStatus = new BulkMessageJobStatus(
@@ -171,22 +164,12 @@ public class BulkMessageService {
                     tracker.incrementSuccess();
                     batchSuccessCount++;
                     
-                    // 성능 추적기에 성공 기록
-                    if (tracker.getPerformanceTracker() != null) {
-                        tracker.getPerformanceTracker().recordSuccess(responseTime);
-                    }
-                    
                     log.trace("메시지 발송 성공 - userId: {}, phone: {}, result: {}, responseTime: {}ms", 
                              user.getId(), maskPhoneNumber(user.getPhoneNumber()), result, responseTime);
                     
                 } else {
                     tracker.incrementFailure();
                     batchFailureCount++;
-                    
-                    // 성능 추적기에 실패 기록
-                    if (tracker.getPerformanceTracker() != null) {
-                        tracker.getPerformanceTracker().recordFailure(responseTime);
-                    }
                     
                     // 구조화된 에러 로그
                     String errorMessage = "발송 실패: " + result.getDescription();
@@ -200,11 +183,6 @@ public class BulkMessageService {
                 long responseTime = System.currentTimeMillis() - messageStartTime;
                 tracker.incrementFailure();
                 batchFailureCount++;
-                
-                // 성능 추적기에 실패 기록
-                if (tracker.getPerformanceTracker() != null) {
-                    tracker.getPerformanceTracker().recordFailure(responseTime);
-                }
                 
                 // 구조화된 에러 로그
                 structuredLogger.logMessageFailure(jobId, user.getPhoneNumber(), e.getMessage(), responseTime);
@@ -220,11 +198,6 @@ public class BulkMessageService {
         long batchDuration = System.currentTimeMillis() - batchStartTime;
         structuredLogger.logBatchProcessing(jobId, tracker.getBatchNumber(), users.size(), 
             batchDuration, batchSuccessCount, batchFailureCount);
-        
-        // 성능 추적기에 배치 처리 기록
-        if (tracker.getPerformanceTracker() != null) {
-            tracker.getPerformanceTracker().recordBatchProcessed(users.size(), batchDuration);
-        }
     }
     
     /**
@@ -296,13 +269,6 @@ public class BulkMessageService {
                 jobId, finalStatus, tracker.getTotalUsers(), tracker.getSuccessCount(), 
                 tracker.getFailureCount(), duration.toMillis());
         
-        // 성능 추적 완료 및 로깅
-        MessagePerformanceService.PerformanceMetrics performanceMetrics = 
-            performanceService.stopTracking(jobId.toString());
-        if (performanceMetrics != null) {
-            structuredLogger.logPerformanceMetrics(jobId, performanceMetrics);
-        }
-        
         // 구조화된 작업 완료 로그 (Fallback 통계 포함)
         MessageSendTracker.SendStatistics sendStats = messageSendTracker.getStatistics();
         log.info("작업 완료 시점의 전체 발송 통계 - 전체성공률: {:.1f}%, Fallback비율: {:.1f}%, 카카오성공: {}, SMS대체: {}", 
@@ -371,7 +337,6 @@ public class BulkMessageService {
         private final AtomicInteger successCount = new AtomicInteger(0);
         private final AtomicInteger failureCount = new AtomicInteger(0);
         private final AtomicInteger batchNumber = new AtomicInteger(0);
-        private MessagePerformanceService.PerformanceTracker performanceTracker;
         
         public JobProgressTracker(UUID jobId, int totalUsers) {
             this.jobId = jobId;
@@ -387,14 +352,6 @@ public class BulkMessageService {
         public int getProcessedCount() { return processedCount.get(); }
         public int getSuccessCount() { return successCount.get(); }
         public int getFailureCount() { return failureCount.get(); }
-        
-        public MessagePerformanceService.PerformanceTracker getPerformanceTracker() {
-            return performanceTracker;
-        }
-        
-        public void setPerformanceTracker(MessagePerformanceService.PerformanceTracker performanceTracker) {
-            this.performanceTracker = performanceTracker;
-        }
     }
     
     /**

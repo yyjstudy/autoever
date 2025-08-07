@@ -65,25 +65,6 @@ public class StructuredMessageLogger {
         logStructured("warn", "메시지 발송 실패", logData);
     }
     
-    /**
-     * 성능 메트릭 로그
-     */
-    public void logPerformanceMetrics(UUID jobId, MessagePerformanceService.PerformanceMetrics metrics) {
-        Map<String, Object> logData = createBaseLogData("PERFORMANCE_METRICS", jobId.toString());
-        logData.put("totalUsers", metrics.getTotalUsers());
-        logData.put("successCount", metrics.getSuccessCount());
-        logData.put("failureCount", metrics.getFailureCount());
-        logData.put("successRate", metrics.getSuccessRate());
-        logData.put("throughputPerSecond", metrics.getThroughputPerSecond());
-        logData.put("averageResponseTimeMs", metrics.getAverageResponseTime());
-        logData.put("totalDurationMs", metrics.getTotalDurationMs());
-        logData.put("startTime", metrics.getStartTime().format(TIMESTAMP_FORMATTER));
-        if (metrics.getEndTime() != null) {
-            logData.put("endTime", metrics.getEndTime().format(TIMESTAMP_FORMATTER));
-        }
-        
-        logStructured("info", "성능 메트릭 요약", logData);
-    }
     
     /**
      * 작업 완료 로그
@@ -124,18 +105,6 @@ public class StructuredMessageLogger {
         logStructured("debug", "시스템 리소스 상태", logData);
     }
     
-    /**
-     * 배치 크기 최적화 로그
-     */
-    public void logBatchSizeOptimization(int oldSize, int newSize, String reason) {
-        Map<String, Object> logData = createBaseLogData("BATCH_SIZE_OPTIMIZATION", null);
-        logData.put("oldBatchSize", oldSize);
-        logData.put("newBatchSize", newSize);
-        logData.put("reason", reason);
-        logData.put("optimizationPercent", oldSize > 0 ? (double) (newSize - oldSize) / oldSize * 100 : 0);
-        
-        logStructured("info", "배치 크기 최적화", logData);
-    }
     
     /**
      * 에러 상황 로그

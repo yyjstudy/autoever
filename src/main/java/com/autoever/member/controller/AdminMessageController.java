@@ -6,8 +6,6 @@ import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
 import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.message.service.BulkMessageService;
-import com.autoever.member.message.service.MessagePerformanceService;
-import com.autoever.member.message.service.DynamicBatchOptimizer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -36,8 +34,6 @@ import java.util.UUID;
 public class AdminMessageController {
     
     private final BulkMessageService bulkMessageService;
-    private final MessagePerformanceService performanceService;
-    private final DynamicBatchOptimizer batchOptimizer;
     private final MessageSendTracker messageSendTracker;
     
     /**
@@ -120,54 +116,6 @@ public class AdminMessageController {
         
         return ResponseEntity
             .ok(ApiResponse.success("작업 상태 조회 성공", status));
-    }
-    
-    /**
-     * 시스템 성능 메트릭 조회
-     */
-    @GetMapping("/performance/metrics")
-    @Operation(summary = "시스템 성능 메트릭 조회", description = "전체 시스템의 성능 메트릭을 조회합니다")
-    public ResponseEntity<ApiResponse<MessagePerformanceService.SystemMetrics>> getSystemMetrics() {
-        
-        MessagePerformanceService.SystemMetrics metrics = performanceService.getSystemMetrics();
-        
-        return ResponseEntity
-            .ok(ApiResponse.success("시스템 메트릭 조회 성공", metrics));
-    }
-    
-    /**
-     * 배치 크기 최적화 정보 조회
-     */
-    @GetMapping("/performance/batch-optimization")
-    @Operation(summary = "배치 크기 최적화 정보 조회", description = "현재 시스템 상태에 따른 최적 배치 크기를 조회합니다")
-    public ResponseEntity<ApiResponse<DynamicBatchOptimizer.BatchSizeRecommendation>> getBatchOptimization() {
-        
-        DynamicBatchOptimizer.BatchSizeRecommendation recommendation = batchOptimizer.getRecommendation();
-        
-        return ResponseEntity
-            .ok(ApiResponse.success("배치 최적화 정보 조회 성공", recommendation));
-    }
-    
-    /**
-     * 배치 크기 수동 설정
-     */
-    @PostMapping("/performance/batch-size")
-    @Operation(summary = "배치 크기 수동 설정", description = "배치 크기를 수동으로 설정합니다")
-    public ResponseEntity<ApiResponse<String>> setBatchSize(@RequestParam int batchSize) {
-        
-        if (batchSize < 50 || batchSize > 2000) {
-            return ResponseEntity
-                .badRequest()
-                .body(ApiResponse.error("배치 크기는 50-2000 사이여야 합니다"));
-        }
-        
-        int oldSize = batchOptimizer.getCurrentBatchSize();
-        batchOptimizer.setBatchSize(batchSize);
-        
-        String message = String.format("배치 크기가 %d에서 %d로 변경되었습니다", oldSize, batchSize);
-        
-        return ResponseEntity
-            .ok(ApiResponse.success(message, message));
     }
 
     /**
