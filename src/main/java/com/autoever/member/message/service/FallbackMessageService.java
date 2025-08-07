@@ -68,7 +68,20 @@ public class FallbackMessageService {
             return MessageSendResult.SUCCESS_SMS_FALLBACK;
         }
 
-        // 4. 모든 발송 방법 실패
+        // 4. Rate Limiting 상태 처리
+        if (smsResult == MessageSendResult.RATE_LIMITED) {
+            log.warn("SMS도 Rate Limit 초과: recipient={}", maskPhoneNumber(user.getPhoneNumber()));
+            messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.SMS);
+            return MessageSendResult.RATE_LIMITED;
+        }
+        
+        if (kakaoResult == MessageSendResult.RATE_LIMITED) {
+            log.warn("카카오톡 Rate Limit 초과, SMS 실패: recipient={}", maskPhoneNumber(user.getPhoneNumber()));
+            messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.KAKAOTALK);
+            return MessageSendResult.RATE_LIMITED;
+        }
+
+        // 5. 모든 발송 방법 실패
         log.error("모든 발송 방법 실패: recipient={}, kakaoResult={}, smsResult={}", 
             maskPhoneNumber(user.getPhoneNumber()), kakaoResult, smsResult);
         
@@ -122,7 +135,20 @@ public class FallbackMessageService {
             return MessageSendResult.SUCCESS_SMS_FALLBACK;
         }
 
-        // 4. 모든 발송 방법 실패
+        // 4. Rate Limiting 상태 처리
+        if (smsResult == MessageSendResult.RATE_LIMITED) {
+            log.warn("SMS도 Rate Limit 초과: recipient={}", maskPhoneNumber(phoneNumber));
+            messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.SMS);
+            return MessageSendResult.RATE_LIMITED;
+        }
+        
+        if (kakaoResult == MessageSendResult.RATE_LIMITED) {
+            log.warn("카카오톡 Rate Limit 초과, SMS 실패: recipient={}", maskPhoneNumber(phoneNumber));
+            messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.KAKAOTALK);
+            return MessageSendResult.RATE_LIMITED;
+        }
+
+        // 5. 모든 발송 방법 실패
         log.error("모든 발송 방법 실패: recipient={}, kakaoResult={}, smsResult={}", 
             maskPhoneNumber(phoneNumber), kakaoResult, smsResult);
         
@@ -153,6 +179,13 @@ public class FallbackMessageService {
             } else {
                 log.warn("KakaoTalk 발송 실패: errorCode={}, errorMessage={}", 
                     response.errorCode(), response.errorMessage());
+                
+                // Rate Limiting 상태 확인
+                if ("RATE_LIMIT_EXCEEDED".equals(response.errorCode())) {
+                    log.info("KakaoTalk Rate Limit 초과, 상태 반환");
+                    return MessageSendResult.RATE_LIMITED;
+                }
+                
                 return MessageSendResult.FAILED_BOTH;
             }
 
@@ -185,6 +218,13 @@ public class FallbackMessageService {
             } else {
                 log.warn("SMS 발송 실패: errorCode={}, errorMessage={}", 
                     response.errorCode(), response.errorMessage());
+                
+                // Rate Limiting 상태 확인
+                if ("RATE_LIMIT_EXCEEDED".equals(response.errorCode())) {
+                    log.info("SMS Rate Limit 초과, 상태 반환");
+                    return MessageSendResult.RATE_LIMITED;
+                }
+                
                 return MessageSendResult.FAILED_BOTH;
             }
 

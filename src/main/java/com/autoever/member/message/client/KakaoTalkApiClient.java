@@ -6,6 +6,7 @@ import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.exception.ApiConnectionException;
 import com.autoever.member.message.exception.MessageSendException;
+import com.autoever.member.message.ratelimit.ApiRateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -31,10 +32,12 @@ public class KakaoTalkApiClient implements MessageApiClient {
     private final RestTemplate restTemplate;
     private final MessageApiConfig.KakaoTalkConfig config;
     private final String authHeader;
+    private final ApiRateLimiter rateLimiter;
     
-    public KakaoTalkApiClient(MessageApiConfig messageApiConfig, RestTemplateBuilder restTemplateBuilder) {
+    public KakaoTalkApiClient(MessageApiConfig messageApiConfig, RestTemplateBuilder restTemplateBuilder, ApiRateLimiter rateLimiter) {
         this.config = messageApiConfig.getKakaotalk();
         this.authHeader = createBasicAuthHeader(config.getUsername(), config.getPassword());
+        this.rateLimiter = rateLimiter;
         this.restTemplate = restTemplateBuilder
             .setConnectTimeout(Duration.ofMillis(config.getConnectTimeoutMs()))
             .setReadTimeout(Duration.ofMillis(config.getReadTimeoutMs()))
@@ -45,6 +48,15 @@ public class KakaoTalkApiClient implements MessageApiClient {
     public MessageResponse sendMessage(MessageRequest request) {
         log.info("카카오톡 메시지 발송 시작: recipient={}", maskPhoneNumber(request.recipient()));
         
+        // Rate Limiting 검사
+        if (!rateLimiter.tryAcquire(ApiType.KAKAOTALK)) {
+            ApiRateLimiter.RateLimitInfo rateLimitInfo = rateLimiter.getCurrentUsage(ApiType.KAKAOTALK);
+            log.warn("카카오톡 API Rate Limit 초과: {}", rateLimitInfo);
+            return MessageResponse.failure("RATE_LIMIT_EXCEEDED", 
+                "카카오톡 API 호출 한도를 초과했습니다. " + rateLimitInfo.getRemainingTimeSeconds() + "초 후 재시도하세요.", 
+                ApiType.KAKAOTALK);
+        }
+        
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -52,27 +64,27 @@ public class KakaoTalkApiClient implements MessageApiClient {
             
             // 카카오톡 API 요청 형식에 맞게 변환
             Map<String, Object> requestBody = Map.of(
-                "recipient", request.recipient(),
+                "phone", request.recipient(),
                 "message", request.message()
             );
             
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
             
             String url = config.getBaseUrl() + "/kakaotalk-messages";
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+            ResponseEntity<Void> response = restTemplate.postForEntity(url, entity, Void.class);
             
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> responseBody = response.getBody();
-                String messageId = (String) responseBody.get("messageId");
+            if (response.getStatusCode().is2xxSuccessful()) {
+                // Mock 서버는 응답 바디 없이 HTTP 200만 반환
+                String messageId = "kakao_" + System.currentTimeMillis();
                 
                 log.info("카카오톡 메시지 발송 성공: recipient={}, messageId={}", 
                     maskPhoneNumber(request.recipient()), messageId);
                 
                 return MessageResponse.success(messageId, ApiType.KAKAOTALK);
             } else {
-                log.warn("카카오톡 메시지 발송 실패: 예상하지 못한 응답 상태={}", response.getStatusCode());
-                return MessageResponse.failure("UNEXPECTED_RESPONSE", 
-                    "예상하지 못한 응답: " + response.getStatusCode(), ApiType.KAKAOTALK);
+                log.warn("카카오톡 메시지 발송 실패: 응답 상태={}", response.getStatusCode());
+                return MessageResponse.failure("API_ERROR", 
+                    "카카오톡 API 오류: " + response.getStatusCode(), ApiType.KAKAOTALK);
             }
             
         } catch (HttpClientErrorException e) {

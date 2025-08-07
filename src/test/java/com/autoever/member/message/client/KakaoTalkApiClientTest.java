@@ -5,6 +5,7 @@ import com.autoever.member.message.config.MessageApiConfig;
 import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.exception.ApiConnectionException;
+import com.autoever.member.message.ratelimit.ApiRateLimiter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * KakaoTalkApiClient 단위 테스트
@@ -36,6 +38,9 @@ class KakaoTalkApiClientTest {
     
     @Mock
     private RestTemplateBuilder restTemplateBuilder;
+    
+    @Mock 
+    private ApiRateLimiter rateLimiter;
     
     private KakaoTalkApiClient kakaoTalkApiClient;
     private MessageApiConfig messageApiConfig;
@@ -54,7 +59,10 @@ class KakaoTalkApiClientTest {
         when(restTemplateBuilder.setReadTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
         when(restTemplateBuilder.build()).thenReturn(restTemplate);
         
-        kakaoTalkApiClient = new KakaoTalkApiClient(messageApiConfig, restTemplateBuilder);
+        // RateLimiter mock 설정 - 기본적으로 허용 (lenient로 설정)
+        lenient().when(rateLimiter.tryAcquire(ApiType.KAKAOTALK)).thenReturn(true);
+        
+        kakaoTalkApiClient = new KakaoTalkApiClient(messageApiConfig, restTemplateBuilder, rateLimiter);
     }
     
     @Test
@@ -62,10 +70,9 @@ class KakaoTalkApiClientTest {
     void sendMessage_Success() {
         // Given
         MessageRequest request = new MessageRequest("010-1234-5678", "테스트 메시지");
-        Map<String, Object> responseBody = Map.of("messageId", "kakao_msg_123");
-        ResponseEntity<Map> mockResponse = ResponseEntity.ok(responseBody);
+        ResponseEntity<Void> mockResponse = ResponseEntity.ok().build();
         
-        when(restTemplate.postForEntity(anyString(), any(), eq(Map.class)))
+        when(restTemplate.postForEntity(anyString(), any(), eq(Void.class)))
             .thenReturn(mockResponse);
         
         // When
@@ -74,7 +81,7 @@ class KakaoTalkApiClientTest {
         // Then
         assertThat(response).isNotNull();
         assertThat(response.success()).isTrue();
-        assertThat(response.messageId()).isEqualTo("kakao_msg_123");
+        assertThat(response.messageId()).startsWith("kakao_");
         assertThat(response.apiType()).isEqualTo(ApiType.KAKAOTALK);
         assertThat(response.errorCode()).isNull();
         assertThat(response.errorMessage()).isNull();
@@ -83,7 +90,7 @@ class KakaoTalkApiClientTest {
         verify(restTemplate).postForEntity(
             eq("http://localhost:8081/kakaotalk-messages"),
             any(),
-            eq(Map.class)
+            eq(Void.class)
         );
     }
     
@@ -93,7 +100,7 @@ class KakaoTalkApiClientTest {
         // Given
         MessageRequest request = new MessageRequest("010-1234-5678", "테스트 메시지");
         
-        when(restTemplate.postForEntity(anyString(), any(), eq(Map.class)))
+        when(restTemplate.postForEntity(anyString(), any(), eq(Void.class)))
             .thenThrow(new ResourceAccessException("Connection timeout"));
         
         // When & Then

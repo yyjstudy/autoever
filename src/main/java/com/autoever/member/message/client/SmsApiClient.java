@@ -6,12 +6,11 @@ import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.exception.ApiConnectionException;
 import com.autoever.member.message.exception.MessageSendException;
+import com.autoever.member.message.ratelimit.ApiRateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -33,10 +32,12 @@ public class SmsApiClient implements MessageApiClient {
     private final RestTemplate restTemplate;
     private final MessageApiConfig.SmsConfig config;
     private final String authHeader;
+    private final ApiRateLimiter rateLimiter;
     
-    public SmsApiClient(MessageApiConfig messageApiConfig, RestTemplateBuilder restTemplateBuilder) {
+    public SmsApiClient(MessageApiConfig messageApiConfig, RestTemplateBuilder restTemplateBuilder, ApiRateLimiter rateLimiter) {
         this.config = messageApiConfig.getSms();
         this.authHeader = createBasicAuthHeader(config.getUsername(), config.getPassword());
+        this.rateLimiter = rateLimiter;
         this.restTemplate = restTemplateBuilder
             .setConnectTimeout(Duration.ofMillis(config.getConnectTimeoutMs()))
             .setReadTimeout(Duration.ofMillis(config.getReadTimeoutMs()))
@@ -47,16 +48,26 @@ public class SmsApiClient implements MessageApiClient {
     public MessageResponse sendMessage(MessageRequest request) {
         log.info("SMS 메시지 발송 시작: recipient={}", maskPhoneNumber(request.recipient()));
         
+        // Rate Limiting 검사
+        if (!rateLimiter.tryAcquire(ApiType.SMS)) {
+            ApiRateLimiter.RateLimitInfo rateLimitInfo = rateLimiter.getCurrentUsage(ApiType.SMS);
+            log.warn("SMS API Rate Limit 초과: {}", rateLimitInfo);
+            return MessageResponse.failure("RATE_LIMIT_EXCEEDED", 
+                "SMS API 호출 한도를 초과했습니다. " + rateLimitInfo.getRemainingTimeSeconds() + "초 후 재시도하세요.", 
+                ApiType.SMS);
+        }
+        
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", authHeader);
             
-            // SMS API 요청 형식에 맞게 변환 (form-urlencoded)
-            MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-            requestBody.add("content", request.message());
+            // SMS API 요청 형식에 맞게 변환 (JSON 형식)
+            Map<String, Object> requestBody = Map.of(
+                "message", request.message()
+            );
             
-            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(requestBody, headers);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
             
             // URL 패턴: /sms?phone={phone}
             String url = config.getBaseUrl() + "/sms?phone=" + request.recipient();
@@ -64,12 +75,20 @@ public class SmsApiClient implements MessageApiClient {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> responseBody = response.getBody();
-                String messageId = (String) responseBody.get("smsId");
+                String result = (String) responseBody.get("result");
+                String messageId = (String) responseBody.get("messageId");
                 
-                log.info("SMS 메시지 발송 성공: recipient={}, smsId={}", 
-                    maskPhoneNumber(request.recipient()), messageId);
-                
-                return MessageResponse.success(messageId, ApiType.SMS);
+                if ("OK".equals(result) && messageId != null) {
+                    log.info("SMS 메시지 발송 성공: recipient={}, messageId={}", 
+                        maskPhoneNumber(request.recipient()), messageId);
+                    
+                    return MessageResponse.success(messageId, ApiType.SMS);
+                } else {
+                    String errorMessage = (String) responseBody.get("message");
+                    log.warn("SMS 메시지 발송 실패: result={}, message={}", result, errorMessage);
+                    return MessageResponse.failure("API_ERROR", 
+                        errorMessage != null ? errorMessage : "SMS 발송 실패", ApiType.SMS);
+                }
             } else {
                 log.warn("SMS 메시지 발송 실패: 예상하지 못한 응답 상태={}", response.getStatusCode());
                 return MessageResponse.failure("UNEXPECTED_RESPONSE", 
