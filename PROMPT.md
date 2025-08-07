@@ -1310,3 +1310,30 @@ design/
 2. **깔끔한 RequestBody**: 불필요한 내부 필드(`ageGroupEnum`) 제거로 API 명세 간소화
 3. **기존 기능 유지**: 내부 비즈니스 로직은 변경 없이 문서화만 개선
 4. **높은 호환성**: 기존 테스트와 API 호출 방식 완전 호환
+
+### 68. Task 13 추가 - 실제 Mock 서버 연동 메시지 전송 시스템
+**프롬프트:** "다음 작업을 태스크마스터에 추가한다음에 진행하자. - 메세지 전송을 실제 kakaotalk-mock,와 sms-mock 서버와 연동하도록 수정. 먼저 카카오톡으로 전송을 시도하고, 실패하면 sms 문자메세지를 시도 하는 형태이다. 카카오톡 메세지는 카카오 정책에 따라, 발급된 토큰 당 1분당 100회까지만 호출이 가능합니다. 문자 메세지는 써드파티 벤더사 정책에 따라, 분당 500회 제한이 존재합니다."
+
+**수행 작업:**
+- **Task 13 추가**: "실제 Mock 서버 연동 메시지 전송 시스템 구현 - 카카오톡 우선 SMS 폴백"
+  * TaskMaster AI 기반 태스크 생성 및 의존성 자동 설정 (Task 11, 12에 의존)
+  * 카카오톡 우선 시도 → SMS 자동 폴백 메커니즘 구현
+  * Rate Limiting 정책: 카카오톡 100회/분, SMS 500회/분 제한 구현
+
+- **Task 13 서브태스크 분해 (5개)**:
+  * 13.1: MessageApiClient 실제 Mock 서버 연동 수정
+  * 13.2: Rate Limiting 정책 구현 (카카오톡 100회/분, SMS 500회/분)
+  * 13.3: FallbackMessageService 개선 및 메시지 전송 상태 확장
+  * 13.4: 에러 핸들링 강화 및 API 응답 코드 처리
+  * 13.5: 템플릿 시스템 연동 및 로깅/모니터링 강화
+
+**구현 계획:**
+- **Mock 서버 연동**: localhost:8081 (KakaoTalk), localhost:8082 (SMS)
+- **Basic Auth 설정**: KakaoTalk(autoever/1234), SMS(autoever/5678)
+- **API 명세 준수**: 카카오톡 JSON 형식, SMS form-urlencoded + URL 파라미터
+- **포괄적 테스트**: 연동 테스트, 폴백 테스트, Rate Limiting 테스트, 에러 처리 테스트
+
+**현재 상태:**
+- Task 13.1 진행 준비 완료 (MessageApiClient 실제 Mock 서버 연동)
+- 기존 API 클라이언트 코드가 이미 Mock 서버 명세에 맞게 구현되어 있음 확인
+- application.yml 설정도 올바르게 구성되어 있음 확인
