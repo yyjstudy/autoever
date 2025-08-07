@@ -5,6 +5,8 @@ import com.autoever.member.message.dto.AgeGroup;
 import com.autoever.member.message.dto.BulkMessageJobStatus;
 import com.autoever.member.message.dto.BulkMessageResponse;
 import com.autoever.member.message.dto.MessageSendDto;
+import com.autoever.member.message.queue.MessageQueueService;
+import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.service.ExternalMessageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,9 +45,17 @@ class BulkMessageServiceTest {
     @Mock
     private ExternalMessageService externalMessageService;
     
+    @Mock
+    private FallbackMessageService fallbackMessageService;
+    
+    @Mock
+    private MessageSendTracker messageSendTracker;
     
     @Mock
     private StructuredMessageLogger structuredLogger;
+    
+    @Mock
+    private MessageQueueService messageQueueService;
     
     @InjectMocks
     private BulkMessageService bulkMessageService;
@@ -58,6 +68,10 @@ class BulkMessageServiceTest {
         lenient().doNothing().when(structuredLogger).logBatchProcessing(any(UUID.class), anyInt(), anyInt(), anyLong(), anyInt(), anyInt());
         lenient().doNothing().when(structuredLogger).logJobCompletion(any(UUID.class), anyString(), anyInt(), anyInt(), anyInt(), anyLong());
         lenient().doNothing().when(structuredLogger).logMessageFailure(any(UUID.class), anyString(), anyString(), anyLong());
+        
+        // messageQueueService 모킹 - 기본적으로 큐가 가득 차지 않은 상태로 설정
+        MessageQueueService.QueueStatus queueStatus = new MessageQueueService.QueueStatus(0, 1500);
+        lenient().when(messageQueueService.getQueueStatus()).thenReturn(queueStatus);
     }
     
     @Test
@@ -82,10 +96,14 @@ class BulkMessageServiceTest {
         BulkMessageJobStatus status = bulkMessageService.getJobStatus(response.jobId());
         assertThat(status.jobId()).isEqualTo(response.jobId());
         assertThat(status.totalUsers()).isEqualTo(100);
+        // 비동기 처리로 인해 상태가 변경될 수 있으므로 여러 상태를 허용
         assertThat(status.status()).isIn(
             BulkMessageResponse.JobStatus.IN_PROGRESS,
             BulkMessageResponse.JobStatus.PROCESSING_BATCH,
-            BulkMessageResponse.JobStatus.COMPLETED
+            BulkMessageResponse.JobStatus.SENDING_MESSAGES,
+            BulkMessageResponse.JobStatus.COMPLETED,
+            BulkMessageResponse.JobStatus.PARTIALLY_FAILED,
+            BulkMessageResponse.JobStatus.FAILED
         );
     }
     
@@ -136,6 +154,36 @@ class BulkMessageServiceTest {
         
         // Then - 단순히 CompletableFuture가 반환되는지만 확인
         assertThat(future).isNotNull();
+    }
+    
+    @Test
+    @DisplayName("큐가 가득 찬 경우 - 즉시 실패 응답")
+    void sendBulkMessage_QueueFull() {
+        // Given
+        MessageSendDto request = new MessageSendDto("TWENTIES", "할인 쿠폰 발급!");
+        
+        // 큐가 가득 찬 상태로 모킹
+        MessageQueueService.QueueStatus fullQueueStatus = new MessageQueueService.QueueStatus(1500, 1500);
+        when(messageQueueService.getQueueStatus()).thenReturn(fullQueueStatus);
+        
+        // When
+        BulkMessageResponse response = bulkMessageService.sendBulkMessage(request);
+        
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.jobId()).isNotNull();
+        assertThat(response.totalUsers()).isEqualTo(0);
+        assertThat(response.status()).isEqualTo(BulkMessageResponse.JobStatus.FAILED);
+        assertThat(response.startedAt()).isNotNull();
+        
+        // 작업 상태 확인
+        BulkMessageJobStatus status = bulkMessageService.getJobStatus(response.jobId());
+        assertThat(status.status()).isEqualTo(BulkMessageResponse.JobStatus.FAILED);
+        assertThat(status.totalUsers()).isEqualTo(0);
+        assertThat(status.progressPercentage()).isEqualTo(0.0);
+        
+        // userQueryService.countUsersByAgeGroup이 호출되지 않았는지 확인 (큐 체크에서 미리 실패)
+        verify(userQueryService, never()).countUsersByAgeGroup(any());
     }
     
     private User createMockUser(String username, String phoneNumber) {

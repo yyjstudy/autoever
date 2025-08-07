@@ -20,6 +20,9 @@ public class ApiRateLimiter {
     
     private static final Logger log = LoggerFactory.getLogger(ApiRateLimiter.class);
     
+    // Rate Limit 윈도우 크기 (초 단위) - 기본값 60초(1분)
+    private static final int RATE_LIMIT_WINDOW_SECONDS = 60;
+    
     // API별 현재 카운트 및 윈도우 시작 시간
     private final ConcurrentHashMap<ApiType, AtomicInteger> currentCounts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<ApiType, Instant> windowStartTimes = new ConcurrentHashMap<>();
@@ -33,8 +36,9 @@ public class ApiRateLimiter {
             locks.put(apiType, new ReentrantLock());
         }
         
-        log.info("API Rate Limiter 초기화 완료 - 카카오톡: {}회/분, SMS: {}회/분", 
-            ApiType.KAKAOTALK.getRateLimit(), ApiType.SMS.getRateLimit());
+        log.info("API Rate Limiter 초기화 완료 - 윈도우: {}초, 카카오톡: {}회/{}초, SMS: {}회/{}초", 
+            RATE_LIMIT_WINDOW_SECONDS, ApiType.KAKAOTALK.getRateLimit(), RATE_LIMIT_WINDOW_SECONDS, 
+            ApiType.SMS.getRateLimit(), RATE_LIMIT_WINDOW_SECONDS);
     }
     
     /**
@@ -52,8 +56,8 @@ public class ApiRateLimiter {
             Instant windowStart = windowStartTimes.get(apiType);
             AtomicInteger currentCount = currentCounts.get(apiType);
             
-            // 1분이 지났으면 윈도우 리셋
-            if (ChronoUnit.MINUTES.between(windowStart, now) >= 1) {
+            // 설정된 윈도우 시간이 지났으면 윈도우 리셋
+            if (ChronoUnit.SECONDS.between(windowStart, now) >= RATE_LIMIT_WINDOW_SECONDS) {
                 windowStartTimes.put(apiType, now);
                 currentCount.set(0);
                 log.debug("{}의 Rate Limit 윈도우 리셋", apiType);
@@ -92,8 +96,8 @@ public class ApiRateLimiter {
             Instant windowStart = windowStartTimes.get(apiType);
             AtomicInteger currentCount = currentCounts.get(apiType);
             
-            // 1분이 지났으면 윈도우 리셋
-            if (ChronoUnit.MINUTES.between(windowStart, now) >= 1) {
+            // 설정된 윈도우 시간이 지났으면 윈도우 리셋
+            if (ChronoUnit.SECONDS.between(windowStart, now) >= RATE_LIMIT_WINDOW_SECONDS) {
                 windowStartTimes.put(apiType, now);
                 currentCount.set(0);
                 windowStart = now;
@@ -101,7 +105,7 @@ public class ApiRateLimiter {
             
             int limit = getLimit(apiType);
             int current = currentCount.get();
-            long remainingTimeSeconds = 60 - ChronoUnit.SECONDS.between(windowStart, now);
+            long remainingTimeSeconds = RATE_LIMIT_WINDOW_SECONDS - ChronoUnit.SECONDS.between(windowStart, now);
             
             return new RateLimitInfo(
                 apiType,

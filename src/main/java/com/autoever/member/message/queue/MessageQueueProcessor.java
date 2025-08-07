@@ -86,11 +86,9 @@ public class MessageQueueProcessor {
                 }
             }
             
-            // 처리되지 못한 경우 큐에 다시 추가
+            // 처리되지 못한 경우 큐에서 소비하고 실패 처리
             if (!processed) {
-                log.debug("Rate limit으로 처리 불가 - 큐에 재추가: {}", item.getId());
-                messageQueueService.enqueue(item.getMemberName(), item.getPhoneNumber(), 
-                    item.getMessage(), item.getPreferredApiType());
+                log.warn("Rate limit으로 처리 불가 - 메시지 소비 및 실패 처리: {}", item.getId());
             }
             
         } catch (Exception e) {
