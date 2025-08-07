@@ -22,22 +22,22 @@ public class KakaoTalkController {
     @PostMapping("/kakaotalk-messages")
     public ResponseEntity<Void> sendMessage(@RequestBody KakaoTalkMessageRequest request) {
         log.info("KakaoTalk 메시지 요청 수신 - phone: {}, message: {}", 
-                 maskPhoneNumber(request.getPhoneNumber()), request.getMessage());
+                 maskPhoneNumber(request.phoneNumber()), request.message());
         
         try {
             // 입력 검증
-            if (request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
+            if (request.phoneNumber() == null || request.phoneNumber().trim().isEmpty()) {
                 log.warn("전화번호가 누락됨");
                 return ResponseEntity.badRequest().build();
             }
             
-            if (request.getMessage() == null || request.getMessage().trim().isEmpty()) {
+            if (request.message() == null || request.message().trim().isEmpty()) {
                 log.warn("메시지 내용이 누락됨");
                 return ResponseEntity.badRequest().build();
             }
             
             // 시뮬레이션 시나리오 처리
-            String phoneNumber = request.getPhoneNumber();
+            String phoneNumber = request.phoneNumber();
             
             // 특정 번호로 에러 시나리오 테스트
             if (phoneNumber.contains("9999")) {

@@ -1,17 +1,14 @@
 package com.autoever.mock.kakaotalk.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
 
 /**
- * KakaoTalk API 메시지 요청 DTO
+ * KakaoTalk API 메시지 요청 DTO (Immutable Record)
  */
-@Data
-public class KakaoTalkMessageRequest {
-    
+public record KakaoTalkMessageRequest(
     @JsonProperty("phone")
-    private String phoneNumber;
+    String phoneNumber,
     
     @JsonProperty("message")
-    private String message;
-}
+    String message
+) {}

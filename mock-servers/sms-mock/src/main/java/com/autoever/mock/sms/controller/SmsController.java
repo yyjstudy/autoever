@@ -27,7 +27,7 @@ public class SmsController {
             @RequestBody SmsRequest request) {
         
         log.info("SMS 요청 수신 - phone: {}, message: {}", 
-                 maskPhoneNumber(phoneNumber), request.getMessage());
+                 maskPhoneNumber(phoneNumber), request.message());
         
         try {
             // 입력 검증
@@ -37,7 +37,7 @@ public class SmsController {
                     .body(SmsResponse.failure("INVALID_PHONE", "전화번호는 필수입니다"));
             }
             
-            if (request.getMessage() == null || request.getMessage().trim().isEmpty()) {
+            if (request.message() == null || request.message().trim().isEmpty()) {
                 log.warn("메시지 내용이 누락됨");
                 return ResponseEntity.badRequest()
                     .body(SmsResponse.failure("INVALID_MESSAGE", "메시지 내용은 필수입니다"));

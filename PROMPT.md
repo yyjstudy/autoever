@@ -1422,3 +1422,38 @@ design/
 **현재 상태:**
 - Task 14 간소화 완료 및 5개 서브태스크 준비
 - 다음 단계: Task 14.1부터 순차적 구현 예정
+
+### 72. Mock 서버 DTO를 Record 클래스로 변경
+**프롬프트:** "14번 작업전에 mock server의 dto들을 immutable하게 진행. record 클래스 사용."
+
+**수행 작업:**
+- **KakaoTalkMessageRequest**: `@Data` 클래스에서 immutable record로 변경
+  * `record KakaoTalkMessageRequest(String phoneNumber, String message)`
+  * `@JsonProperty` 어노테이션 유지하여 JSON 직렬화 호환성 확보
+
+- **KakaoTalkMessageResponse**: 복잡한 응답 객체를 record로 변경
+  * 5개 필드를 모두 record 파라미터로 변환
+  * `success()`, `failure()` 정적 팩토리 메서드를 record 생성자 방식으로 리팩토링
+
+- **SmsRequest**: 단순한 메시지 요청 객체를 record로 변경
+  * `record SmsRequest(String message)`
+
+- **SmsResponse**: SMS 응답 객체를 record로 변경
+  * KakaoTalk와 동일한 패턴으로 정적 팩토리 메서드 업데이트
+
+- **Controller 업데이트**:
+  * KakaoTalkController: `request.getPhoneNumber()` → `request.phoneNumber()`로 변경
+  * SmsController: `request.getMessage()` → `request.message()`로 변경
+
+**Record 클래스 도입 효과:**
+- **불변성 보장**: 모든 필드가 기본적으로 final
+- **스레드 안전성**: 불변 객체로 인한 멀티스레드 환경 안전성
+- **보일러플레이트 코드 제거**: getter/setter/equals/hashCode/toString 자동 생성
+- **성능 향상**: JVM 최적화된 record 구조 활용
+- **모던 Java**: Java 14+ 모범 사례 준수
+
+**검증 결과:**
+- ✅ 모든 Mock 서버 컴파일 성공
+- ✅ 메인 프로젝트 테스트 100% 통과
+- ✅ JSON 직렬화/역직렬화 정상 동작 확인
+- ✅ 정적 팩토리 메서드 정상 작동
