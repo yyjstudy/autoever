@@ -766,7 +766,7 @@
             "description": "mock-servers 루트 디렉토리 하위에 kakaotalk-mock, sms-mock 서브모듈을 생성하고 Gradle 멀티 모듈 설정을 구성합니다.",
             "dependencies": [],
             "details": "mock-servers/ 루트 디렉토리 생성. kakaotalk-mock/, sms-mock/ 서브 디렉토리 생성. settings.gradle에 include 'kakaotalk-mock', 'sms-mock' 추가. 각 서브모듈별로 독립적인 build.gradle 파일 생성. Spring Boot 플러그인 및 필요한 의존성 설정 (spring-boot-starter-web, spring-boot-starter-security).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "gradle build 명령으로 멀티 모듈 프로젝트가 정상적으로 빌드되는지 확인. 각 서브모듈이 독립적으로 인식되는지 gradle projects 명령으로 검증."
           },
           {
@@ -777,7 +777,7 @@
               "12.1"
             ],
             "details": "KakaotalkMockApplication 메인 클래스 생성. SecurityConfig 클래스로 Basic Auth 설정 (autoever/1234). application.yml에 server.port=8081 설정. CSRF 비활성화 및 세션 STATELESS 설정. /kakaotalk-messages 엔드포인트에 대한 인증 요구사항 설정.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "애플리케이션이 포트 8081에서 정상 시작되는지 확인. 인증 없이 API 호출 시 401 응답 확인. 올바른 인증 정보로 접근 가능한지 테스트."
           },
           {
@@ -788,7 +788,7 @@
               "12.1"
             ],
             "details": "SmsMockApplication 메인 클래스 생성. SecurityConfig 클래스로 Basic Auth 설정 (autoever/5678). application.yml에 server.port=8082 설정. CSRF 비활성화 및 세션 STATELESS 설정. /sms 엔드포인트에 대한 인증 요구사항 설정.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "애플리케이션이 포트 8082에서 정상 시작되는지 확인. 인증 없이 API 호출 시 401 응답 확인. 올바른 인증 정보로 접근 가능한지 테스트."
           },
           {
@@ -818,7 +818,7 @@
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-07T01:56:43.552Z",
+      "updated": "2025-08-07T02:11:55.675Z",
       "description": "Tasks for master context"
     }
   }

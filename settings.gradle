@@ -1,1 +1,5 @@
 rootProject.name = 'autoever-member-system'
+
+// Mock 서버 서브프로젝트 추가
+include 'mock-servers:kakaotalk-mock'
+include 'mock-servers:sms-mock'

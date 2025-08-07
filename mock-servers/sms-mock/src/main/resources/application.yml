@@ -1,0 +1,29 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: sms-mock-server
+  
+  # 기본 시큐리티 사용자 설정 (Basic Auth)
+  security:
+    user:
+      name: autoever
+      password: 5678
+
+# 로깅 설정
+logging:
+  level:
+    com.autoever.mock.sms: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+# Mock 서버 설정
+mock:
+  sms:
+    api:
+      endpoint: /sms
+      auth:
+        username: autoever
+        password: 5678

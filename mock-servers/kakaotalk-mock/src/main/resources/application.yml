@@ -1,0 +1,29 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: kakaotalk-mock-server
+  
+  # 기본 시큐리티 사용자 설정 (Basic Auth)
+  security:
+    user:
+      name: autoever
+      password: 1234
+
+# 로깅 설정
+logging:
+  level:
+    com.autoever.mock.kakaotalk: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+# Mock 서버 설정
+mock:
+  kakaotalk:
+    api:
+      endpoint: /kakaotalk-messages
+      auth:
+        username: autoever
+        password: 1234
