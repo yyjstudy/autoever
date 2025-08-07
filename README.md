@@ -46,12 +46,27 @@ Spring Boot 기반의 회원관리 및 메시지 발송 시스템입니다. JWT 
    ```
 
 2. **전체 시스템 실행** (권장)
+   
+   **Linux/macOS:**
    ```bash
    ./start.sh
    ```
+   
+   **Windows:**
+   ```cmd
+   start.bat
+   ```
+   
    > 🚀 **한 번에 모든 서버 시작**: Mock 서버들과 메인 애플리케이션을 자동으로 시작합니다.
+   
+   **Windows 서버 종료:**
+   ```cmd
+   stop.bat
+   ```
 
 3. **개별 서버 실행** (개발용)
+   
+   **Linux/macOS:**
    ```bash
    # KakaoTalk Mock Server (별도 터미널)
    ./gradlew :mock-servers:kakaotalk-mock:bootRun
@@ -63,9 +78,22 @@ Spring Boot 기반의 회원관리 및 메시지 발송 시스템입니다. JWT 
    ./gradlew bootRun
    ```
    
+   **Windows:**
+   ```cmd
+   REM KakaoTalk Mock Server (별도 CMD)
+   gradlew.bat :mock-servers:kakaotalk-mock:bootRun
+   
+   REM SMS Mock Server (별도 CMD)
+   gradlew.bat :mock-servers:sms-mock:bootRun
+   
+   REM 메인 애플리케이션 (별도 CMD)
+   gradlew.bat bootRun
+   ```
+   
    또는 JAR 파일 빌드 후 실행:
    ```bash
-   ./gradlew build
+   ./gradlew build  # Linux/macOS
+   gradlew.bat build  # Windows
    java -jar build/libs/autoever-member-system-0.0.1-SNAPSHOT.jar
    ```
 
