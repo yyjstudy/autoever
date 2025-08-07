@@ -57,6 +57,29 @@ public class BulkMessageService {
         log.info("대량 메시지 발송 작업 시작 - jobId: {}, ageGroup: {}", 
                  jobId, request.ageGroup());
         
+        // 큐 상태 확인 - 큐가 꽉 찬 경우 즉시 실패 응답 반환
+        MessageQueueService.QueueStatus queueStatus = messageQueueService.getQueueStatus();
+        if (queueStatus.isFull()) {
+            log.error("큐가 가득참 - 대량 메시지 발송 작업 실패 - jobId: {}, 현재큐크기: {}, 최대큐크기: {}", 
+                     jobId, queueStatus.getCurrentSize(), queueStatus.getMaxSize());
+            
+            // 실패 상태로 작업 등록
+            BulkMessageJobStatus failedStatus = new BulkMessageJobStatus(
+                jobId,
+                BulkMessageResponse.JobStatus.FAILED,
+                0, 0, 0, 0,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                Duration.ZERO,
+                0.0
+            );
+            jobStatusMap.put(jobId, failedStatus);
+            
+            structuredLogger.logJobStart(jobId, request.ageGroup(), request.message(), 0);
+            
+            return BulkMessageResponse.queueFull(jobId);
+        }
+        
         // 실제 사용자 수 조회
         int totalUsers = userQueryService.countUsersByAgeGroup(ageGroup);
         

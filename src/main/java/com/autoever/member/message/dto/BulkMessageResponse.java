@@ -53,4 +53,17 @@ public record BulkMessageResponse(
             LocalDateTime.now()
         );
     }
+    
+    /**
+     * 큐 가득참으로 인한 실패 응답 생성
+     */
+    public static BulkMessageResponse queueFull(UUID jobId) {
+        return new BulkMessageResponse(
+            jobId,
+            0,
+            Duration.ZERO,
+            JobStatus.FAILED,
+            LocalDateTime.now()
+        );
+    }
 }

@@ -104,6 +104,13 @@ public class AdminMessageController {
         
         BulkMessageResponse response = bulkMessageService.sendBulkMessage(request);
         
+        // 큐가 꽉 찬 경우 Service Unavailable 응답
+        if (response.status() == BulkMessageResponse.JobStatus.FAILED && response.totalUsers() == 0) {
+            return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)  // 503 - 서비스 일시 불가
+                .body(ApiResponse.error("큐가 가득 참니다. 잠시 후 다시 시도해주세요.", response));
+        }
+        
         return ResponseEntity
             .status(HttpStatus.ACCEPTED)  // 202 - 비동기 작업 시작됨
             .body(ApiResponse.success("대량 메시지 발송이 시작되었습니다.", response));
