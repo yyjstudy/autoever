@@ -1695,3 +1695,38 @@ design/
 - 72개 Sub-task 완료 (100%)
 - Mock 서버 Rate Limiting 튜토리얼 구현 완료
 - 의미있고 통일된 테스트 커버리지 확보
+
+### 79. H2 메모리 DB용 테스트 API 구현
+**프롬프트:** "이제 내가 직접 메뉴얼 테스트를 진행할 것이다. 나는 h2 db를 사용하므로 스웨거에 테스트를 위한 간편한 api를 만들거다."
+
+**요구사항:**
+- 테스트용 API 전용 패키지 생성
+- 모든 유저 삭제 API
+- 랜덤 유저 생성 API (유저 수 필수, 연령대 옵션)
+- 연령대: 10, 20, 30, ..., 90 (나중에 10대부터로 변경)
+- 최대 생성 수: 100명으로 제한
+
+**구현 내용:**
+
+#### 테스트 API 패키지 구성
+- `com.autoever.test.controller.TestDataController` - API 엔드포인트
+- `com.autoever.test.service.TestDataService` - 랜덤 데이터 생성 로직  
+- `com.autoever.test.dto.*` - 요청/응답 DTO
+
+**API 엔드포인트:**
+- `POST /api/test/users` - 랜덤 유저 생성
+- `DELETE /api/test/users` - 모든 유저 삭제
+- `GET /api/test/health` - API 상태 확인
+
+#### Swagger 노출 및 보안 구성
+**문제:** 컴포넌트 스캔 범위 밖 (`com.autoever.member` vs `com.autoever.test`)
+**해결:** `@SpringBootApplication(scanBasePackages = {"com.autoever.member", "com.autoever.test"})`
+**보안:** `/api/test/**` 경로를 ADMIN 권한 필요로 설정 (admin/1212)
+
+#### 상세 문서화 및 예시 추가
+- 각 API별 상세한 설명과 사용 시나리오
+- 4가지 요청 예시 (기본, 랜덤연령, 최대생성, 특정연령대)
+- 성공/실패 응답 JSON 예시
+- 연령대 범위를 10대부터로 최종 조정
+
+**최종 결과:** H2 메모리 DB 전용 실용적인 수동 테스트 도구 완성

@@ -71,6 +71,9 @@ public class SecurityConfig {
                 // 공개 접근 허용 경로
                 .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                 
+                // 테스트 API는 관리자 권한 필요 (H2 메모리 DB 테스트용)
+                .requestMatchers("/api/test/**").hasRole("ADMIN")
+                
                 // 관리자 전용 API는 ADMIN 권한 필요
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 
