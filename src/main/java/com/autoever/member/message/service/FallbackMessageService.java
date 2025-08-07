@@ -9,7 +9,6 @@ import com.autoever.member.message.ratelimit.ApiRateLimiter;
 import com.autoever.member.message.queue.MessageQueueService;
 import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
-import com.autoever.member.message.logging.MessageTraceContext;
 import com.autoever.member.message.result.MessageSendResult;
 import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.message.template.MessageTemplateService;
@@ -51,36 +50,30 @@ public class FallbackMessageService {
         }
 
         String maskedPhone = maskPhoneNumber(user.getPhoneNumber());
-        String traceId = MessageTraceContext.startTrace(maskedPhone, "template");
         
-        try {
-            log.info("메시지 발송 요청 - 수신자: {}, 메시지 길이: {}", maskedPhone, originalMessage.length());
+        log.info("메시지 발송 요청 - 수신자: {}, 메시지 길이: {}", maskedPhone, originalMessage.length());
 
-            // 1. 템플릿 적용
-            long templateStartTime = System.currentTimeMillis();
-            String templatedMessage = messageTemplateService.applyTemplate(user, originalMessage);
-            long templateDuration = System.currentTimeMillis() - templateStartTime;
-            
-            log.info("템플릿 적용 완료 - 처리시간: {}ms, 템플릿 후 길이: {}", 
-                templateDuration, templatedMessage.length());
+        // 1. 템플릿 적용
+        long templateStartTime = System.currentTimeMillis();
+        String templatedMessage = messageTemplateService.applyTemplate(user, originalMessage);
+        long templateDuration = System.currentTimeMillis() - templateStartTime;
+        
+        log.info("템플릿 적용 완료 - 처리시간: {}ms, 템플릿 후 길이: {}", 
+            templateDuration, templatedMessage.length());
 
-            // 2. 큐에 추가 시도 (카카오톡 우선)
-            MessageQueueService.QueueResult queueResult = messageQueueService.enqueue(
-                user.getName(), user.getPhoneNumber(), templatedMessage, ApiType.KAKAOTALK);
-            
-            if (queueResult.isSuccess()) {
-                log.info("메시지 큐에 추가 완료 - QueueId: {}, Position: {}", 
-                    queueResult.getQueueId(), queueResult.getQueuePosition());
-                messageSendTracker.recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
-                return MessageSendResult.QUEUED;
-            } else {
-                log.error("큐 용량 초과 - {}", queueResult.getMessage());
-                messageSendTracker.recordResult(MessageSendResult.QUEUE_FULL, ApiType.KAKAOTALK);
-                return MessageSendResult.QUEUE_FULL;
-            }
-            
-        } finally {
-            MessageTraceContext.endTrace();
+        // 2. 큐에 추가 시도 (카카오톡 우선)
+        MessageQueueService.QueueResult queueResult = messageQueueService.enqueue(
+            user.getName(), user.getPhoneNumber(), templatedMessage, ApiType.KAKAOTALK);
+        
+        if (queueResult.isSuccess()) {
+            log.info("메시지 큐에 추가 완료 - QueueId: {}, Position: {}", 
+                queueResult.getQueueId(), queueResult.getQueuePosition());
+            messageSendTracker.recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
+            return MessageSendResult.QUEUED;
+        } else {
+            log.error("큐 용량 초과 - {}", queueResult.getMessage());
+            messageSendTracker.recordResult(MessageSendResult.QUEUE_FULL, ApiType.KAKAOTALK);
+            return MessageSendResult.QUEUE_FULL;
         }
     }
 
@@ -106,37 +99,31 @@ public class FallbackMessageService {
         }
 
         String maskedPhone = maskPhoneNumber(phoneNumber);
-        String traceId = MessageTraceContext.startTrace(maskedPhone, "direct");
         
-        try {
-            log.info("메시지 발송 요청 - 수신자: {}, 회원명: {}, 메시지 길이: {}", 
-                maskedPhone, memberName, originalMessage.length());
+        log.info("메시지 발송 요청 - 수신자: {}, 회원명: {}, 메시지 길이: {}", 
+            maskedPhone, memberName, originalMessage.length());
 
-            // 1. 템플릿 적용
-            long templateStartTime = System.currentTimeMillis();
-            String templatedMessage = messageTemplateService.applyTemplate(memberName, originalMessage);
-            long templateDuration = System.currentTimeMillis() - templateStartTime;
-            
-            log.info("템플릿 적용 완료 - 처리시간: {}ms, 템플릿 후 길이: {}", 
-                templateDuration, templatedMessage.length());
+        // 1. 템플릿 적용
+        long templateStartTime = System.currentTimeMillis();
+        String templatedMessage = messageTemplateService.applyTemplate(memberName, originalMessage);
+        long templateDuration = System.currentTimeMillis() - templateStartTime;
+        
+        log.info("템플릿 적용 완료 - 처리시간: {}ms, 템플릿 후 길이: {}", 
+            templateDuration, templatedMessage.length());
 
-            // 2. 큐에 추가 시도 (카카오톡 우선)
-            MessageQueueService.QueueResult queueResult = messageQueueService.enqueue(
-                memberName, phoneNumber, templatedMessage, ApiType.KAKAOTALK);
-            
-            if (queueResult.isSuccess()) {
-                log.info("메시지 큐에 추가 완료 - QueueId: {}, Position: {}", 
-                    queueResult.getQueueId(), queueResult.getQueuePosition());
-                messageSendTracker.recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
-                return MessageSendResult.QUEUED;
-            } else {
-                log.error("큐 용량 초과 - {}", queueResult.getMessage());
-                messageSendTracker.recordResult(MessageSendResult.QUEUE_FULL, ApiType.KAKAOTALK);
-                return MessageSendResult.QUEUE_FULL;
-            }
-            
-        } finally {
-            MessageTraceContext.endTrace();
+        // 2. 큐에 추가 시도 (카카오톡 우선)
+        MessageQueueService.QueueResult queueResult = messageQueueService.enqueue(
+            memberName, phoneNumber, templatedMessage, ApiType.KAKAOTALK);
+        
+        if (queueResult.isSuccess()) {
+            log.info("메시지 큐에 추가 완료 - QueueId: {}, Position: {}", 
+                queueResult.getQueueId(), queueResult.getQueuePosition());
+            messageSendTracker.recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
+            return MessageSendResult.QUEUED;
+        } else {
+            log.error("큐 용량 초과 - {}", queueResult.getMessage());
+            messageSendTracker.recordResult(MessageSendResult.QUEUE_FULL, ApiType.KAKAOTALK);
+            return MessageSendResult.QUEUE_FULL;
         }
     }
 
@@ -148,7 +135,6 @@ public class FallbackMessageService {
      * @return KakaoTalk 발송 결과
      */
     private MessageSendResult attemptKakaoTalkSend(String phoneNumber, String message) {
-        MessageTraceContext.setApiType("KAKAOTALK");
         long startTime = System.currentTimeMillis();
         
         try {
@@ -205,7 +191,6 @@ public class FallbackMessageService {
      * @return SMS 발송 결과
      */
     private MessageSendResult attemptSmsSend(String phoneNumber, String message) {
-        MessageTraceContext.setApiType("SMS");
         long startTime = System.currentTimeMillis();
         
         try {
