@@ -1337,3 +1337,53 @@ design/
 - Task 13.1 진행 준비 완료 (MessageApiClient 실제 Mock 서버 연동)
 - 기존 API 클라이언트 코드가 이미 Mock 서버 명세에 맞게 구현되어 있음 확인
 - application.yml 설정도 올바르게 구성되어 있음 확인
+
+### 69. Task 13 그룹별 작업 진행
+**프롬프트:** "태스크 13을 그룹핑 하고 그룹별로 작업을 진행하자."
+
+**수행 작업:**
+- **Task 13 그룹핑**:
+  * Group 1: Mock 서버 연동 및 Rate Limiting (Task 13.1 + 13.2)
+  * Group 2: Fallback 서비스 개선 및 에러 핸들링 (Task 13.3 + 13.4)
+  * Group 3: 템플릿 연동 및 모니터링 강화 (Task 13.5)
+
+- **Group 1 완료: Mock 서버 연동 및 Rate Limiting**
+  * ApiRateLimiter 클래스 구현: Sliding Window 방식의 Thread-safe Rate Limiting
+  * KakaoTalk 100회/분, SMS 500회/분 제한 적용
+  * Mock 서버 API 명세 준수: KakaoTalk JSON, SMS Query Param + Body
+  * 테스트 전체 통과 (KakaoTalkApiClientTest, SmsApiClientTest)
+
+- **Group 2 완료: Fallback 서비스 개선 및 에러 핸들링**
+  * MessageSendResult에 RATE_LIMITED 상태 추가
+  * FallbackMessageService Rate Limiting 통합
+  * MDC 기반 MessageTraceContext 구현 (요청 추적)
+  * 에러 타입별 상세 처리 (RATE_LIMIT_EXCEEDED, AUTHENTICATION_FAILED 등)
+
+- **Group 3 완료: 템플릿 연동 및 모니터링 강화**
+  * AdminController에 메시지 통계 API 추가 (/api/admin/messages/statistics)
+  * 통계 리셋 API 추가 (/api/admin/messages/statistics/reset)
+  * MDC 로깅으로 전체 요청 흐름 추적
+  * 테스트 전체 통과
+
+### 70. 불필요한 클래스 정리
+**프롬프트:** "태스크 13작업을 완료함으로써, 최신 기획이 반영된건데 이후로 사용되지 않을 클래스와 테스트는 정리하자. ratelimit관련해서."
+
+**수행 작업:**
+- **삭제된 구식 클래스들**:
+  * RateLimiter.java - 구식 인터페이스 (ApiRateLimiter로 대체)
+  * TokenBucket.java - 구식 구현체 (ApiRateLimiter로 대체)
+  * MessageClientFactory.java - 팩토리 패턴 제거 (직접 DI로 변경)
+  * MessageService.java - 불필요한 서비스 (FallbackMessageService로 통합)
+  * 관련 테스트 파일들 모두 삭제
+
+- **리팩토링 작업**:
+  * FallbackMessageService: MessageClientFactory 대신 직접 의존성 주입
+  * FallbackExternalMessageServiceImpl 생성: ExternalMessageService 인터페이스 구현체
+  * 모든 테스트 통과 확인 (100% 성공)
+
+**최종 결과:**
+- Task 13 전체 완료 ✅
+- Mock 서버 연동 완료 (KakaoTalk:8081, SMS:8082)
+- Rate Limiting 구현 완료 (카카오톡 100회/분, SMS 500회/분)
+- MDC 기반 요청 추적 및 모니터링 구현
+- 불필요한 레거시 코드 정리 완료

@@ -2,10 +2,12 @@ package com.autoever.member.message.service;
 
 import com.autoever.member.entity.User;
 import com.autoever.member.message.ApiType;
+import com.autoever.member.message.client.KakaoTalkApiClient;
 import com.autoever.member.message.client.MessageApiClient;
-import com.autoever.member.message.client.MessageClientFactory;
+import com.autoever.member.message.client.SmsApiClient;
 import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
+import com.autoever.member.message.logging.MessageTraceContext;
 import com.autoever.member.message.result.MessageSendResult;
 import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.message.template.MessageTemplateService;
@@ -21,7 +23,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FallbackMessageService {
 
-    private final MessageClientFactory messageClientFactory;
+    private final KakaoTalkApiClient kakaoTalkApiClient;
+    private final SmsApiClient smsApiClient;
     private final MessageTemplateService messageTemplateService;
     private final MessageSendTracker messageSendTracker;
 
@@ -43,50 +46,67 @@ public class FallbackMessageService {
             throw new IllegalArgumentException("메시지 내용은 필수입니다");
         }
 
-        // 1. 템플릿 적용
-        String templatedMessage = messageTemplateService.applyTemplate(user, originalMessage);
-        log.info("템플릿 적용 완료: recipient={}", maskPhoneNumber(user.getPhoneNumber()));
-
-        // 2. KakaoTalk 우선 발송 시도
-        MessageSendResult kakaoResult = attemptKakaoTalkSend(user.getPhoneNumber(), templatedMessage);
+        String maskedPhone = maskPhoneNumber(user.getPhoneNumber());
+        String traceId = MessageTraceContext.startTrace(maskedPhone, "template");
         
-        if (kakaoResult == MessageSendResult.SUCCESS_KAKAO) {
-            log.info("카카오톡 발송 성공: recipient={}", maskPhoneNumber(user.getPhoneNumber()));
-            messageSendTracker.recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
-            return MessageSendResult.SUCCESS_KAKAO;
-        }
+        try {
+            log.info("메시지 발송 시작 - 수신자: {}, 메시지 길이: {}", maskedPhone, originalMessage.length());
 
-        // 3. KakaoTalk 실패 시 SMS Fallback 시도
-        log.warn("카카오톡 발송 실패, SMS로 전환: recipient={}, kakaoResult={}", 
-            maskPhoneNumber(user.getPhoneNumber()), kakaoResult);
+            // 1. 템플릿 적용
+            long templateStartTime = System.currentTimeMillis();
+            String templatedMessage = messageTemplateService.applyTemplate(user, originalMessage);
+            long templateDuration = System.currentTimeMillis() - templateStartTime;
+            
+            log.info("템플릿 적용 완료 - 처리시간: {}ms, 템플릿 후 길이: {}", 
+                templateDuration, templatedMessage.length());
 
-        MessageSendResult smsResult = attemptSmsSend(user.getPhoneNumber(), templatedMessage);
-        
-        if (smsResult == MessageSendResult.SUCCESS_SMS_FALLBACK) {
-            log.info("SMS Fallback 발송 성공: recipient={}", maskPhoneNumber(user.getPhoneNumber()));
-            messageSendTracker.recordResult(MessageSendResult.SUCCESS_SMS_FALLBACK, ApiType.SMS);
-            return MessageSendResult.SUCCESS_SMS_FALLBACK;
-        }
+            // 2. KakaoTalk 우선 발송 시도
+            long sendStartTime = System.currentTimeMillis();
+            MessageSendResult kakaoResult = attemptKakaoTalkSend(user.getPhoneNumber(), templatedMessage);
+            
+            if (kakaoResult == MessageSendResult.SUCCESS_KAKAO) {
+                long totalDuration = System.currentTimeMillis() - sendStartTime;
+                log.info("카카오톡 발송 성공 - 총 처리시간: {}ms", totalDuration);
+                messageSendTracker.recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
+                return MessageSendResult.SUCCESS_KAKAO;
+            }
 
-        // 4. Rate Limiting 상태 처리
-        if (smsResult == MessageSendResult.RATE_LIMITED) {
-            log.warn("SMS도 Rate Limit 초과: recipient={}", maskPhoneNumber(user.getPhoneNumber()));
-            messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.SMS);
-            return MessageSendResult.RATE_LIMITED;
-        }
-        
-        if (kakaoResult == MessageSendResult.RATE_LIMITED) {
-            log.warn("카카오톡 Rate Limit 초과, SMS 실패: recipient={}", maskPhoneNumber(user.getPhoneNumber()));
-            messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.KAKAOTALK);
-            return MessageSendResult.RATE_LIMITED;
-        }
+            // 3. KakaoTalk 실패 시 SMS Fallback 시도
+            log.warn("카카오톡 발송 실패, SMS로 전환 - 실패사유: {}", kakaoResult);
 
-        // 5. 모든 발송 방법 실패
-        log.error("모든 발송 방법 실패: recipient={}, kakaoResult={}, smsResult={}", 
-            maskPhoneNumber(user.getPhoneNumber()), kakaoResult, smsResult);
-        
-        messageSendTracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.KAKAOTALK);
-        return MessageSendResult.FAILED_BOTH;
+            MessageSendResult smsResult = attemptSmsSend(user.getPhoneNumber(), templatedMessage);
+            
+            if (smsResult == MessageSendResult.SUCCESS_SMS_FALLBACK) {
+                long totalDuration = System.currentTimeMillis() - sendStartTime;
+                log.info("SMS Fallback 발송 성공 - 총 처리시간: {}ms", totalDuration);
+                messageSendTracker.recordResult(MessageSendResult.SUCCESS_SMS_FALLBACK, ApiType.SMS);
+                return MessageSendResult.SUCCESS_SMS_FALLBACK;
+            }
+
+            // 4. Rate Limiting 상태 처리
+            if (smsResult == MessageSendResult.RATE_LIMITED) {
+                log.warn("SMS도 Rate Limit 초과 - 모든 채널에서 제한 상태");
+                messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.SMS);
+                return MessageSendResult.RATE_LIMITED;
+            }
+            
+            if (kakaoResult == MessageSendResult.RATE_LIMITED) {
+                log.warn("카카오톡 Rate Limit 초과, SMS 실패 - SMS 실패사유: {}", smsResult);
+                messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.KAKAOTALK);
+                return MessageSendResult.RATE_LIMITED;
+            }
+
+            // 5. 모든 발송 방법 실패
+            long totalDuration = System.currentTimeMillis() - sendStartTime;
+            log.error("모든 발송 방법 실패 - 카카오톡: {}, SMS: {}, 총 처리시간: {}ms", 
+                kakaoResult, smsResult, totalDuration);
+            
+            messageSendTracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.KAKAOTALK);
+            return MessageSendResult.FAILED_BOTH;
+            
+        } finally {
+            MessageTraceContext.endTrace();
+        }
     }
 
     /**
@@ -110,50 +130,68 @@ public class FallbackMessageService {
             throw new IllegalArgumentException("메시지 내용은 필수입니다");
         }
 
-        // 1. 템플릿 적용
-        String templatedMessage = messageTemplateService.applyTemplate(memberName, originalMessage);
-        log.info("템플릿 적용 완료: recipient={}", maskPhoneNumber(phoneNumber));
-
-        // 2. KakaoTalk 우선 발송 시도
-        MessageSendResult kakaoResult = attemptKakaoTalkSend(phoneNumber, templatedMessage);
+        String maskedPhone = maskPhoneNumber(phoneNumber);
+        String traceId = MessageTraceContext.startTrace(maskedPhone, "direct");
         
-        if (kakaoResult == MessageSendResult.SUCCESS_KAKAO) {
-            log.info("카카오톡 발송 성공: recipient={}", maskPhoneNumber(phoneNumber));
-            messageSendTracker.recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
-            return MessageSendResult.SUCCESS_KAKAO;
-        }
+        try {
+            log.info("직접 메시지 발송 시작 - 수신자: {}, 회원명: {}, 메시지 길이: {}", 
+                maskedPhone, memberName, originalMessage.length());
 
-        // 3. KakaoTalk 실패 시 SMS Fallback 시도
-        log.warn("카카오톡 발송 실패, SMS로 전환: recipient={}, kakaoResult={}", 
-            maskPhoneNumber(phoneNumber), kakaoResult);
+            // 1. 템플릿 적용
+            long templateStartTime = System.currentTimeMillis();
+            String templatedMessage = messageTemplateService.applyTemplate(memberName, originalMessage);
+            long templateDuration = System.currentTimeMillis() - templateStartTime;
+            
+            log.info("템플릿 적용 완료 - 처리시간: {}ms, 템플릿 후 길이: {}", 
+                templateDuration, templatedMessage.length());
 
-        MessageSendResult smsResult = attemptSmsSend(phoneNumber, templatedMessage);
-        
-        if (smsResult == MessageSendResult.SUCCESS_SMS_FALLBACK) {
-            log.info("SMS Fallback 발송 성공: recipient={}", maskPhoneNumber(phoneNumber));
-            messageSendTracker.recordResult(MessageSendResult.SUCCESS_SMS_FALLBACK, ApiType.SMS);
-            return MessageSendResult.SUCCESS_SMS_FALLBACK;
-        }
+            // 2. KakaoTalk 우선 발송 시도
+            long sendStartTime = System.currentTimeMillis();
+            MessageSendResult kakaoResult = attemptKakaoTalkSend(phoneNumber, templatedMessage);
+            
+            if (kakaoResult == MessageSendResult.SUCCESS_KAKAO) {
+                long totalDuration = System.currentTimeMillis() - sendStartTime;
+                log.info("카카오톡 발송 성공 - 총 처리시간: {}ms", totalDuration);
+                messageSendTracker.recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
+                return MessageSendResult.SUCCESS_KAKAO;
+            }
 
-        // 4. Rate Limiting 상태 처리
-        if (smsResult == MessageSendResult.RATE_LIMITED) {
-            log.warn("SMS도 Rate Limit 초과: recipient={}", maskPhoneNumber(phoneNumber));
-            messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.SMS);
-            return MessageSendResult.RATE_LIMITED;
-        }
-        
-        if (kakaoResult == MessageSendResult.RATE_LIMITED) {
-            log.warn("카카오톡 Rate Limit 초과, SMS 실패: recipient={}", maskPhoneNumber(phoneNumber));
-            messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.KAKAOTALK);
-            return MessageSendResult.RATE_LIMITED;
-        }
+            // 3. KakaoTalk 실패 시 SMS Fallback 시도
+            log.warn("카카오톡 발송 실패, SMS로 전환 - 실패사유: {}", kakaoResult);
 
-        // 5. 모든 발송 방법 실패
-        log.error("모든 발송 방법 실패: recipient={}, kakaoResult={}, smsResult={}", 
-            maskPhoneNumber(phoneNumber), kakaoResult, smsResult);
-        
-        messageSendTracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.KAKAOTALK);
-        return MessageSendResult.FAILED_BOTH;
+            MessageSendResult smsResult = attemptSmsSend(phoneNumber, templatedMessage);
+            
+            if (smsResult == MessageSendResult.SUCCESS_SMS_FALLBACK) {
+                long totalDuration = System.currentTimeMillis() - sendStartTime;
+                log.info("SMS Fallback 발송 성공 - 총 처리시간: {}ms", totalDuration);
+                messageSendTracker.recordResult(MessageSendResult.SUCCESS_SMS_FALLBACK, ApiType.SMS);
+                return MessageSendResult.SUCCESS_SMS_FALLBACK;
+            }
+
+            // 4. Rate Limiting 상태 처리
+            if (smsResult == MessageSendResult.RATE_LIMITED) {
+                log.warn("SMS도 Rate Limit 초과 - 모든 채널에서 제한 상태");
+                messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.SMS);
+                return MessageSendResult.RATE_LIMITED;
+            }
+            
+            if (kakaoResult == MessageSendResult.RATE_LIMITED) {
+                log.warn("카카오톡 Rate Limit 초과, SMS 실패 - SMS 실패사유: {}", smsResult);
+                messageSendTracker.recordResult(MessageSendResult.RATE_LIMITED, ApiType.KAKAOTALK);
+                return MessageSendResult.RATE_LIMITED;
+            }
+
+            // 5. 모든 발송 방법 실패
+            long totalDuration = System.currentTimeMillis() - sendStartTime;
+            log.error("모든 발송 방법 실패 - 카카오톡: {}, SMS: {}, 총 처리시간: {}ms", 
+                kakaoResult, smsResult, totalDuration);
+            
+            messageSendTracker.recordResult(MessageSendResult.FAILED_BOTH, ApiType.KAKAOTALK);
+            return MessageSendResult.FAILED_BOTH;
+            
+        } finally {
+            MessageTraceContext.endTrace();
+        }
     }
 
     /**
@@ -164,25 +202,32 @@ public class FallbackMessageService {
      * @return KakaoTalk 발송 결과
      */
     private MessageSendResult attemptKakaoTalkSend(String phoneNumber, String message) {
+        MessageTraceContext.setApiType("KAKAOTALK");
+        long startTime = System.currentTimeMillis();
+        
         try {
-            MessageApiClient kakaoClient = messageClientFactory.getAvailableClient(ApiType.KAKAOTALK);
-            if (kakaoClient == null) {
-                log.warn("KakaoTalk 클라이언트를 찾을 수 없습니다");
+            log.debug("KakaoTalk API 호출 시작 - 메시지 길이: {}", message.length());
+            
+            if (!kakaoTalkApiClient.isAvailable()) {
+                log.warn("KakaoTalk 클라이언트 사용 불가 - 연결 상태 불량");
                 return MessageSendResult.FAILED_BOTH;
             }
 
             MessageRequest request = new MessageRequest(phoneNumber, message);
-            MessageResponse response = kakaoClient.sendMessage(request);
+            MessageResponse response = kakaoTalkApiClient.sendMessage(request);
+            long duration = System.currentTimeMillis() - startTime;
 
             if (response.success()) {
+                log.debug("KakaoTalk API 호출 성공 - 처리시간: {}ms, messageId: {}", 
+                    duration, response.messageId());
                 return MessageSendResult.SUCCESS_KAKAO;
             } else {
-                log.warn("KakaoTalk 발송 실패: errorCode={}, errorMessage={}", 
-                    response.errorCode(), response.errorMessage());
+                log.warn("KakaoTalk API 호출 실패 - 처리시간: {}ms, errorCode: {}, errorMessage: {}", 
+                    duration, response.errorCode(), response.errorMessage());
                 
                 // Rate Limiting 상태 확인
                 if ("RATE_LIMIT_EXCEEDED".equals(response.errorCode())) {
-                    log.info("KakaoTalk Rate Limit 초과, 상태 반환");
+                    log.info("KakaoTalk Rate Limit 초과 - 다음 API로 전환");
                     return MessageSendResult.RATE_LIMITED;
                 }
                 
@@ -190,7 +235,9 @@ public class FallbackMessageService {
             }
 
         } catch (Exception e) {
-            log.error("KakaoTalk 발송 중 예외 발생: recipient={}", maskPhoneNumber(phoneNumber), e);
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("KakaoTalk API 호출 중 예외 발생 - 처리시간: {}ms, 수신자: {}", 
+                duration, maskPhoneNumber(phoneNumber), e);
             return MessageSendResult.FAILED_BOTH;
         }
     }
@@ -203,25 +250,32 @@ public class FallbackMessageService {
      * @return SMS 발송 결과
      */
     private MessageSendResult attemptSmsSend(String phoneNumber, String message) {
+        MessageTraceContext.setApiType("SMS");
+        long startTime = System.currentTimeMillis();
+        
         try {
-            MessageApiClient smsClient = messageClientFactory.getAvailableClient(ApiType.SMS);
-            if (smsClient == null) {
-                log.warn("SMS 클라이언트를 찾을 수 없습니다");
+            log.debug("SMS API 호출 시작 - 메시지 길이: {}", message.length());
+            
+            if (!smsApiClient.isAvailable()) {
+                log.warn("SMS 클라이언트 사용 불가 - 연결 상태 불량");
                 return MessageSendResult.FAILED_BOTH;
             }
 
             MessageRequest request = new MessageRequest(phoneNumber, message);
-            MessageResponse response = smsClient.sendMessage(request);
+            MessageResponse response = smsApiClient.sendMessage(request);
+            long duration = System.currentTimeMillis() - startTime;
 
             if (response.success()) {
+                log.debug("SMS API 호출 성공 - 처리시간: {}ms, messageId: {}", 
+                    duration, response.messageId());
                 return MessageSendResult.SUCCESS_SMS_FALLBACK;
             } else {
-                log.warn("SMS 발송 실패: errorCode={}, errorMessage={}", 
-                    response.errorCode(), response.errorMessage());
+                log.warn("SMS API 호출 실패 - 처리시간: {}ms, errorCode: {}, errorMessage: {}", 
+                    duration, response.errorCode(), response.errorMessage());
                 
                 // Rate Limiting 상태 확인
                 if ("RATE_LIMIT_EXCEEDED".equals(response.errorCode())) {
-                    log.info("SMS Rate Limit 초과, 상태 반환");
+                    log.info("SMS Rate Limit 초과 - 모든 채널 소진");
                     return MessageSendResult.RATE_LIMITED;
                 }
                 
@@ -229,7 +283,9 @@ public class FallbackMessageService {
             }
 
         } catch (Exception e) {
-            log.error("SMS 발송 중 예외 발생: recipient={}", maskPhoneNumber(phoneNumber), e);
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("SMS API 호출 중 예외 발생 - 처리시간: {}ms, 수신자: {}", 
+                duration, maskPhoneNumber(phoneNumber), e);
             return MessageSendResult.FAILED_BOTH;
         }
     }
