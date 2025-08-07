@@ -884,11 +884,82 @@
             "testStrategy": "템플릿 적용 테스트: 폴백 메시지에도 동일한 템플릿 형식 적용 확인. 로깅 테스트: 각 API 호출 결과와 폴백 동작이 상세히 로깅되는지 확인. 메트릭 수집 테스트: 대량 발송 시 정확한 통계 데이터 수집 확인."
           }
         ]
+      },
+      {
+        "id": 14,
+        "title": "Mock 서버에 토큰 관리 시스템 구현",
+        "description": "카카오톡과 SMS Mock 서버에 간단한 Rate Limiting 기능을 구현합니다. 복잡한 토큰 인증 없이 메모리 기반 카운터로만 요청 횟수를 제한하는 기본적인 튜토리얼 수준의 기능입니다.",
+        "status": "pending",
+        "dependencies": [
+          12,
+          13
+        ],
+        "priority": "medium",
+        "details": "간단한 Rate Limiting 시스템 구현: 메모리 기반 요청 카운터를 ConcurrentHashMap으로 관리. 카카오톡 Mock 서버: 1분에 100회 제한, SMS Mock 서버: 1분에 500회 제한. 클라이언트 IP 또는 요청자 구분 없이 전체 서버 기준으로 카운터 적용. 시간 윈도우 기반 카운터 리셋 로직 (1분 단위). Rate limit 초과 시 429 Too Many Requests 응답. 응답 헤더 추가: X-RateLimit-Remaining, X-RateLimit-Reset 정보 제공. 토큰 관리, JWT 인증, Bearer 토큰 검증 등은 제외하고 순수한 요청 횟수 카운팅만 구현.",
+        "testStrategy": "Rate Limiting 테스트: 제한 횟수까지 요청 성공 확인, 제한 초과 시 429 Too Many Requests 응답 확인. 시간 윈도우 리셋 테스트: 1분 후 카운터 초기화 확인. 메모리 기반 저장소 테스트: 서버 재시작 시 카운터 초기화 확인. 동시성 테스트: 다중 요청 시 카운터 정확성 검증. API 응답 헤더 테스트: X-RateLimit-Remaining 값이 요청마다 감소하는지 확인. 각 Mock 서버별 독립적인 제한 적용 테스트.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "간단한 Rate Limiting 서비스 클래스 구현",
+            "description": "메모리 기반 요청 카운터를 관리하는 간단한 Rate Limiting 서비스를 구현합니다.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "RateLimitService 클래스 구현: 전체 서버 기준 요청 카운터 관리용 AtomicInteger 구성. 시간 윈도우 기반 카운터 리셋 로직 구현 (1분 단위). checkRateLimit 메서드: 현재 요청 수 확인 및 제한 검사. 카카오톡 서버용: 100회/분, SMS 서버용: 500회/분 제한 설정. 스케줄링을 통한 자동 카운터 리셋 (@Scheduled 사용). 현재 요청 수와 남은 요청 수 정보 제공 메서드.",
+            "testStrategy": "카운터 증가 및 리셋 기능 단위 테스트, 제한 검사 로직 테스트, 스케줄링 기반 리셋 테스트"
+          },
+          {
+            "id": 2,
+            "title": "Rate Limiting 필터 구현",
+            "description": "모든 API 요청에 대해 Rate Limiting을 적용하는 서블릿 필터를 구현합니다.",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "RateLimitFilter 클래스 생성: OncePerRequestFilter 상속하여 doFilterInternal 메서드 구현. RateLimitService를 사용하여 요청 전 카운터 체크. Rate limit 초과 시 429 Too Many Requests 응답 반환. X-RateLimit-Remaining, X-RateLimit-Reset 헤더 추가. 정상 요청 시 카운터 증가 후 다음 필터로 진행. 각 Mock 서버별 다른 제한 값 적용 로직.",
+            "testStrategy": "정상 요청 처리 테스트, 제한 초과 시 429 응답 테스트, 응답 헤더 정확성 테스트, 필터 순서 및 동작 테스트"
+          },
+          {
+            "id": 3,
+            "title": "카카오톡 Mock 서버에 Rate Limiting 적용",
+            "description": "카카오톡 Mock 서버(포트 8081)에 1분당 100회 제한을 적용합니다.",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "카카오톡 Mock 서버 설정 수정: RateLimitFilter를 필터 체인에 등록. 1분당 100회 제한 설정 적용. 기존 카카오톡 메시지 발송 API 유지하면서 Rate Limiting 추가. FilterRegistrationBean을 사용하여 특정 URL 패턴에만 필터 적용. 서버별 독립적인 RateLimitService 인스턴스 구성.",
+            "testStrategy": "카카오톡 API 100회 제한 테스트, 제한 초과 시 429 응답 확인, 기존 기능 정상 동작 확인"
+          },
+          {
+            "id": 4,
+            "title": "SMS Mock 서버에 Rate Limiting 적용",
+            "description": "SMS Mock 서버(포트 8082)에 1분당 500회 제한을 적용합니다.",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "SMS Mock 서버 설정 수정: RateLimitFilter를 필터 체인에 등록. 1분당 500회 제한 설정 적용. 기존 SMS 발송 API 유지하면서 Rate Limiting 추가. FilterRegistrationBean을 사용하여 특정 URL 패턴에만 필터 적용. 카카오톡 서버와 독립적인 RateLimitService 인스턴스 구성.",
+            "testStrategy": "SMS API 500회 제한 테스트, 제한 초과 시 429 응답 확인, 기존 기능 정상 동작 확인"
+          },
+          {
+            "id": 5,
+            "title": "Rate Limiting 통합 테스트 및 모니터링 구현",
+            "description": "각 Mock 서버별 독립적인 Rate Limiting 동작을 검증하고 모니터링 기능을 추가합니다.",
+            "status": "pending",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "통합 테스트 구현: 카카오톡과 SMS 서버의 독립적인 카운터 동작 확인. 동시성 테스트: 다중 스레드에서 동시 요청 시 카운터 정확성 검증. 모니터링 엔드포인트 추가: GET /admin/rate-limit-status로 현재 카운터 상태 조회. 로깅 추가: Rate limit 도달 시 경고 로그 출력. 메모리 사용량 최적화 및 성능 테스트.",
+            "testStrategy": "각 서버별 독립적 제한 적용 테스트, 동시성 및 성능 테스트, 모니터링 엔드포인트 테스트, 시간 윈도우 리셋 정확성 테스트"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-07T04:26:56.479Z",
+      "updated": "2025-08-07T05:25:29.636Z",
       "description": "Tasks for master context"
     }
   }
