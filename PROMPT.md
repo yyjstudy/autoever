@@ -1507,3 +1507,42 @@ design/
 - **예측 가능성**: 통합 테스트에서 일관된 에러 시뮬레이션
 - **표준 준수**: HTTP 상태 코드 요구사항 100% 준수
 - **문서화**: 명확하고 실용적인 API 사용 가이드
+
+### 74. Task 14 Group 1 완료 - 간소화된 Mock 서버 Rate Limiting 인프라
+**프롬프트:** "이제 태스크 14번을 진행할건데, 그룹핑을 하고 진행해라. 작업은 최소한 간소화하여 하고, 튜토리얼정도만 가능하게 하는게 목적이야."
+
+**수행 작업:**
+
+#### TaskMaster 설정 변경
+- Task 14.5 제목 변경: "Rate Limiting 통합 테스트 구현" (모니터링 기능 제거)
+- 2개 그룹으로 간소화: Group 1(14.1+14.2), Group 2(14.3+14.4+14.5)
+
+#### Group 1 완료: 기본 Rate Limiting 인프라
+
+**Task 14.1: 간단한 Rate Limiting 서비스 클래스 구현**
+- KakaoTalk Mock: `SimpleRateLimiter` (100회/분 제한)
+- SMS Mock: `SimpleRateLimiter` (500회/분 제한)
+- 메모리 기반 AtomicInteger 카운터 사용
+- 1분 단위 슬라이딩 윈도우 구현
+- Thread-safe 동시성 보장 (Double-check locking)
+- RateLimitInfo Record 클래스로 상태 정보 제공
+
+**Task 14.2: Rate Limiting 필터 구현**
+- KakaoTalk/SMS Mock 서버별 `RateLimitFilter` 구현
+- OncePerRequestFilter 상속으로 HTTP 요청 인터셉트
+- 요구사항 준수: 429 대신 500 상태 코드 사용
+- Rate Limit 정보 HTTP 헤더 추가 (X-RateLimit-*)
+- KakaoTalk(텍스트), SMS(JSON) 각각 적합한 응답 형식
+
+**Group 1 특징:**
+- **간소화**: 복잡한 토큰 관리, JWT 인증 제외
+- **튜토리얼 수준**: 학습 목적에 적합한 기본 구현  
+- **독립성**: 메인 프로젝트 Rate Limiting과 완전 분리
+- **현실적**: 실제 Mock 서버 환경에 적용 가능
+
+**검증 결과:**
+- ✅ 양쪽 Mock 서버 빌드 성공
+- ✅ HTTP 상태 코드 요구사항 준수
+- ✅ Thread-safe 동시성 구현 완료
+
+**현재 상태:** Group 1 완료, Group 2 진행 예정

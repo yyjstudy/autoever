@@ -902,7 +902,7 @@
             "id": 1,
             "title": "간단한 Rate Limiting 서비스 클래스 구현",
             "description": "메모리 기반 요청 카운터를 관리하는 간단한 Rate Limiting 서비스를 구현합니다.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "details": "RateLimitService 클래스 구현: 전체 서버 기준 요청 카운터 관리용 AtomicInteger 구성. 시간 윈도우 기반 카운터 리셋 로직 구현 (1분 단위). checkRateLimit 메서드: 현재 요청 수 확인 및 제한 검사. 카카오톡 서버용: 100회/분, SMS 서버용: 500회/분 제한 설정. 스케줄링을 통한 자동 카운터 리셋 (@Scheduled 사용). 현재 요청 수와 남은 요청 수 정보 제공 메서드.",
             "testStrategy": "카운터 증가 및 리셋 기능 단위 테스트, 제한 검사 로직 테스트, 스케줄링 기반 리셋 테스트"
@@ -911,7 +911,7 @@
             "id": 2,
             "title": "Rate Limiting 필터 구현",
             "description": "모든 API 요청에 대해 Rate Limiting을 적용하는 서블릿 필터를 구현합니다.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1
             ],
@@ -944,22 +944,22 @@
           },
           {
             "id": 5,
-            "title": "Rate Limiting 통합 테스트 및 모니터링 구현",
-            "description": "각 Mock 서버별 독립적인 Rate Limiting 동작을 검증하고 모니터링 기능을 추가합니다.",
+            "title": "Rate Limiting 통합 테스트 구현",
+            "description": "카카오톡과 SMS Mock 서버의 Rate Limiting 동작 확인을 위한 기본적인 통합 테스트를 구현합니다.",
             "status": "pending",
             "dependencies": [
               3,
               4
             ],
-            "details": "통합 테스트 구현: 카카오톡과 SMS 서버의 독립적인 카운터 동작 확인. 동시성 테스트: 다중 스레드에서 동시 요청 시 카운터 정확성 검증. 모니터링 엔드포인트 추가: GET /admin/rate-limit-status로 현재 카운터 상태 조회. 로깅 추가: Rate limit 도달 시 경고 로그 출력. 메모리 사용량 최적화 및 성능 테스트.",
-            "testStrategy": "각 서버별 독립적 제한 적용 테스트, 동시성 및 성능 테스트, 모니터링 엔드포인트 테스트, 시간 윈도우 리셋 정확성 테스트"
+            "details": "기본적인 통합 테스트 구현: 카카오톡과 SMS 서버의 독립적인 카운터 동작 확인을 위한 간단한 테스트 케이스 작성. 각 서버별 제한 횟수까지 요청 성공 확인. 제한 초과 시 429 응답 확인. 시간 윈도우 리셋 후 정상 동작 확인. 튜토리얼 수준의 기본적인 테스트 시나리오로 학습 목적에 적합하도록 구성.",
+            "testStrategy": "각 서버별 독립적 제한 적용 테스트, 기본적인 시간 윈도우 리셋 테스트, 단순한 통합 시나리오 테스트"
           }
         ]
       }
     ],
     "metadata": {
       "created": "2025-08-04T12:43:28.666Z",
-      "updated": "2025-08-07T05:25:29.636Z",
+      "updated": "2025-08-07T05:58:39.059Z",
       "description": "Tasks for master context"
     }
   }
