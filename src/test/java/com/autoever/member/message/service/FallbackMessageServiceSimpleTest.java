@@ -9,6 +9,7 @@ import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.result.MessageSendResult;
 import com.autoever.member.message.result.MessageSendTracker;
 import com.autoever.member.message.template.MessageTemplateService;
+import com.autoever.member.message.ratelimit.ApiRateLimiter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,12 +37,19 @@ class FallbackMessageServiceSimpleTest {
     @Mock
     private MessageSendTracker messageSendTracker;
     
+    @Mock
+    private ApiRateLimiter apiRateLimiter;
+    
     private FallbackMessageService fallbackMessageService;
     
     @BeforeEach
     void setUp() {
+        // Rate Limiter 기본 설정 - 허용 상태로 설정 (lenient로 설정)
+        lenient().when(apiRateLimiter.tryAcquire(ApiType.KAKAOTALK)).thenReturn(true);
+        lenient().when(apiRateLimiter.tryAcquire(ApiType.SMS)).thenReturn(true);
+        
         fallbackMessageService = new FallbackMessageService(
-            kakaoTalkApiClient, smsApiClient, messageTemplateService, messageSendTracker);
+            kakaoTalkApiClient, smsApiClient, messageTemplateService, messageSendTracker, apiRateLimiter);
     }
     
     @Test

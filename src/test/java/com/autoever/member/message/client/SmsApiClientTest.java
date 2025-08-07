@@ -5,7 +5,6 @@ import com.autoever.member.message.config.MessageApiConfig;
 import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.exception.ApiConnectionException;
-import com.autoever.member.message.ratelimit.ApiRateLimiter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.lenient;
 
 /**
  * SmsApiClient 단위 테스트
@@ -39,9 +37,6 @@ class SmsApiClientTest {
     
     @Mock
     private RestTemplateBuilder restTemplateBuilder;
-    
-    @Mock
-    private ApiRateLimiter rateLimiter;
     
     private SmsApiClient smsApiClient;
     private MessageApiConfig messageApiConfig;
@@ -60,10 +55,7 @@ class SmsApiClientTest {
         when(restTemplateBuilder.setReadTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
         when(restTemplateBuilder.build()).thenReturn(restTemplate);
         
-        // RateLimiter mock 설정 - 기본적으로 허용 (lenient로 설정)
-        lenient().when(rateLimiter.tryAcquire(ApiType.SMS)).thenReturn(true);
-        
-        smsApiClient = new SmsApiClient(messageApiConfig, restTemplateBuilder, rateLimiter);
+        smsApiClient = new SmsApiClient(messageApiConfig, restTemplateBuilder);
     }
     
     @Test

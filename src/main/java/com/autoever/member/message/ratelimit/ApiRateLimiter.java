@@ -13,16 +13,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * API별 Rate Limiting을 처리하는 클래스
- * 카카오톡: 100회/분, SMS: 500회/분의 제한 정책 적용
+ * ApiType enum에 정의된 rate limit 정책을 동적으로 적용
  */
 @Component
 public class ApiRateLimiter {
     
     private static final Logger log = LoggerFactory.getLogger(ApiRateLimiter.class);
-    
-    // API별 제한 정책
-    private static final int KAKAOTALK_LIMIT_PER_MINUTE = 100;
-    private static final int SMS_LIMIT_PER_MINUTE = 500;
     
     // API별 현재 카운트 및 윈도우 시작 시간
     private final ConcurrentHashMap<ApiType, AtomicInteger> currentCounts = new ConcurrentHashMap<>();
@@ -38,7 +34,7 @@ public class ApiRateLimiter {
         }
         
         log.info("API Rate Limiter 초기화 완료 - 카카오톡: {}회/분, SMS: {}회/분", 
-            KAKAOTALK_LIMIT_PER_MINUTE, SMS_LIMIT_PER_MINUTE);
+            ApiType.KAKAOTALK.getRateLimit(), ApiType.SMS.getRateLimit());
     }
     
     /**
@@ -133,14 +129,7 @@ public class ApiRateLimiter {
     }
     
     private int getLimit(ApiType apiType) {
-        switch (apiType) {
-            case KAKAOTALK:
-                return KAKAOTALK_LIMIT_PER_MINUTE;
-            case SMS:
-                return SMS_LIMIT_PER_MINUTE;
-            default:
-                return 100; // 기본값
-        }
+        return apiType.getRateLimit();
     }
     
     /**

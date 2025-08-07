@@ -5,6 +5,7 @@ import com.autoever.member.message.ApiType;
 import com.autoever.member.message.client.KakaoTalkApiClient;
 import com.autoever.member.message.client.MessageApiClient;
 import com.autoever.member.message.client.SmsApiClient;
+import com.autoever.member.message.ratelimit.ApiRateLimiter;
 import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.logging.MessageTraceContext;
@@ -27,6 +28,7 @@ public class FallbackMessageService {
     private final SmsApiClient smsApiClient;
     private final MessageTemplateService messageTemplateService;
     private final MessageSendTracker messageSendTracker;
+    private final ApiRateLimiter apiRateLimiter;
 
     /**
      * 템플릿이 적용된 메시지를 Fallback 메커니즘과 함께 발송합니다.
@@ -208,11 +210,20 @@ public class FallbackMessageService {
         try {
             log.debug("KakaoTalk API 호출 시작 - 메시지 길이: {}", message.length());
             
+            // 1. Rate Limiting 사전 검사 - Mock 서버에 불필요한 요청 방지
+            if (!apiRateLimiter.tryAcquire(ApiType.KAKAOTALK)) {
+                ApiRateLimiter.RateLimitInfo rateLimitInfo = apiRateLimiter.getCurrentUsage(ApiType.KAKAOTALK);
+                log.warn("KakaoTalk Rate Limit 초과 - Mock 서버 호출 생략: {}", rateLimitInfo);
+                return MessageSendResult.RATE_LIMITED;
+            }
+            
+            // 2. 클라이언트 연결 상태 확인
             if (!kakaoTalkApiClient.isAvailable()) {
                 log.warn("KakaoTalk 클라이언트 사용 불가 - 연결 상태 불량");
                 return MessageSendResult.FAILED_BOTH;
             }
 
+            // 3. 실제 API 호출 (Rate Limiting 통과 후)
             MessageRequest request = new MessageRequest(phoneNumber, message);
             MessageResponse response = kakaoTalkApiClient.sendMessage(request);
             long duration = System.currentTimeMillis() - startTime;
@@ -256,11 +267,20 @@ public class FallbackMessageService {
         try {
             log.debug("SMS API 호출 시작 - 메시지 길이: {}", message.length());
             
+            // 1. Rate Limiting 사전 검사 - Mock 서버에 불필요한 요청 방지
+            if (!apiRateLimiter.tryAcquire(ApiType.SMS)) {
+                ApiRateLimiter.RateLimitInfo rateLimitInfo = apiRateLimiter.getCurrentUsage(ApiType.SMS);
+                log.warn("SMS Rate Limit 초과 - Mock 서버 호출 생략: {}", rateLimitInfo);
+                return MessageSendResult.RATE_LIMITED;
+            }
+            
+            // 2. 클라이언트 연결 상태 확인
             if (!smsApiClient.isAvailable()) {
                 log.warn("SMS 클라이언트 사용 불가 - 연결 상태 불량");
                 return MessageSendResult.FAILED_BOTH;
             }
 
+            // 3. 실제 API 호출 (Rate Limiting 통과 후)
             MessageRequest request = new MessageRequest(phoneNumber, message);
             MessageResponse response = smsApiClient.sendMessage(request);
             long duration = System.currentTimeMillis() - startTime;

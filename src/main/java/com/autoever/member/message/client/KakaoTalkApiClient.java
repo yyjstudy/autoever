@@ -6,7 +6,6 @@ import com.autoever.member.message.dto.MessageRequest;
 import com.autoever.member.message.dto.MessageResponse;
 import com.autoever.member.message.exception.ApiConnectionException;
 import com.autoever.member.message.exception.MessageSendException;
-import com.autoever.member.message.ratelimit.ApiRateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -32,12 +31,10 @@ public class KakaoTalkApiClient implements MessageApiClient {
     private final RestTemplate restTemplate;
     private final MessageApiConfig.KakaoTalkConfig config;
     private final String authHeader;
-    private final ApiRateLimiter rateLimiter;
     
-    public KakaoTalkApiClient(MessageApiConfig messageApiConfig, RestTemplateBuilder restTemplateBuilder, ApiRateLimiter rateLimiter) {
+    public KakaoTalkApiClient(MessageApiConfig messageApiConfig, RestTemplateBuilder restTemplateBuilder) {
         this.config = messageApiConfig.getKakaotalk();
         this.authHeader = createBasicAuthHeader(config.getUsername(), config.getPassword());
-        this.rateLimiter = rateLimiter;
         this.restTemplate = restTemplateBuilder
             .setConnectTimeout(Duration.ofMillis(config.getConnectTimeoutMs()))
             .setReadTimeout(Duration.ofMillis(config.getReadTimeoutMs()))
@@ -47,15 +44,6 @@ public class KakaoTalkApiClient implements MessageApiClient {
     @Override
     public MessageResponse sendMessage(MessageRequest request) {
         log.info("카카오톡 메시지 발송 시작: recipient={}", maskPhoneNumber(request.recipient()));
-        
-        // Rate Limiting 검사
-        if (!rateLimiter.tryAcquire(ApiType.KAKAOTALK)) {
-            ApiRateLimiter.RateLimitInfo rateLimitInfo = rateLimiter.getCurrentUsage(ApiType.KAKAOTALK);
-            log.warn("카카오톡 API Rate Limit 초과: {}", rateLimitInfo);
-            return MessageResponse.failure("RATE_LIMIT_EXCEEDED", 
-                "카카오톡 API 호출 한도를 초과했습니다. " + rateLimitInfo.getRemainingTimeSeconds() + "초 후 재시도하세요.", 
-                ApiType.KAKAOTALK);
-        }
         
         try {
             HttpHeaders headers = new HttpHeaders();

@@ -1780,3 +1780,65 @@ design/
 **테스트 결과:** `./gradlew test --rerun-tasks` 실행 → BUILD SUCCESSFUL ✅
 
 **결과:** 프로젝트가 간소화되어 핵심 기능에 집중할 수 있게 됨
+
+### 83. 기존 Rate Limiting 기능 조합 요청
+**프롬프트:** "기존에 존재하는 레이트리미팅 기능을 조합해라"
+
+**요구사항 분석:**
+- 메인 서버에서 클라이언트 사이드 rate limiting 구현 필요
+- 목 서버의 불필요한 요청 사전 차단
+- 카카오톡(100회/분), SMS(500회/분) 제한 사항 고려
+- 기존 목 서버 rate limiting과 독립적으로 운영
+
+**구현된 컴포넌트:**
+1. **ApiRateLimiter.java** - Token bucket 알고리즘 기반 rate limiter
+   - 카카오톡: 100회/분, SMS: 500회/분 제한
+   - 1분 sliding window 방식
+   - Thread-safe concurrent 구현
+   - 상세한 사용량 정보 제공
+
+2. **FallbackMessageService 수정**
+   - Rate limit 사전 검사 로직 추가
+   - 제한 초과 시 목 서버 호출 생략
+   - `RATE_LIMITED` 결과 반환으로 즉시 실패 처리
+
+3. **API 클라이언트 정리**
+   - KakaoTalkApiClient, SmsApiClient에서 rate limiting 제거
+   - 생성자 signature 단순화 (rateLimiter 파라미터 제거)
+
+4. **Mock 서버 독립성 유지**
+   - Mock 서버는 독립적인 벤더로 취급
+   - 클라이언트 사이드와 서버 사이드 rate limiting 모두 유지
+   - 상호 의존성 없는 별개 시스템으로 운영
+
+**테스트 결과:**
+- 관련 테스트 파일 업데이트 (lenient stubbing 적용)
+- Mock 서버 rate limiting 기능 유지 확인
+- `./gradlew test` 실행 → BUILD SUCCESSFUL ✅
+
+### 84. Dynamic Rate Limiting 값 적용
+**프롬프트:** "public enum ApiType { KAKAOTALK(\"카카오톡\", 2), SMS(\"SMS\", 10);를 활용하도록 바꾸어라"
+
+**문제 발견:**
+- ApiType enum에서 KAKAOTALK(2), SMS(10)으로 변경
+- ApiRateLimiter에서 하드코딩된 값(100, 500) 사용하여 변경사항 미반영
+
+**해결 작업:**
+1. **ApiRateLimiter 동적 값 적용**
+   - 하드코딩된 `KAKAOTALK_LIMIT_PER_MINUTE = 100, SMS_LIMIT_PER_MINUTE = 500` 제거
+   - `getLimit()` 메서드를 `apiType.getRateLimit()` 호출로 수정
+   - 초기화 로그도 동적 값으로 변경
+
+2. **테스트 검증**
+   - 임시 테스트 파일로 동작 확인
+   - KAKAOTALK: 2회 허용 후 차단 ✅
+   - SMS: 10회 허용 후 차단 ✅
+   - 로그: "API Rate Limiter 초기화 완료 - 카카오톡: 2회/분, SMS: 10회/분" ✅
+
+**최종 아키텍처:**
+- **클라이언트 사이드 Rate Limiting**: 메인 서버에서 목 서버 호출 전 사전 차단
+- **서버 사이드 Rate Limiting**: Mock 서버에서 독립적인 보호 메커니즘
+- **동적 설정**: ApiType enum 값 변경 시 실시간 반영
+- **독립적 운영**: 두 시스템 간 의존성 없음
+
+**결과:** ApiType enum 값 변경이 실시간으로 rate limiting에 반영됨
