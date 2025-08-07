@@ -1008,3 +1008,109 @@ design/
 - 연령대별 대량 메시지 발송 시스템 완전 구현
 - 비동기 처리, 성능 모니터링, 동적 최적화 통합
 - 전체 테스트 100% 통과 달성
+
+---
+
+## 2025-08-07
+
+### 55. Spring Boot 애플리케이션 시작 오류 해결
+**프롬프트:** "Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled."
+
+**문제 상황:**
+- ThreadPoolTaskExecutor 빈을 찾을 수 없다는 오류 발생
+- BatchProcessingService에서 @Qualifier("messageTaskExecutor") 의존성 주입 실패
+
+**수행 작업:**
+- AsyncConfig 클래스의 순환 의존성 문제 해결
+- getAsyncExecutor()와 messageTaskExecutor() 메서드 간의 중복 빈 정의 제거
+- 단일 messageTaskExecutor() 메서드로 통합하여 Bean 생성 간소화
+- 애플리케이션 정상 시작 확인 (gradle bootRun 성공)
+
+### 56. 외부 서비스 연결 검증 제거
+**프롬프트:** "내가 인텔리제이에서 런하면 안되는데? Caused by: java.net.ConnectException: Connection refused"
+
+**문제 상황:**
+- MessageClientFactory 초기화 시 외부 서비스(KakaoTalk, SMS) 연결 검증 시도
+- localhost:8081, localhost:8082 서비스 미실행으로 Connection refused 발생
+
+**수행 작업:**
+- MessageClientFactory 생성자에서 client.isAvailable() 호출 제거
+- 애플리케이션 시작 시 외부 서비스 연결 상태와 무관하게 정상 시작되도록 수정
+- 외부 서비스 가용성은 실제 메시지 발송 시점에 확인하도록 변경
+- 전체 테스트 실행 후 BUILD SUCCESSFUL 확인
+
+### 57. 추가 요구사항 발견 - 관리자 메시지 API 상세 명세
+**프롬프트:** "태스크마스터에 기록되지 않은 정보가 아래와 같이 있다..."
+
+**발견된 추가 요구사항:**
+1. 메시지 템플릿: "{회원 성명}님, 안녕하세요. 현대 오토에버입니다."로 시작
+2. Fallback 메커니즘: 카카오톡 실패 시 SMS 자동 전환
+3. API 명세 변경:
+   - 카카오톡: POST http://localhost:8081/kakaotalk-messages, Basic Auth(autoever/1234)
+   - SMS: POST http://localhost:8082/sms?phone={phone}, form-urlencoded, Basic Auth(autoever/5678)
+4. Rate Limiting 유지: 카카오톡 100회/분, SMS 500회/분
+
+**작업 분리:**
+- 메시지 템플릿 서비스 구현
+- API 클라이언트 수정 (새로운 엔드포인트 및 인증 정보)
+- Fallback 메커니즘 강화
+- Mock 서버 구현 검토
+
+### 58. TaskMaster Task 11 추가 - 메시지 템플릿 및 Fallback 메커니즘
+**프롬프트:** "위에 정리한 내용을 태스크마스터 11번으로 추가 가능하면 해줘."
+
+**수행 작업:**
+- task-master add-task 명령으로 Task 11 생성
+- 제목: "메시지 템플릿 및 Fallback 메커니즘 구현"
+- 의존성: Task 9, 10 (AI가 자동 식별)
+- task-master expand --id=11 --research로 5개 서브태스크 생성:
+  1. MessageTemplate 클래스 및 MessageTemplateService 구현
+  2. MessageApiClient 엔드포인트 및 Basic Auth 업데이트
+  3. MessageSendResult enum 및 결과 추적 시스템 구현
+  4. FallbackMessageService 구현 (11.2, 11.3 의존)
+  5. 대량 발송 시스템에 템플릿 및 Fallback 통합 (11.1, 11.4 의존)
+
+### 59. Mock 서버 구현 검토
+**프롬프트:** "http://localhost:8081/kakaotalk-messages , http://localhost:8082/sms?phone={phone} 를 참고하면 포트번호가 다르니, 서버를 2개 더 동작시켜야 하는 형태일것 같다. 이 작업의 작업량은 큰편일까 작은편일까?"
+
+**사용자 의도:**
+- 외부 메시지 서비스 Mock 서버 구현 필요성 확인
+- 작업량 평가 요청
+
+**분석 결과:**
+- 작업량: 중간 정도 (모노레포 형태로 구현 시 작은 편)
+- Mock 서버 2개 구현 필요 (KakaoTalk, SMS)
+- Spring Boot 애플리케이션으로 간단한 엔드포인트 구현
+- Basic Auth 및 응답 코드 시뮬레이션
+
+### 60. TaskMaster Task 12 추가 - Mock 서버 구현
+**프롬프트:** "프로젝트는 추가로 생성하지 않고, 모노레포 형태로 할거다." → "태스크마스터에 추가해줘."
+
+**수행 작업:**
+- task-master add-task로 Task 12 생성
+- 제목: "Mock 서버 구현 - 카카오톡 및 SMS API 시뮬레이션"
+- 모노레포 구조: mock-servers/kakaotalk-mock/, mock-servers/sms-mock/
+- task-master expand --id=12 --research로 5개 서브태스크 생성:
+  1. 모노레포 구조 설정 및 Gradle 멀티 모듈 프로젝트 생성
+  2. 카카오톡 Mock 서버 기본 구조 및 Security 설정 (12.1 의존)
+  3. SMS Mock 서버 기본 구조 및 Security 설정 (12.1 의존)
+  4. 카카오톡 Mock API 엔드포인트 구현 (12.2 의존)
+  5. SMS Mock API 엔드포인트 구현 및 실행 스크립트 작성 (12.3 의존)
+
+### 61. Git 커밋 정리 - 이전 커밋에 통합
+**프롬프트:** "우선 현재 git의 변경사항을 taskmaster만 제외한 나머지를 추가해서 커밋하고 푸쉬해줘." → "아니다. 이전 커밋에 포함시켜서 원격에 덮어 씌워라."
+
+**수행 작업:**
+- AsyncConfig, MessageClientFactory, application.yml 변경사항을 이전 커밋에 통합
+- git commit --amend --no-edit으로 이전 커밋 수정
+- git push --force origin main으로 원격 저장소 업데이트
+- 포함된 변경사항:
+  * AsyncConfig 순환 의존성 해결
+  * MessageClientFactory 초기화 시 연결 검증 제거
+  * application.yml에 async.enabled 추가
+
+**현재 프로젝트 상태:**
+- Tasks 1-10: 완료 ✅
+- Task 11: 메시지 템플릿 및 Fallback 메커니즘 (pending)
+- Task 12: Mock 서버 구현 (pending)
+- 애플리케이션 정상 시작 및 모든 테스트 통과 상태
