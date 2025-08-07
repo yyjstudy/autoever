@@ -1,9 +1,8 @@
 package com.autoever.member.controller;
 
 import com.autoever.member.dto.LoginDto;
-import com.autoever.member.dto.UserRegistrationDto;
 import com.autoever.member.entity.User;
-import com.autoever.member.jwt.JwtUtil;
+import com.autoever.member.jwt.JwtService;
 import com.autoever.member.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +45,7 @@ class UserControllerLoginIntegrationTest {
     private PasswordEncoder passwordEncoder;
     
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
     
     private User testUser;
     private final String TEST_USERNAME = "testuser";
@@ -88,8 +87,8 @@ class UserControllerLoginIntegrationTest {
         // JWT 토큰 검증
         String response = result.getResponse().getContentAsString();
         String token = objectMapper.readTree(response).get("data").get("accessToken").asText();
-        assertThat(jwtUtil.validateToken(token)).isTrue();
-        assertThat(jwtUtil.extractUsername(token)).isEqualTo(TEST_USERNAME);
+        assertThat(jwtService.validateToken(token)).isTrue();
+        assertThat(jwtService.extractUsername(token)).isEqualTo(TEST_USERNAME);
     }
     
     @Test

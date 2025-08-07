@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class TokenBlacklistService {
     
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     
     // 인메모리 블랙리스트 저장소 (실제 환경에서는 Redis 등 외부 저장소 사용 권장)
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
@@ -35,9 +35,9 @@ public class TokenBlacklistService {
         
         try {
             // 토큰이 이미 만료된 경우 블랙리스트에 추가할 필요 없음
-            if (jwtUtil.validateToken(token)) {
+            if (jwtService.validateToken(token)) {
                 blacklistedTokens.add(token);
-                String username = jwtUtil.extractUsername(token);
+                String username = jwtService.extractUsername(token);
                 log.info("토큰이 블랙리스트에 추가되었습니다. 사용자: {}", username);
             } else {
                 log.debug("이미 만료된 토큰은 블랙리스트에 추가하지 않습니다.");
@@ -76,7 +76,7 @@ public class TokenBlacklistService {
         
         blacklistedTokens.removeIf(token -> {
             try {
-                Date expiration = jwtUtil.extractExpiration(token);
+                Date expiration = jwtService.extractExpiration(token);
                 return expiration.before(new Date());
             } catch (Exception e) {
                 // 파싱 실패한 토큰은 제거
@@ -116,7 +116,7 @@ public class TokenBlacklistService {
         int count = 0;
         for (String token : Set.copyOf(blacklistedTokens)) {
             try {
-                String tokenUsername = jwtUtil.extractUsername(token);
+                String tokenUsername = jwtService.extractUsername(token);
                 if (username.equals(tokenUsername)) {
                     count++;
                 }

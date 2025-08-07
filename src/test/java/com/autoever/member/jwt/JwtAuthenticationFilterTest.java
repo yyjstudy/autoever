@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 class JwtAuthenticationFilterTest {
 
     @Mock
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
 
     @Mock
     private JwtProperties jwtProperties;
@@ -63,10 +63,10 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_ValidToken_SetsAuthentication() throws ServletException, IOException {
         // Given
         when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn(BEARER_TOKEN);
-        when(jwtUtil.extractTokenFromHeader(BEARER_TOKEN)).thenReturn(VALID_TOKEN);
+        when(jwtService.extractTokenFromHeader(BEARER_TOKEN)).thenReturn(VALID_TOKEN);
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(false);
-        when(jwtUtil.validateToken(VALID_TOKEN)).thenReturn(true);
-        when(jwtUtil.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
+        when(jwtService.validateToken(VALID_TOKEN)).thenReturn(true);
+        when(jwtService.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -86,9 +86,9 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_InvalidToken_NoAuthentication() throws ServletException, IOException {
         // Given
         when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn("Bearer " + INVALID_TOKEN);
-        when(jwtUtil.extractTokenFromHeader("Bearer " + INVALID_TOKEN)).thenReturn(INVALID_TOKEN);
+        when(jwtService.extractTokenFromHeader("Bearer " + INVALID_TOKEN)).thenReturn(INVALID_TOKEN);
         when(tokenBlacklistService.isBlacklisted(INVALID_TOKEN)).thenReturn(false);
-        when(jwtUtil.validateToken(INVALID_TOKEN)).thenReturn(false);
+        when(jwtService.validateToken(INVALID_TOKEN)).thenReturn(false);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -98,7 +98,7 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil, never()).extractUsername(any());
+        verify(jwtService, never()).extractUsername(any());
     }
 
     @Test
@@ -106,7 +106,7 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_NoAuthorizationHeader_NoAuthentication() throws ServletException, IOException {
         // Given
         when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn(null);
-        when(jwtUtil.extractTokenFromHeader(null)).thenReturn(null);
+        when(jwtService.extractTokenFromHeader(null)).thenReturn(null);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -116,8 +116,8 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil, never()).validateToken(any());
-        verify(jwtUtil, never()).extractUsername(any());
+        verify(jwtService, never()).validateToken(any());
+        verify(jwtService, never()).extractUsername(any());
     }
 
     @Test
@@ -126,7 +126,7 @@ class JwtAuthenticationFilterTest {
         // Given
         String malformedHeader = "Basic dXNlcjpwYXNzd29yZA==";
         when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn(malformedHeader);
-        when(jwtUtil.extractTokenFromHeader(malformedHeader)).thenReturn(null);
+        when(jwtService.extractTokenFromHeader(malformedHeader)).thenReturn(null);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -136,7 +136,7 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil, never()).validateToken(any());
+        verify(jwtService, never()).validateToken(any());
     }
 
     @Test
@@ -144,7 +144,7 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_ExceptionThrown_ClearsSecurityContext() throws ServletException, IOException {
         // Given
         when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn(BEARER_TOKEN);
-        when(jwtUtil.extractTokenFromHeader(BEARER_TOKEN)).thenThrow(new RuntimeException("JWT 처리 오류"));
+        when(jwtService.extractTokenFromHeader(BEARER_TOKEN)).thenThrow(new RuntimeException("JWT 처리 오류"));
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -265,7 +265,7 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_BlacklistedToken_NoAuthentication() throws ServletException, IOException {
         // Given
         when(request.getHeader(JwtProperties.HEADER_STRING)).thenReturn(BEARER_TOKEN);
-        when(jwtUtil.extractTokenFromHeader(BEARER_TOKEN)).thenReturn(VALID_TOKEN);
+        when(jwtService.extractTokenFromHeader(BEARER_TOKEN)).thenReturn(VALID_TOKEN);
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(true);
 
         // When
@@ -276,7 +276,7 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtUtil, never()).validateToken(any());
-        verify(jwtUtil, never()).extractUsername(any());
+        verify(jwtService, never()).validateToken(any());
+        verify(jwtService, never()).extractUsername(any());
     }
 }

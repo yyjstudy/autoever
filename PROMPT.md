@@ -2032,3 +2032,26 @@ design/
 - 🎨 시각적으로 명확한 Mermaid 다이어그램들
 - 🔍 개발자들이 시스템을 빠르게 이해할 수 있는 구조
 - ✅ 정확한 Rate Limiting 정보로 운영 안정성 확보
+
+### 95. JwtUtil을 JwtService로 리네이밍
+**프롬프트:** "JwtUtil 클래스에 상태를 두고있다. JwtService로 이름을 바꾸고, 다시 모든테스트 수행해."
+
+**수행 작업:**
+
+1. **JwtUtil → JwtService 클래스 리네이밍 완료**
+   - JwtUtil.java → JwtService.java 파일명 변경
+   - JwtUtilTest.java → JwtServiceTest.java 파일명 변경
+   - 클래스 내부 주석을 "유틸리티 클래스" → "서비스 클래스"로 수정
+
+2. **모든 참조 업데이트 완료**
+   - 14개 파일에서 JwtUtil 참조를 JwtService로 변경
+   - 주요 변경 파일:
+     - JwtTokenProvider.java
+     - JwtAuthenticationFilter.java
+     - TokenBlacklistService.java
+     - 5개 테스트 파일 (JwtTokenProviderTest, JwtAuthenticationFilterTest, TokenBlacklistServiceTest, JwtAdvancedFeaturesIntegrationTest, SecurityConfigIntegrationTest, UserControllerLoginIntegrationTest)
+
+**결과:**
+- ✅ JwtUtil → JwtService 리네이밍 작업 완료
+- 🔄 모든 참조 업데이트 완료
+- 🧪 358개 테스트 모두 정상 통과 확인

@@ -26,7 +26,7 @@ class JwtAdvancedFeaturesIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
 
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
@@ -45,7 +45,7 @@ class JwtAdvancedFeaturesIntegrationTest {
     @DisplayName("유효한 JWT 토큰으로 API 접근 후 블랙리스트 추가하면 접근 차단")
     void jwtTokenBlacklist_Integration_Success() throws Exception {
         // Given - 유효한 JWT 토큰 생성
-        String validToken = jwtUtil.generateToken(TEST_USERNAME);
+        String validToken = jwtService.generateToken(TEST_USERNAME);
 
         // When - 유효한 토큰으로 API 접근 (성공)
         mockMvc.perform(get("/api/users/me")
@@ -71,8 +71,8 @@ class JwtAdvancedFeaturesIntegrationTest {
             1L, 
             jwtProperties.tokenPrefix()
         );
-        JwtUtil shortExpiryJwtUtil = new JwtUtil(shortExpiryProperties);
-        String shortToken = shortExpiryJwtUtil.generateToken(TEST_USERNAME);
+        JwtService shortExpiryJwtService = new JwtService(shortExpiryProperties);
+        String shortToken = shortExpiryJwtService.generateToken(TEST_USERNAME);
 
         // 토큰이 만료되도록 대기
         Thread.sleep(10);
@@ -107,9 +107,9 @@ class JwtAdvancedFeaturesIntegrationTest {
     @DisplayName("블랙리스트 서비스 기능 종합 테스트")
     void tokenBlacklistService_ComprehensiveTest() {
         // Given
-        String token1 = jwtUtil.generateToken("user1");
-        String token2 = jwtUtil.generateToken("user2");
-        String token3 = jwtUtil.generateToken("user3");
+        String token1 = jwtService.generateToken("user1");
+        String token2 = jwtService.generateToken("user2");
+        String token3 = jwtService.generateToken("user3");
 
         // When - 토큰들을 블랙리스트에 추가
         tokenBlacklistService.addToBlacklist(token1);
@@ -142,7 +142,7 @@ class JwtAdvancedFeaturesIntegrationTest {
     @DisplayName("JWT 필터와 블랙리스트 서비스 연동 테스트")
     void jwtFilterAndBlacklistService_Integration() throws Exception {
         // Given
-        String token = jwtUtil.generateToken(TEST_USERNAME);
+        String token = jwtService.generateToken(TEST_USERNAME);
 
         // When - 처음에는 토큰이 유효해서 인증 통과
         mockMvc.perform(get("/api/users/me")
@@ -161,7 +161,7 @@ class JwtAdvancedFeaturesIntegrationTest {
     @Test
     @DisplayName("다양한 Authorization 헤더 형식 처리")
     void variousAuthorizationHeaderFormats_HandledCorrectly() throws Exception {
-        String validToken = jwtUtil.generateToken(TEST_USERNAME);
+        String validToken = jwtService.generateToken(TEST_USERNAME);
 
         // Given - 다양한 헤더 형식들
         String[] validHeaders = {
@@ -214,15 +214,15 @@ class JwtAdvancedFeaturesIntegrationTest {
     @DisplayName("블랙리스트된 토큰과 만료된 토큰의 다른 처리")
     void blacklistedVsExpiredToken_DifferentHandling() throws Exception {
         // Given - 유효한 토큰과 만료 시간이 짧은 토큰
-        String validToken = jwtUtil.generateToken(TEST_USERNAME);
+        String validToken = jwtService.generateToken(TEST_USERNAME);
         
         JwtProperties shortExpiryProperties = new JwtProperties(
             jwtProperties.secretKey(), 
             1L, 
             jwtProperties.tokenPrefix()
         );
-        JwtUtil shortExpiryJwtUtil = new JwtUtil(shortExpiryProperties);
-        String expiredToken = shortExpiryJwtUtil.generateToken(TEST_USERNAME);
+        JwtService shortExpiryJwtService = new JwtService(shortExpiryProperties);
+        String expiredToken = shortExpiryJwtService.generateToken(TEST_USERNAME);
         
         // 토큰이 만료되도록 대기
         Thread.sleep(10);

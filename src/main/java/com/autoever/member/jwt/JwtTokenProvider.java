@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
     
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     
     /**
      * Authentication 객체로부터 JWT 토큰을 생성
@@ -28,8 +28,8 @@ public class JwtTokenProvider {
         log.debug("JWT 토큰 생성 시작: username={}", username);
         
         // JWT 토큰 생성
-        String token = jwtUtil.generateToken(username);
-        long expiresIn = jwtUtil.getExpirationTime();
+        String token = jwtService.generateToken(username);
+        long expiresIn = jwtService.getExpirationTime();
         
         log.info("JWT 토큰 생성 완료: username={}, expiresIn={}ms", username, expiresIn);
         
@@ -46,8 +46,8 @@ public class JwtTokenProvider {
         log.debug("사용자명으로 JWT 토큰 생성 시작: username={}", username);
         
         // JWT 토큰 생성
-        String token = jwtUtil.generateToken(username);
-        long expiresIn = jwtUtil.getExpirationTime();
+        String token = jwtService.generateToken(username);
+        long expiresIn = jwtService.getExpirationTime();
         
         log.info("JWT 토큰 생성 완료: username={}, expiresIn={}ms", username, expiresIn);
         
@@ -61,7 +61,7 @@ public class JwtTokenProvider {
      * @return 유효성 여부
      */
     public boolean validateToken(String token) {
-        return jwtUtil.validateToken(token);
+        return jwtService.validateToken(token);
     }
     
     /**
@@ -71,7 +71,7 @@ public class JwtTokenProvider {
      * @return 사용자명
      */
     public String extractUsername(String token) {
-        return jwtUtil.extractUsername(token);
+        return jwtService.extractUsername(token);
     }
     
     /**
@@ -80,6 +80,6 @@ public class JwtTokenProvider {
      * @return 만료 시간 (밀리초)
      */
     public long getTokenExpirationTime() {
-        return jwtUtil.getExpirationTime();
+        return jwtService.getExpirationTime();
     }
 }

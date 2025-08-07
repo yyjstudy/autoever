@@ -1,10 +1,9 @@
 package com.autoever.member.config;
 
-import com.autoever.member.jwt.JwtUtil;
+import com.autoever.member.jwt.JwtService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -29,7 +28,7 @@ class SecurityConfigIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
 
     @Test
     @DisplayName("회원가입 API는 인증 없이 접근 가능")
@@ -54,7 +53,7 @@ class SecurityConfigIntegrationTest {
     void protectedEndpoint_ValidJWT_Success() throws Exception {
         // Given
         String username = "testuser";
-        String token = jwtUtil.generateToken(username);
+        String token = jwtService.generateToken(username);
 
         // When & Then
         mockMvc.perform(get("/api/users/me")
@@ -106,7 +105,7 @@ class SecurityConfigIntegrationTest {
     void adminEndpoint_JWTWithoutAdminRole_Forbidden() throws Exception {
         // Given - JWT는 기본적으로 ROLE_USER 권한만 부여
         String username = "testuser";
-        String token = jwtUtil.generateToken(username);
+        String token = jwtService.generateToken(username);
 
         // When & Then
         mockMvc.perform(get("/api/admin/users")
@@ -158,7 +157,7 @@ class SecurityConfigIntegrationTest {
     void multipleAuthHeaders_JWTPriority() throws Exception {
         // Given
         String username = "testuser";
-        String validJWT = jwtUtil.generateToken(username);
+        String validJWT = jwtService.generateToken(username);
         String basicAuth = Base64.getEncoder().encodeToString("admin:1212".getBytes());
 
         // When & Then - JWT가 우선 처리되어 ROLE_USER로 인증됨

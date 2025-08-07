@@ -1,6 +1,5 @@
 package com.autoever.member.jwt;
 
-import com.autoever.member.config.JwtProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,7 @@ import static org.mockito.Mockito.*;
 class TokenBlacklistServiceTest {
 
     @Mock
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
 
     @InjectMocks
     private TokenBlacklistService tokenBlacklistService;
@@ -40,8 +39,8 @@ class TokenBlacklistServiceTest {
     @DisplayName("유효한 토큰을 블랙리스트에 추가 성공")
     void addToBlacklist_ValidToken_Success() {
         // Given
-        when(jwtUtil.validateToken(VALID_TOKEN)).thenReturn(true);
-        when(jwtUtil.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
+        when(jwtService.validateToken(VALID_TOKEN)).thenReturn(true);
+        when(jwtService.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
 
         // When
         tokenBlacklistService.addToBlacklist(VALID_TOKEN);
@@ -50,15 +49,15 @@ class TokenBlacklistServiceTest {
         assertThat(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).isTrue();
         assertThat(tokenBlacklistService.getBlacklistSize()).isEqualTo(1);
 
-        verify(jwtUtil).validateToken(VALID_TOKEN);
-        verify(jwtUtil).extractUsername(VALID_TOKEN);
+        verify(jwtService).validateToken(VALID_TOKEN);
+        verify(jwtService).extractUsername(VALID_TOKEN);
     }
 
     @Test
     @DisplayName("이미 만료된 토큰은 블랙리스트에 추가하지 않음")
     void addToBlacklist_ExpiredToken_NotAdded() {
         // Given
-        when(jwtUtil.validateToken(EXPIRED_TOKEN)).thenReturn(false);
+        when(jwtService.validateToken(EXPIRED_TOKEN)).thenReturn(false);
 
         // When
         tokenBlacklistService.addToBlacklist(EXPIRED_TOKEN);
@@ -67,8 +66,8 @@ class TokenBlacklistServiceTest {
         assertThat(tokenBlacklistService.isBlacklisted(EXPIRED_TOKEN)).isFalse();
         assertThat(tokenBlacklistService.getBlacklistSize()).isEqualTo(0);
 
-        verify(jwtUtil).validateToken(EXPIRED_TOKEN);
-        verify(jwtUtil, never()).extractUsername(EXPIRED_TOKEN);
+        verify(jwtService).validateToken(EXPIRED_TOKEN);
+        verify(jwtService, never()).extractUsername(EXPIRED_TOKEN);
     }
 
     @Test
@@ -84,15 +83,15 @@ class TokenBlacklistServiceTest {
         tokenBlacklistService.addToBlacklist("   ");
         assertThat(tokenBlacklistService.getBlacklistSize()).isEqualTo(0);
 
-        verifyNoInteractions(jwtUtil);
+        verifyNoInteractions(jwtService);
     }
 
     @Test
     @DisplayName("토큰이 블랙리스트에 있는지 정확히 확인")
     void isBlacklisted_CheckCorrectly() {
         // Given
-        when(jwtUtil.validateToken(VALID_TOKEN)).thenReturn(true);
-        when(jwtUtil.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
+        when(jwtService.validateToken(VALID_TOKEN)).thenReturn(true);
+        when(jwtService.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
         tokenBlacklistService.addToBlacklist(VALID_TOKEN);
 
         // When & Then
@@ -112,19 +111,19 @@ class TokenBlacklistServiceTest {
         String expiredToken2 = "expired.token.2";
 
         // 유효한 토큰들 추가
-        when(jwtUtil.validateToken(validToken1)).thenReturn(true);
-        when(jwtUtil.extractUsername(validToken1)).thenReturn("user1");
-        when(jwtUtil.validateToken(validToken2)).thenReturn(true);
-        when(jwtUtil.extractUsername(validToken2)).thenReturn("user2");
+        when(jwtService.validateToken(validToken1)).thenReturn(true);
+        when(jwtService.extractUsername(validToken1)).thenReturn("user1");
+        when(jwtService.validateToken(validToken2)).thenReturn(true);
+        when(jwtService.extractUsername(validToken2)).thenReturn("user2");
         
         tokenBlacklistService.addToBlacklist(validToken1);
         tokenBlacklistService.addToBlacklist(validToken2);
 
         // 만료된 토큰들을 블랙리스트에 직접 추가 (테스트를 위해)
-        when(jwtUtil.validateToken(expiredToken1)).thenReturn(true);
-        when(jwtUtil.extractUsername(expiredToken1)).thenReturn("expiredUser1");
-        when(jwtUtil.validateToken(expiredToken2)).thenReturn(true);
-        when(jwtUtil.extractUsername(expiredToken2)).thenReturn("expiredUser2");
+        when(jwtService.validateToken(expiredToken1)).thenReturn(true);
+        when(jwtService.extractUsername(expiredToken1)).thenReturn("expiredUser1");
+        when(jwtService.validateToken(expiredToken2)).thenReturn(true);
+        when(jwtService.extractUsername(expiredToken2)).thenReturn("expiredUser2");
         
         tokenBlacklistService.addToBlacklist(expiredToken1);
         tokenBlacklistService.addToBlacklist(expiredToken2);
@@ -133,10 +132,10 @@ class TokenBlacklistServiceTest {
         Date pastDate = new Date(System.currentTimeMillis() - 1000);
         Date futureDate = new Date(System.currentTimeMillis() + 3600000);
         
-        when(jwtUtil.extractExpiration(validToken1)).thenReturn(futureDate);
-        when(jwtUtil.extractExpiration(validToken2)).thenReturn(futureDate);
-        when(jwtUtil.extractExpiration(expiredToken1)).thenReturn(pastDate);
-        when(jwtUtil.extractExpiration(expiredToken2)).thenReturn(pastDate);
+        when(jwtService.extractExpiration(validToken1)).thenReturn(futureDate);
+        when(jwtService.extractExpiration(validToken2)).thenReturn(futureDate);
+        when(jwtService.extractExpiration(expiredToken1)).thenReturn(pastDate);
+        when(jwtService.extractExpiration(expiredToken2)).thenReturn(pastDate);
 
         assertThat(tokenBlacklistService.getBlacklistSize()).isEqualTo(4);
 
@@ -158,17 +157,17 @@ class TokenBlacklistServiceTest {
         String validToken = "valid.token";
         String unparsableToken = "unparsable.token";
 
-        when(jwtUtil.validateToken(validToken)).thenReturn(true);
-        when(jwtUtil.extractUsername(validToken)).thenReturn("user");
-        when(jwtUtil.validateToken(unparsableToken)).thenReturn(true);
-        when(jwtUtil.extractUsername(unparsableToken)).thenReturn("user2");
+        when(jwtService.validateToken(validToken)).thenReturn(true);
+        when(jwtService.extractUsername(validToken)).thenReturn("user");
+        when(jwtService.validateToken(unparsableToken)).thenReturn(true);
+        when(jwtService.extractUsername(unparsableToken)).thenReturn("user2");
         
         tokenBlacklistService.addToBlacklist(validToken);
         tokenBlacklistService.addToBlacklist(unparsableToken);
 
         // cleanup 시 파싱 실패하도록 설정
-        when(jwtUtil.extractExpiration(validToken)).thenReturn(new Date(System.currentTimeMillis() + 3600000));
-        when(jwtUtil.extractExpiration(unparsableToken)).thenThrow(new RuntimeException("파싱 실패"));
+        when(jwtService.extractExpiration(validToken)).thenReturn(new Date(System.currentTimeMillis() + 3600000));
+        when(jwtService.extractExpiration(unparsableToken)).thenThrow(new RuntimeException("파싱 실패"));
 
         assertThat(tokenBlacklistService.getBlacklistSize()).isEqualTo(2);
 
@@ -189,12 +188,12 @@ class TokenBlacklistServiceTest {
         String userToken2 = "user.token.2";
         String otherUserToken = "other.user.token";
 
-        when(jwtUtil.validateToken(userToken1)).thenReturn(true);
-        when(jwtUtil.extractUsername(userToken1)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.validateToken(userToken2)).thenReturn(true);
-        when(jwtUtil.extractUsername(userToken2)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.validateToken(otherUserToken)).thenReturn(true);
-        when(jwtUtil.extractUsername(otherUserToken)).thenReturn("otheruser");
+        when(jwtService.validateToken(userToken1)).thenReturn(true);
+        when(jwtService.extractUsername(userToken1)).thenReturn(TEST_USERNAME);
+        when(jwtService.validateToken(userToken2)).thenReturn(true);
+        when(jwtService.extractUsername(userToken2)).thenReturn(TEST_USERNAME);
+        when(jwtService.validateToken(otherUserToken)).thenReturn(true);
+        when(jwtService.extractUsername(otherUserToken)).thenReturn("otheruser");
 
         tokenBlacklistService.addToBlacklist(userToken1);
         tokenBlacklistService.addToBlacklist(userToken2);
@@ -217,15 +216,15 @@ class TokenBlacklistServiceTest {
 
         // 아무 에러 없이 정상적으로 처리되어야 함
         assertThat(tokenBlacklistService.getBlacklistSize()).isEqualTo(0);
-        verifyNoInteractions(jwtUtil);
+        verifyNoInteractions(jwtService);
     }
 
     @Test
     @DisplayName("블랙리스트 전체 정리")
     void clearBlacklist_RemovesAllTokens() {
         // Given
-        when(jwtUtil.validateToken(VALID_TOKEN)).thenReturn(true);
-        when(jwtUtil.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
+        when(jwtService.validateToken(VALID_TOKEN)).thenReturn(true);
+        when(jwtService.extractUsername(VALID_TOKEN)).thenReturn(TEST_USERNAME);
         tokenBlacklistService.addToBlacklist(VALID_TOKEN);
         
         assertThat(tokenBlacklistService.getBlacklistSize()).isEqualTo(1);
@@ -242,7 +241,7 @@ class TokenBlacklistServiceTest {
     @DisplayName("토큰 블랙리스트 예외 상황 처리")
     void addToBlacklist_ExceptionHandling() {
         // Given
-        when(jwtUtil.validateToken(INVALID_TOKEN)).thenThrow(new RuntimeException("토큰 검증 실패"));
+        when(jwtService.validateToken(INVALID_TOKEN)).thenThrow(new RuntimeException("토큰 검증 실패"));
 
         // When
         tokenBlacklistService.addToBlacklist(INVALID_TOKEN);

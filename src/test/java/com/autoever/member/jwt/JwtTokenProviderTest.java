@@ -1,7 +1,6 @@
 package com.autoever.member.jwt;
 
 import com.autoever.member.dto.JwtTokenDto;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +20,7 @@ import static org.mockito.BDDMockito.given;
 class JwtTokenProviderTest {
 
     @Mock
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
     
     @Mock
     private Authentication authentication;
@@ -40,8 +39,8 @@ class JwtTokenProviderTest {
     void generateToken_WithAuthentication_ShouldReturnJwtTokenDto() {
         // Given
         given(authentication.getName()).willReturn(TEST_USERNAME);
-        given(jwtUtil.generateToken(TEST_USERNAME)).willReturn(TEST_TOKEN);
-        given(jwtUtil.getExpirationTime()).willReturn(TEST_EXPIRES_IN);
+        given(jwtService.generateToken(TEST_USERNAME)).willReturn(TEST_TOKEN);
+        given(jwtService.getExpirationTime()).willReturn(TEST_EXPIRES_IN);
         
         // When
         JwtTokenDto result = jwtTokenProvider.generateToken(authentication);
@@ -57,8 +56,8 @@ class JwtTokenProviderTest {
     @DisplayName("사용자명으로 직접 JWT 토큰 생성 성공")
     void generateTokenForUsername_WithUsername_ShouldReturnJwtTokenDto() {
         // Given
-        given(jwtUtil.generateToken(TEST_USERNAME)).willReturn(TEST_TOKEN);
-        given(jwtUtil.getExpirationTime()).willReturn(TEST_EXPIRES_IN);
+        given(jwtService.generateToken(TEST_USERNAME)).willReturn(TEST_TOKEN);
+        given(jwtService.getExpirationTime()).willReturn(TEST_EXPIRES_IN);
         
         // When
         JwtTokenDto result = jwtTokenProvider.generateTokenForUsername(TEST_USERNAME);
@@ -74,7 +73,7 @@ class JwtTokenProviderTest {
     @DisplayName("JWT 토큰 유효성 검증 - 유효한 토큰")
     void validateToken_WithValidToken_ShouldReturnTrue() {
         // Given
-        given(jwtUtil.validateToken(TEST_TOKEN)).willReturn(true);
+        given(jwtService.validateToken(TEST_TOKEN)).willReturn(true);
 
         // When
         boolean result = jwtTokenProvider.validateToken(TEST_TOKEN);
@@ -88,7 +87,7 @@ class JwtTokenProviderTest {
     void validateToken_WithInvalidToken_ShouldReturnFalse() {
         // Given
         String invalidToken = "invalid.jwt.token";
-        given(jwtUtil.validateToken(invalidToken)).willReturn(false);
+        given(jwtService.validateToken(invalidToken)).willReturn(false);
 
         // When
         boolean result = jwtTokenProvider.validateToken(invalidToken);
@@ -101,7 +100,7 @@ class JwtTokenProviderTest {
     @DisplayName("JWT 토큰에서 사용자명 추출 성공")
     void extractUsername_WithValidToken_ShouldReturnUsername() {
         // Given
-        given(jwtUtil.extractUsername(TEST_TOKEN)).willReturn(TEST_USERNAME);
+        given(jwtService.extractUsername(TEST_TOKEN)).willReturn(TEST_USERNAME);
 
         // When
         String result = jwtTokenProvider.extractUsername(TEST_TOKEN);
@@ -114,7 +113,7 @@ class JwtTokenProviderTest {
     @DisplayName("토큰 만료 시간 조회 성공")
     void getTokenExpirationTime_ShouldReturnExpirationTime() {
         // Given
-        given(jwtUtil.getExpirationTime()).willReturn(TEST_EXPIRES_IN);
+        given(jwtService.getExpirationTime()).willReturn(TEST_EXPIRES_IN);
         
         // When
         long result = jwtTokenProvider.getTokenExpirationTime();
@@ -129,8 +128,8 @@ class JwtTokenProviderTest {
         // Given
         long longExpirationTime = 7200000L; // 2시간
         given(authentication.getName()).willReturn(TEST_USERNAME);
-        given(jwtUtil.generateToken(TEST_USERNAME)).willReturn(TEST_TOKEN);
-        given(jwtUtil.getExpirationTime()).willReturn(longExpirationTime);
+        given(jwtService.generateToken(TEST_USERNAME)).willReturn(TEST_TOKEN);
+        given(jwtService.getExpirationTime()).willReturn(longExpirationTime);
 
         // When
         JwtTokenDto result = jwtTokenProvider.generateToken(authentication);
@@ -146,7 +145,7 @@ class JwtTokenProviderTest {
     void generateToken_WithNullUsername_ShouldHandleGracefully() {
         // Given
         given(authentication.getName()).willReturn(null);
-        given(jwtUtil.generateToken(null)).willReturn(TEST_TOKEN);
+        given(jwtService.generateToken(null)).willReturn(TEST_TOKEN);
 
         // When
         JwtTokenDto result = jwtTokenProvider.generateToken(authentication);
@@ -162,7 +161,7 @@ class JwtTokenProviderTest {
     void generateTokenForUsername_WithEmptyUsername_ShouldHandleGracefully() {
         // Given
         String emptyUsername = "";
-        given(jwtUtil.generateToken(emptyUsername)).willReturn(TEST_TOKEN);
+        given(jwtService.generateToken(emptyUsername)).willReturn(TEST_TOKEN);
 
         // When
         JwtTokenDto result = jwtTokenProvider.generateTokenForUsername(emptyUsername);

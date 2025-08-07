@@ -21,7 +21,7 @@ import java.util.function.Function;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtUtil {
+public class JwtService {
     
     private final JwtProperties jwtProperties;
     

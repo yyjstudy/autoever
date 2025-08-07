@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final JwtProperties jwtProperties;
     private final TokenBlacklistService tokenBlacklistService;
     
@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             
             if (token != null && isValidToken(token)) {
                 setAuthentication(token);
-                log.debug("JWT 토큰 인증 성공: {}", jwtUtil.extractUsername(token));
+                log.debug("JWT 토큰 인증 성공: {}", jwtService.extractUsername(token));
             } else if (token != null) {
                 log.debug("유효하지 않은 JWT 토큰 또는 블랙리스트에 등록된 토큰");
             }
@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private String extractTokenFromRequest(HttpServletRequest request) {
         String authorizationHeader = request.getHeader(JwtProperties.HEADER_STRING);
-        return jwtUtil.extractTokenFromHeader(authorizationHeader);
+        return jwtService.extractTokenFromHeader(authorizationHeader);
     }
     
     /**
@@ -79,7 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         
         // 2. JWT 토큰 유효성 검증
-        return jwtUtil.validateToken(token);
+        return jwtService.validateToken(token);
     }
     
     /**
@@ -88,7 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @param token 유효한 JWT 토큰
      */
     private void setAuthentication(String token) {
-        String username = jwtUtil.extractUsername(token);
+        String username = jwtService.extractUsername(token);
         
         // 기본 사용자 권한 설정 (추후 토큰에서 권한 정보를 추출하도록 확장 가능)
         List<SimpleGrantedAuthority> authorities = Collections.singletonList(

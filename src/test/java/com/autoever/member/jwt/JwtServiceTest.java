@@ -15,11 +15,11 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.*;
 
-@DisplayName("JwtUtil 테스트")
+@DisplayName("JwtService 테스트")
 @ActiveProfiles("test")
-class JwtUtilTest {
+class JwtServiceTest {
 
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
     private JwtProperties jwtProperties;
 
     private static final String SECRET_KEY = "YXV0b2V2ZXJTZWNyZXRLZXlGb3JKV1RUb2tlbkdlbmVyYXRpb25BbmRWYWxpZGF0aW9uMjAyNCE=";
@@ -30,14 +30,14 @@ class JwtUtilTest {
     @BeforeEach
     void setUp() {
         jwtProperties = new JwtProperties(SECRET_KEY, EXPIRATION_TIME, TOKEN_PREFIX);
-        jwtUtil = new JwtUtil(jwtProperties);
+        jwtService = new JwtService(jwtProperties);
     }
 
     @Test
     @DisplayName("JWT 토큰 생성 성공")
     void generateToken_Success() {
         // When
-        String token = jwtUtil.generateToken(TEST_USERNAME);
+        String token = jwtService.generateToken(TEST_USERNAME);
 
         // Then
         assertThat(token).isNotNull();
@@ -49,10 +49,10 @@ class JwtUtilTest {
     @DisplayName("JWT 토큰에서 사용자명 추출 성공")
     void extractUsername_Success() {
         // Given
-        String token = jwtUtil.generateToken(TEST_USERNAME);
+        String token = jwtService.generateToken(TEST_USERNAME);
 
         // When
-        String extractedUsername = jwtUtil.extractUsername(token);
+        String extractedUsername = jwtService.extractUsername(token);
 
         // Then
         assertThat(extractedUsername).isEqualTo(TEST_USERNAME);
@@ -63,10 +63,10 @@ class JwtUtilTest {
     void extractExpiration_Success() {
         // Given
         Date beforeGeneration = new Date();
-        String token = jwtUtil.generateToken(TEST_USERNAME);
+        String token = jwtService.generateToken(TEST_USERNAME);
 
         // When
-        Date expiration = jwtUtil.extractExpiration(token);
+        Date expiration = jwtService.extractExpiration(token);
 
         // Then
         assertThat(expiration).isNotNull();
@@ -79,10 +79,10 @@ class JwtUtilTest {
     @DisplayName("유효한 JWT 토큰 검증 성공")
     void validateToken_WithUsername_Success() {
         // Given
-        String token = jwtUtil.generateToken(TEST_USERNAME);
+        String token = jwtService.generateToken(TEST_USERNAME);
 
         // When
-        Boolean isValid = jwtUtil.validateToken(token, TEST_USERNAME);
+        Boolean isValid = jwtService.validateToken(token, TEST_USERNAME);
 
         // Then
         assertThat(isValid).isTrue();
@@ -92,10 +92,10 @@ class JwtUtilTest {
     @DisplayName("잘못된 사용자명으로 JWT 토큰 검증 실패")
     void validateToken_WithWrongUsername_Failure() {
         // Given
-        String token = jwtUtil.generateToken(TEST_USERNAME);
+        String token = jwtService.generateToken(TEST_USERNAME);
 
         // When
-        Boolean isValid = jwtUtil.validateToken(token, "wronguser");
+        Boolean isValid = jwtService.validateToken(token, "wronguser");
 
         // Then
         assertThat(isValid).isFalse();
@@ -105,10 +105,10 @@ class JwtUtilTest {
     @DisplayName("사용자명 없이 JWT 토큰 검증 성공")
     void validateToken_WithoutUsername_Success() {
         // Given
-        String token = jwtUtil.generateToken(TEST_USERNAME);
+        String token = jwtService.generateToken(TEST_USERNAME);
 
         // When
-        Boolean isValid = jwtUtil.validateToken(token);
+        Boolean isValid = jwtService.validateToken(token);
 
         // Then
         assertThat(isValid).isTrue();
@@ -121,7 +121,7 @@ class JwtUtilTest {
         String invalidToken = "invalid.jwt.token";
 
         // When
-        Boolean isValid = jwtUtil.validateToken(invalidToken);
+        Boolean isValid = jwtService.validateToken(invalidToken);
 
         // Then
         assertThat(isValid).isFalse();
@@ -135,7 +135,7 @@ class JwtUtilTest {
         String authHeader = "Bearer " + token;
 
         // When
-        String extractedToken = jwtUtil.extractTokenFromHeader(authHeader);
+        String extractedToken = jwtService.extractTokenFromHeader(authHeader);
 
         // Then
         assertThat(extractedToken).isEqualTo(token);
@@ -148,7 +148,7 @@ class JwtUtilTest {
         String authHeader = "Basic dXNlcjpwYXNzd29yZA==";
 
         // When
-        String extractedToken = jwtUtil.extractTokenFromHeader(authHeader);
+        String extractedToken = jwtService.extractTokenFromHeader(authHeader);
 
         // Then
         assertThat(extractedToken).isNull();
@@ -158,7 +158,7 @@ class JwtUtilTest {
     @DisplayName("null Authorization 헤더에서 토큰 추출 시 null 반환")
     void extractTokenFromHeader_NullHeader_ReturnsNull() {
         // When
-        String extractedToken = jwtUtil.extractTokenFromHeader(null);
+        String extractedToken = jwtService.extractTokenFromHeader(null);
 
         // Then
         assertThat(extractedToken).isNull();
@@ -171,7 +171,7 @@ class JwtUtilTest {
         String username = "testuser123";
         
         // When
-        String token = jwtUtil.generateToken(username);
+        String token = jwtService.generateToken(username);
         
         // Then - 토큰을 직접 파싱하여 검증
         SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
@@ -193,9 +193,9 @@ class JwtUtilTest {
     void validateToken_Expired_Failure() {
         // Given - 만료 시간을 1밀리초로 설정
         JwtProperties shortExpiryProperties = new JwtProperties(SECRET_KEY, 1L, TOKEN_PREFIX);
-        JwtUtil shortExpiryJwtUtil = new JwtUtil(shortExpiryProperties);
+        JwtService shortExpiryJwtService = new JwtService(shortExpiryProperties);
         
-        String token = shortExpiryJwtUtil.generateToken(TEST_USERNAME);
+        String token = shortExpiryJwtService.generateToken(TEST_USERNAME);
         
         // 토큰이 만료되도록 대기
         try {
@@ -205,7 +205,7 @@ class JwtUtilTest {
         }
 
         // When
-        Boolean isValid = shortExpiryJwtUtil.validateToken(token);
+        Boolean isValid = shortExpiryJwtService.validateToken(token);
 
         // Then
         assertThat(isValid).isFalse();
