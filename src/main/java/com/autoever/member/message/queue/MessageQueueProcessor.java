@@ -40,29 +40,55 @@ public class MessageQueueProcessor {
      */
     @Scheduled(fixedDelay = 5000) // 5초마다 실행
     public void processQueue() {
+        // 큐 상태 확인
+        MessageQueueService.QueueStatus status = messageQueueService.getQueueStatus();
+        if (status.getCurrentSize() == 0) {
+            return; // 큐가 비어있음
+        }
+        
+        // 각 API 타입별로 rate limit 확인하고 처리
+        boolean kakaoAvailable = apiRateLimiter.hasCapacity(ApiType.KAKAOTALK);
+        boolean smsAvailable = apiRateLimiter.hasCapacity(ApiType.SMS);
+        
+        if (!kakaoAvailable && !smsAvailable) {
+            log.debug("모든 API Rate limit 초과 - 대기");
+            return;
+        }
+        
+        // 큐에서 항목을 확인하되, rate limit이 가능한 것만 처리
         MessageQueueItem item = messageQueueService.dequeue();
         
         if (item == null) {
             return; // 큐가 비어있음
         }
         
-        log.info("큐에서 메시지 처리 시작 - {}", item);
-        
         try {
-            // Rate limit 확인 후 처리
-            if (apiRateLimiter.tryAcquire(item.getPreferredApiType())) {
-                boolean success = sendMessage(item);
-                
-                if (success) {
-                    log.info("큐 메시지 발송 성공 - ID: {}", item.getId());
-                } else {
-                    log.warn("큐 메시지 발송 실패 - ID: {}", item.getId());
-                    // 실패한 경우 재시도 로직을 추가할 수 있음
+            boolean processed = false;
+            
+            // 선호하는 API 타입으로 시도
+            if (item.getPreferredApiType() == ApiType.KAKAOTALK && kakaoAvailable) {
+                if (apiRateLimiter.tryAcquire(ApiType.KAKAOTALK)) {
+                    log.info("큐 메시지 카카오톡 발송 - ID: {}", item.getId());
+                    processed = sendKakaoTalk(item);
                 }
-                
-            } else {
-                // Rate limit 아직 초과 상태 - 큐에 다시 추가
-                log.debug("Rate limit 여전히 초과 - 큐에 재추가: {}", item);
+            } else if (item.getPreferredApiType() == ApiType.SMS && smsAvailable) {
+                if (apiRateLimiter.tryAcquire(ApiType.SMS)) {
+                    log.info("큐 메시지 SMS 발송 - ID: {}", item.getId());
+                    processed = sendSms(item);
+                }
+            }
+            
+            // 선호 API가 불가능한 경우 대체 API 시도
+            if (!processed && item.getPreferredApiType() == ApiType.KAKAOTALK && smsAvailable) {
+                if (apiRateLimiter.tryAcquire(ApiType.SMS)) {
+                    log.info("큐 메시지 카카오톡->SMS Fallback - ID: {}", item.getId());
+                    processed = sendSms(item);
+                }
+            }
+            
+            // 처리되지 못한 경우 큐에 다시 추가
+            if (!processed) {
+                log.debug("Rate limit으로 처리 불가 - 큐에 재추가: {}", item.getId());
                 messageQueueService.enqueue(item.getMemberName(), item.getPhoneNumber(), 
                     item.getMessage(), item.getPreferredApiType());
             }
@@ -73,30 +99,45 @@ public class MessageQueueProcessor {
     }
     
     /**
-     * 실제 메시지 발송 수행
+     * 카카오톡 메시지 발송
      */
-    private boolean sendMessage(MessageQueueItem item) {
+    private boolean sendKakaoTalk(MessageQueueItem item) {
         try {
             MessageRequest request = new MessageRequest(item.getPhoneNumber(), item.getMessage());
-            MessageResponse response;
+            MessageResponse response = kakaoTalkApiClient.sendMessage(request);
             
-            if (item.getPreferredApiType() == ApiType.KAKAOTALK) {
-                response = kakaoTalkApiClient.sendMessage(request);
-                
-                if (!response.success() && smsApiClient.isAvailable()) {
-                    // 카카오톡 실패 시 SMS로 fallback
-                    log.info("카카오톡 실패, SMS로 전환 - ID: {}", item.getId());
-                    response = smsApiClient.sendMessage(request);
-                }
-                
+            if (response.success()) {
+                log.info("카카오톡 발송 성공 - ID: {}, MessageId: {}", item.getId(), response.messageId());
+                return true;
             } else {
-                response = smsApiClient.sendMessage(request);
+                log.warn("카카오톡 발송 실패 - ID: {}, Error: {}", item.getId(), response.errorMessage());
+                return false;
             }
             
-            return response.success();
+        } catch (Exception e) {
+            log.error("카카오톡 발송 중 오류 - ID: " + item.getId(), e);
+            return false;
+        }
+    }
+    
+    /**
+     * SMS 메시지 발송
+     */
+    private boolean sendSms(MessageQueueItem item) {
+        try {
+            MessageRequest request = new MessageRequest(item.getPhoneNumber(), item.getMessage());
+            MessageResponse response = smsApiClient.sendMessage(request);
+            
+            if (response.success()) {
+                log.info("SMS 발송 성공 - ID: {}, MessageId: {}", item.getId(), response.messageId());
+                return true;
+            } else {
+                log.warn("SMS 발송 실패 - ID: {}, Error: {}", item.getId(), response.errorMessage());
+                return false;
+            }
             
         } catch (Exception e) {
-            log.error("메시지 발송 중 오류 - ID: " + item.getId(), e);
+            log.error("SMS 발송 중 오류 - ID: " + item.getId(), e);
             return false;
         }
     }

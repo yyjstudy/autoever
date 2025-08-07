@@ -118,6 +118,17 @@ public class ApiRateLimiter {
     }
     
     /**
+     * 특정 API의 용량이 남아있는지 확인합니다 (카운트를 증가시키지 않음).
+     * 
+     * @param apiType API 타입
+     * @return 용량 여부
+     */
+    public boolean hasCapacity(ApiType apiType) {
+        RateLimitInfo info = getCurrentUsage(apiType);
+        return info.getRemaining() > 0;
+    }
+    
+    /**
      * 모든 API의 현재 사용량을 로깅합니다.
      */
     public void logCurrentUsage() {

@@ -57,8 +57,8 @@ class FallbackMessageServiceSimpleTest {
     }
     
     @Test
-    @DisplayName("카카오톡 발송 성공")
-    void sendWithFallback_KakaoTalkSuccess() {
+    @DisplayName("큐에 메시지 추가 성공")
+    void sendWithFallback_QueueSuccess() {
         // Given
         String memberName = "김철수";
         String phoneNumber = "010-1234-5678";
@@ -66,46 +66,45 @@ class FallbackMessageServiceSimpleTest {
         String templatedMessage = "김철수님, 안녕하세요. 테스트 메시지";
         
         when(messageTemplateService.applyTemplate(memberName, originalMessage)).thenReturn(templatedMessage);
-        when(kakaoTalkApiClient.isAvailable()).thenReturn(true);
-        when(kakaoTalkApiClient.sendMessage(any(MessageRequest.class)))
-            .thenReturn(MessageResponse.success("kakao_msg_123", ApiType.KAKAOTALK));
+        when(messageQueueService.enqueue(eq(memberName), eq(phoneNumber), eq(templatedMessage), eq(ApiType.KAKAOTALK)))
+            .thenReturn(MessageQueueService.QueueResult.queued("queue_id_123", 1));
         
         // When
         MessageSendResult result = fallbackMessageService.sendWithFallback(memberName, phoneNumber, originalMessage);
         
         // Then
-        assertThat(result).isEqualTo(MessageSendResult.SUCCESS_KAKAO);
-        verify(messageSendTracker).recordResult(MessageSendResult.SUCCESS_KAKAO, ApiType.KAKAOTALK);
+        assertThat(result).isEqualTo(MessageSendResult.QUEUED);
+        verify(messageSendTracker).recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
+        verify(messageQueueService).enqueue(memberName, phoneNumber, templatedMessage, ApiType.KAKAOTALK);
     }
     
     @Test
-    @DisplayName("카카오톡 실패 시 SMS Fallback 성공")
-    void sendWithFallback_KakaoFailure_SmsFallbackSuccess() {
+    @DisplayName("큐에 메시지 추가 성공 (User 객체 사용)")
+    void sendWithFallback_UserObject_QueueSuccess() {
         // Given
-        String memberName = "이영희";
-        String phoneNumber = "010-9876-5432";
+        User user = User.builder()
+            .name("이영희")
+            .phoneNumber("010-9876-5432")
+            .build();
         String originalMessage = "중요한 안내사항";
         String templatedMessage = "이영희님, 안녕하세요. 중요한 안내사항";
         
-        when(messageTemplateService.applyTemplate(memberName, originalMessage)).thenReturn(templatedMessage);
-        when(kakaoTalkApiClient.isAvailable()).thenReturn(true);
-        when(kakaoTalkApiClient.sendMessage(any(MessageRequest.class)))
-            .thenReturn(MessageResponse.failure("SEND_ERROR", "전송 실패", ApiType.KAKAOTALK));
-        when(smsApiClient.isAvailable()).thenReturn(true);
-        when(smsApiClient.sendMessage(any(MessageRequest.class)))
-            .thenReturn(MessageResponse.success("sms_msg_456", ApiType.SMS));
+        when(messageTemplateService.applyTemplate(user, originalMessage)).thenReturn(templatedMessage);
+        when(messageQueueService.enqueue(eq("이영희"), eq("010-9876-5432"), eq(templatedMessage), eq(ApiType.KAKAOTALK)))
+            .thenReturn(MessageQueueService.QueueResult.queued("queue_id_456", 2));
         
         // When
-        MessageSendResult result = fallbackMessageService.sendWithFallback(memberName, phoneNumber, originalMessage);
+        MessageSendResult result = fallbackMessageService.sendWithFallback(user, originalMessage);
         
         // Then
-        assertThat(result).isEqualTo(MessageSendResult.SUCCESS_SMS_FALLBACK);
-        verify(messageSendTracker).recordResult(MessageSendResult.SUCCESS_SMS_FALLBACK, ApiType.SMS);
+        assertThat(result).isEqualTo(MessageSendResult.QUEUED);
+        verify(messageSendTracker).recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
+        verify(messageQueueService).enqueue("이영희", "010-9876-5432", templatedMessage, ApiType.KAKAOTALK);
     }
     
     @Test
-    @DisplayName("모든 발송 방법 실패")
-    void sendWithFallback_AllFailure() {
+    @DisplayName("큐가 가득 찬 경우")
+    void sendWithFallback_QueueFull() {
         // Given
         String memberName = "박민수";
         String phoneNumber = "010-5555-5555";
@@ -113,43 +112,38 @@ class FallbackMessageServiceSimpleTest {
         String templatedMessage = "박민수님, 안녕하세요. 실패 테스트";
         
         when(messageTemplateService.applyTemplate(memberName, originalMessage)).thenReturn(templatedMessage);
-        when(kakaoTalkApiClient.isAvailable()).thenReturn(true);
-        when(kakaoTalkApiClient.sendMessage(any(MessageRequest.class)))
-            .thenReturn(MessageResponse.failure("SEND_ERROR", "카카오톡 전송 실패", ApiType.KAKAOTALK));
-        when(smsApiClient.isAvailable()).thenReturn(true);
-        when(smsApiClient.sendMessage(any(MessageRequest.class)))
-            .thenReturn(MessageResponse.failure("SEND_ERROR", "SMS 전송 실패", ApiType.SMS));
+        when(messageQueueService.enqueue(eq(memberName), eq(phoneNumber), eq(templatedMessage), eq(ApiType.KAKAOTALK)))
+            .thenReturn(MessageQueueService.QueueResult.queueFull());
         
         // When
         MessageSendResult result = fallbackMessageService.sendWithFallback(memberName, phoneNumber, originalMessage);
         
         // Then
-        assertThat(result).isEqualTo(MessageSendResult.FAILED_BOTH);
-        verify(messageSendTracker).recordResult(MessageSendResult.FAILED_BOTH, ApiType.KAKAOTALK);
+        assertThat(result).isEqualTo(MessageSendResult.QUEUE_FULL);
+        verify(messageSendTracker).recordResult(MessageSendResult.QUEUE_FULL, ApiType.KAKAOTALK);
+        verify(messageQueueService).enqueue(memberName, phoneNumber, templatedMessage, ApiType.KAKAOTALK);
     }
     
     @Test
-    @DisplayName("Rate Limiting 처리")
-    void sendWithFallback_RateLimited() {
+    @DisplayName("템플릿 적용 후 큐에 추가")
+    void sendWithFallback_TemplateAndQueue() {
         // Given
         String memberName = "최영수";
         String phoneNumber = "010-7777-7777";
-        String originalMessage = "Rate Limit 테스트";
-        String templatedMessage = "최영수님, 안녕하세요. Rate Limit 테스트";
+        String originalMessage = "큐 처리 테스트";
+        String templatedMessage = "최영수님, 안녕하세요. 큐 처리 테스트";
         
         when(messageTemplateService.applyTemplate(memberName, originalMessage)).thenReturn(templatedMessage);
-        when(kakaoTalkApiClient.isAvailable()).thenReturn(true);
-        when(kakaoTalkApiClient.sendMessage(any(MessageRequest.class)))
-            .thenReturn(MessageResponse.failure("RATE_LIMIT_EXCEEDED", "Rate Limit 초과", ApiType.KAKAOTALK));
-        when(smsApiClient.isAvailable()).thenReturn(true);
-        when(smsApiClient.sendMessage(any(MessageRequest.class)))
-            .thenReturn(MessageResponse.failure("RATE_LIMIT_EXCEEDED", "SMS Rate Limit 초과", ApiType.SMS));
+        when(messageQueueService.enqueue(eq(memberName), eq(phoneNumber), eq(templatedMessage), eq(ApiType.KAKAOTALK)))
+            .thenReturn(MessageQueueService.QueueResult.queued("queue_id_789", 10));
         
         // When
         MessageSendResult result = fallbackMessageService.sendWithFallback(memberName, phoneNumber, originalMessage);
         
         // Then
-        assertThat(result).isEqualTo(MessageSendResult.RATE_LIMITED);
-        verify(messageSendTracker).recordResult(MessageSendResult.RATE_LIMITED, ApiType.SMS);
+        assertThat(result).isEqualTo(MessageSendResult.QUEUED);
+        verify(messageTemplateService).applyTemplate(memberName, originalMessage);
+        verify(messageQueueService).enqueue(memberName, phoneNumber, templatedMessage, ApiType.KAKAOTALK);
+        verify(messageSendTracker).recordResult(MessageSendResult.QUEUED, ApiType.KAKAOTALK);
     }
 }
