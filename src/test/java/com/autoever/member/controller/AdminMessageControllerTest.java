@@ -161,8 +161,11 @@ class AdminMessageControllerTest {
             352,
             72,
             10,
+            50,  // queuedCount
             1523,
-            424
+            424,
+            10,  // currentQueueSize
+            1500  // maxQueueSize
         );
         
         when(messageSendTracker.getStatistics()).thenReturn(statistics);

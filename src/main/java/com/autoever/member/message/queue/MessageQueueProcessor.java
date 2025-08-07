@@ -36,9 +36,9 @@ public class MessageQueueProcessor {
     }
     
     /**
-     * 5초마다 큐를 확인해서 처리 가능한 메시지 발송
+     * 0.1초마다 큐를 확인해서 처리 가능한 메시지 발송
      */
-    @Scheduled(fixedDelay = 5000) // 5초마다 실행
+    @Scheduled(fixedDelay = 100) // 0.1초(100ms)마다 실행
     public void processQueue() {
         // 큐 상태 확인
         MessageQueueService.QueueStatus status = messageQueueService.getQueueStatus();

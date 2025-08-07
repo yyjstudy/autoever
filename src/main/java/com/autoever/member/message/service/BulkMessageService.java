@@ -8,6 +8,7 @@ import com.autoever.member.message.dto.MessageSendDto;
 import com.autoever.member.service.ExternalMessageService;
 import com.autoever.member.message.result.MessageSendResult;
 import com.autoever.member.message.result.MessageSendTracker;
+import com.autoever.member.message.queue.MessageQueueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,6 +39,7 @@ public class BulkMessageService {
     private final FallbackMessageService fallbackMessageService;
     private final MessageSendTracker messageSendTracker;
     private final StructuredMessageLogger structuredLogger;
+    private final MessageQueueService messageQueueService;
     
     // 임시로 메모리에 작업 상태 저장 (실제로는 DB나 Redis 사용)
     private final ConcurrentHashMap<UUID, BulkMessageJobStatus> jobStatusMap = new ConcurrentHashMap<>();
@@ -160,7 +162,22 @@ public class BulkMessageService {
                 long responseTime = System.currentTimeMillis() - messageStartTime;
                 
                 // 결과에 따른 분류 처리
-                if (result.isSuccess()) {
+                if (result == MessageSendResult.QUEUE_FULL) {
+                    // 큐가 가득 찬 경우 즉시 실패 처리하고 작업 중단
+                    tracker.incrementFailure();
+                    batchFailureCount++;
+                    
+                    String errorMessage = "큐 용량 초과로 작업 중단: " + result.getDescription();
+                    structuredLogger.logMessageFailure(jobId, user.getPhoneNumber(), errorMessage, responseTime);
+                    
+                    log.error("큐가 가득참 - 대량 발송 작업 중단 - userId: {}, phone: {}, responseTime: {}ms", 
+                            user.getId(), maskPhoneNumber(user.getPhoneNumber()), responseTime);
+                    
+                    // 큐가 가득 찬 경우 더 이상 발송하지 않고 실패로 처리
+                    updateJobStatus(jobId, BulkMessageResponse.JobStatus.FAILED);
+                    throw new RuntimeException("큐 용량 초과로 인한 발송 실패");
+                    
+                } else if (result.isSuccess()) {
                     tracker.incrementSuccess();
                     batchSuccessCount++;
                     

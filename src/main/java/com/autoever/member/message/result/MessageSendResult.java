@@ -53,10 +53,10 @@ public enum MessageSendResult {
     /**
      * 발송이 성공했는지 확인
      * 
-     * @return 성공한 경우 true
+     * @return 성공한 경우 true (큐에 추가된 경우도 성공으로 처리)
      */
     public boolean isSuccess() {
-        return this == SUCCESS_KAKAO || this == SUCCESS_SMS_FALLBACK;
+        return this == SUCCESS_KAKAO || this == SUCCESS_SMS_FALLBACK || this == QUEUED;
     }
     
     /**

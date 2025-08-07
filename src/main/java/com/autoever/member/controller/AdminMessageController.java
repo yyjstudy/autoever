@@ -54,6 +54,11 @@ public class AdminMessageController {
             
             **메시지 템플릿:**
             입력한 메시지 앞에 '{회원 성명}님, 안녕하세요. 현대 오토에버입니다.' 템플릿이 자동으로 추가됩니다.
+            
+            **큐 기반 처리:**
+            - 모든 메시지는 큐(최대 1500개)에 추가되어 순차 처리됩니다
+            - 큐가 가득 찬 경우 즉시 작업이 실패로 처리됩니다
+            - 큐의 메시지는 0.1초마다 rate limit을 확인하여 자동 발송됩니다
             """)
     @RequestBody(
         description = "대량 메시지 발송 요청 정보",
@@ -108,7 +113,8 @@ public class AdminMessageController {
      * 메시지 발송 작업 상태 조회
      */
     @GetMapping("/send/{jobId}/status")
-    @Operation(summary = "메시지 발송 작업 상태 조회", description = "진행 중인 메시지 발송 작업의 상태를 조회합니다")
+    @Operation(summary = "메시지 발송 작업 상태 조회", 
+        description = "진행 중인 메시지 발송 작업의 상태를 조회합니다. 현재 큐 상태도 함께 제공됩니다.")
     public ResponseEntity<ApiResponse<BulkMessageJobStatus>> getJobStatus(
             @PathVariable UUID jobId) {
         
@@ -135,6 +141,8 @@ public class AdminMessageController {
             - Fallback 발생률 (%)
             - 채널별 성공/실패 건수
             - Rate Limiting 발생 건수
+            - 큐에 대기 중인 메시지 건수
+            - 현재 큐 상태 (사용량/최대용량)
             
             **실시간 통계**: 시스템 시작 이후 누적 데이터를 제공합니다.
             """

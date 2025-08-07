@@ -1,6 +1,7 @@
 package com.autoever.member.message.result;
 
 import com.autoever.member.message.ApiType;
+import com.autoever.member.message.queue.MessageQueueService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @DisplayName("MessageSendTracker 테스트")
 class MessageSendTrackerTest {
@@ -16,7 +18,9 @@ class MessageSendTrackerTest {
     
     @BeforeEach
     void setUp() {
-        tracker = new MessageSendTracker();
+        MessageQueueService mockQueueService = mock(MessageQueueService.class);
+        when(mockQueueService.getQueueStatus()).thenReturn(new MessageQueueService.QueueStatus(0, 1500));
+        tracker = new MessageSendTracker(mockQueueService);
     }
     
     @Test

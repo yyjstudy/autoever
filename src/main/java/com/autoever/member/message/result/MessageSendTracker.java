@@ -1,6 +1,8 @@
 package com.autoever.member.message.result;
 
 import com.autoever.member.message.ApiType;
+import com.autoever.member.message.queue.MessageQueueService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +19,10 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MessageSendTracker {
+    
+    private final MessageQueueService messageQueueService;
     
     // 결과별 카운터
     private final Map<MessageSendResult, AtomicInteger> resultCounters = new ConcurrentHashMap<>();
@@ -34,7 +39,7 @@ public class MessageSendTracker {
     // 진행 중인 작업별 통계
     private final Map<UUID, JobStatistics> jobStatistics = new ConcurrentHashMap<>();
     
-    public MessageSendTracker() {
+    {
         // 모든 결과 타입에 대한 카운터 초기화
         for (MessageSendResult result : MessageSendResult.values()) {
             resultCounters.put(result, new AtomicInteger(0));
@@ -113,6 +118,7 @@ public class MessageSendTracker {
      * @return 통계 정보
      */
     public SendStatistics getStatistics() {
+        MessageQueueService.QueueStatus queueStatus = messageQueueService.getQueueStatus();
         return new SendStatistics(
             totalAttempts.get(),
             getSuccessRate(),
@@ -121,8 +127,11 @@ public class MessageSendTracker {
             resultCounters.get(MessageSendResult.SUCCESS_SMS_FALLBACK).get(),
             resultCounters.get(MessageSendResult.FAILED_BOTH).get(),
             resultCounters.get(MessageSendResult.RATE_LIMITED).get(),
+            resultCounters.get(MessageSendResult.QUEUED).get(),
             apiAttemptCounters.get(ApiType.KAKAOTALK).get(),
-            apiAttemptCounters.get(ApiType.SMS).get()
+            apiAttemptCounters.get(ApiType.SMS).get(),
+            queueStatus.getCurrentSize(),
+            queueStatus.getMaxSize()
         );
     }
     
@@ -159,16 +168,20 @@ public class MessageSendTracker {
         int smsFallbackCount,
         int failedCount,
         int rateLimitedCount,
+        int queuedCount,
         int kakaoAttempts,
-        int smsAttempts
+        int smsAttempts,
+        int currentQueueSize,
+        int maxQueueSize
     ) {
         @Override
         public String toString() {
             return String.format(
                 "전체 시도: %d, 성공률: %.1f%%, Fallback 비율: %.1f%%, " +
-                "카카오톡 성공: %d, SMS 대체: %d, 실패: %d, 제한: %d",
+                "카카오톡 성공: %d, SMS 대체: %d, 실패: %d, 제한: %d, 큐대기: %d, 큐상태: %d/%d",
                 totalAttempts, successRate, fallbackRate,
-                kakaoSuccessCount, smsFallbackCount, failedCount, rateLimitedCount
+                kakaoSuccessCount, smsFallbackCount, failedCount, rateLimitedCount,
+                queuedCount, currentQueueSize, maxQueueSize
             );
         }
     }
